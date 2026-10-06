@@ -3,3 +3,4 @@
 #![forbid(unsafe_code)]
 pub use ciglet_rs as dsp;
 pub use liblrhsmm_rs as hsmm;
+pub mod definition;

@@ -1,0 +1,8 @@
+{
+  "ndurstate": 3,
+  "streamdef": [
+    { "nstate": 3, "ndim": 2 },
+    { "nstate": 2, "ndim": 1, "nmix": 2, "weight": 0.5 }
+  ],
+  "dur_attr": [ { "index": 1, "floor": 2, "ceil": 10 } ]
+}
