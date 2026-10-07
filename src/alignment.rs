@@ -146,77 +146,16 @@ fn align_prepared(
             matches!(options.duration_mode, DurationMode::Geometric),
         );
     }
-    // Validate frame conversion before extracting any group from the observation.
-    let segmentation = dataset::read_segmentation(states, model)?;
     let mut occurrences = Vec::new();
-    let mut first = 0;
-    let mut frame_start = 0;
-    while first < states.len() {
-        let (phone, mut previous) = identity(&states[first])?;
-        let mut last = first + 1;
-        while last < states.len() {
-            let (next_phone, index) = identity(&states[last])?;
-            if next_phone != phone || index <= previous {
-                break;
-            }
-            previous = index;
-            last += 1;
-        }
-        let frame_end = (segmentation.boundaries[last - 1] as usize).min(observation.frames);
-        if frame_end <= frame_start {
-            return Err(invalid(
-                "isolated phoneme requires a positive frame interval",
-            ));
-        }
-        let dimensions: Vec<_> = observation.streams.iter().map(|s| s.dimensions).collect();
-        let mut local = Observation::new(frame_end - frame_start, &dimensions).map_err(invalid)?;
-        for (source, target) in observation.streams.iter().zip(&mut local.streams) {
-            target.values.copy_from_slice(
-                &source.values[frame_start * source.dimensions..frame_end * source.dimensions],
-            );
-        }
-        let mut group = states[first..last].to_vec();
-        let count = group.len() as i64;
-        for (index, state) in group.iter_mut().enumerate() {
-            state.time = f64::from(segmentation.boundaries[first + index]) - frame_start as f64;
-            // Filter using the source state, and compact accepted transitions.
-            // Re-import probabilities from JSON to retain C's mixed precision.
-            if let Some(jumps) = &mut state.jumps {
-                jumps.retain(|jump| {
-                    jump.get("d")
-                        .and_then(serde_json::Value::as_i64)
-                        .is_some_and(|delta| {
-                            let destination = index as i64 + delta;
-                            delta == 1 || (destination >= 0 && destination < count)
-                        })
-                });
-            }
-        }
-        let aligned = infer(model, prepared, &local, &group, options)?;
+    for group in dataset::isolated_groups(model, observation, states)? {
+        let aligned = infer(model, prepared, &group.observation, &group.states, options)?;
         occurrences.extend(aligned.into_iter().map(|item| StateOccurrence {
-            state: first + item.state,
-            end: frame_start + item.end,
+            state: group.first_state + item.state,
+            end: group.first_frame + item.end,
         }));
-        frame_start = frame_end;
-        first = last;
     }
     materialize(states, &occurrences, false)
 }
-
-fn identity(state: &State) -> io::Result<(&str, u64)> {
-    let phone = state
-        .metadata
-        .first()
-        .and_then(serde_json::Value::as_str)
-        .ok_or_else(|| invalid("isolated alignment requires a phoneme in ext[0]"))?;
-    let index = state
-        .metadata
-        .get(1)
-        .and_then(serde_json::Value::as_u64)
-        .ok_or_else(|| invalid("isolated alignment requires a state index in ext[1]"))?;
-    Ok((phone, index))
-}
-
 fn materialize(
     states: &[State],
     occurrences: &[StateOccurrence],

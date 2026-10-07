@@ -6,9 +6,48 @@ one embedded observation/segmentation pair or its ordered isolated groups.
 The result owns the updated model and per-iteration reports. Reports expose
 temperature, corpus mean and one row of group likelihoods per file.
 
-This checkpoint implements the training calculation API. The shiro-rest
-CLI, JSON-to-isolated-group loading, likelihood-file export and wavsplit
-orchestration are still pending. It is not the full native acceptance gate.
+The shiro-rest CLI, JSON-to-isolated-group loading and likelihood-file
+export are implemented. Wavsplit orchestration and full real-audio native
+acceptance are still pending.
+
+## CLI and isolated JSON loading
+
+`shiro-rest` retains `-m`, `-s`, `-n`, `-g`, `-p`, `-P`, `-d`, `-t`,
+`-l`, `-i`, `-D`, `-T`, `-M` and `-h`. Binary model stdout and `-m -`
+stdin are supported. Negative finite thresholds disable early stopping.
+Fractional HSMM pruning radii are accepted, matching the core library's
+floating-point option instead of the old CLI's atoi truncation.
+
+`dataset::isolated_groups` is shared with alignment. Groups retain their
+original first frame/state indices, local observations and JSON metadata.
+Phone-name changes and equal state-index resets separate phones. End
+boundaries are capped before copying. Local extra jumps are compacted and
+filtered by their actual destination before the shared mixed-precision
+JSON importer rebuilds probabilities. These are the same disclosed
+corrections tested by the existing alignment C references.
+`dataset::load_training_files` returns one Dataset per input JSON file,
+with one embedded sample or its ordered isolated groups.
+
+`-T` uses available host parallelism; `-l` forces one worker, as in C.
+Reports appear on stderr with the original zero-based iteration numbers.
+The callback reports after the corresponding update has completed.
+Likelihood CSV has one row per file per iteration, with comma-separated
+isolated group values and six decimal places. It uses portable LF, while
+Windows C text mode uses CRLF. The checked Linux C CSV bytes match exactly.
+The model and CSV are prepared before writing; aliases to model, JSON or
+feature inputs are rejected. Training failures leave existing CSV files
+untouched and produce no model stdout. An output I/O failure is propagated.
+Zero iterations preserve model bytes, do not read feature files and write
+an empty requested CSV, matching the original behavior.
+
+Nine CLI combinations cover embedded HSMM, repeated iterations, DAEM, HMM,
+mean-frame likelihood, isolated HSMM and isolated mean/HMM/DAEM. Every
+checked model and CSV matches the corrected C tool exactly on Windows
+x86_64. Each CLI result is reread and used for a further training run.
+Additional checks cover stdin, custom pruning/duration values, negative
+threshold, parallel settings, help and input/output aliases. Independent
+isolation checks verify multistream frame copying, local state offsets,
+cross-phone filtering, compact transitions and invalid metadata.
 
 ## Preserved calculation rules
 
@@ -80,14 +119,14 @@ repeatable parallel reduction and worker-error propagation have independent
 regressions. The fixture likelihoods can decrease, so no monotonic-likelihood
 or real-audio convergence guarantee is inferred from these synthetic cases.
 
-`tests/generate_training_reference.py` reproduces all six C command cases.
+`tests/generate_training_reference.py` reproduces all nine C command cases.
 Pass `--shiro`, `--include` and `--archive` for the pinned checkouts/archive.
 `--check` compares without writing. It verifies exactly one occurrence of
 each source correction before patching. The existing ignored-fread C
 warnings are retained. Separate original-tool commands verify that default
 convergence stops after two updates and zero iterations preserve model bytes.
 
-## Native validation
+## Training API checkpoint validation
 
 All 46 current integration tests pass on Windows MSVC x86_64/i686,
 Windows GNU x86_64 and Linux GNU x86_64/i686, including optional host
@@ -97,6 +136,15 @@ The reference generator's `--check` run reproduces all six command cases
 and both stopping checks. An earlier default-target development build
 emitted an incremental-cache access-denied warning; final target-specific
 test logs have no compiler warnings. No cache repair is claimed.
+
+The subsequent CLI checkpoint has 49 integration tests. Its Windows MSVC
+x86_64 run emitted an incremental-cache finalization access-denied warning
+for shiro-align; compilation and tests completed successfully. That cache
+warning is separate from numerical, CLI and model compatibility checks.
+All 49 tests, including optional host tests, pass on the five native targets.
+All nine CLI command cases reproduce corrected-C model and CSV outputs;
+the source generator reproduces those fixtures and both stopping checks.
+Formatting, Clippy with warnings denied and whitespace checks pass.
 
 Complete SHIRO workflows, remaining dependency functions, public precision
 and build coverage, real-audio/native acceptance and all bindings remain

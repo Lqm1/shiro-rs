@@ -46,6 +46,9 @@ def main():
             ("daem", ["-n", "3", "-D", "-t", "0"]),
             ("hmm", ["-n", "2", "-g", "-P", "0.8", "-t", "0"]),
             ("isolated", ["-n", "2", "-i", "-t", "0"]), ("mean", ["-M"]),
+            ("isolated-mean", ["-n", "2", "-i", "-M", "-t", "0"]),
+            ("isolated-hmm", ["-n", "2", "-i", "-g", "-P", "0.8", "-t", "0"]),
+            ("isolated-daem", ["-n", "3", "-i", "-D", "-t", "0"]),
         ]
         for name, flags in cases:
             output = subprocess.run([
