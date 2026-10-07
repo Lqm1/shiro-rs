@@ -59,7 +59,11 @@ not public symbols; the remaining own-header rows are marked implemented.
 The installed `external/fastapprox-all.h` additionally defines 44 scalar and
 44 four-lane functions. A separate bundled inventory now tracks them. These
 functions were not covered by the original own-header count. All 44 scalar
-functions now have Rust mappings; all 44 four-lane functions remain pending.
+functions now have Rust mappings. Ten four-lane exponential/logarithm/power
+functions and the conversion/index/splat/bit helpers now have safe Rust
+mappings verified against the original SSE2 header; 34 four-lane functions
+remain pending. Rust array splats also correct the reproduced original signed
+integer macro's accidental high-word sign extension.
 The scalar comparison also reproduced invalid negative/overflowing Lambert
 exponential refinements. Rust now corrects those results while preserving
 positive finite source bits, with independent high-precision comparison in
