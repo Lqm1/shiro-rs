@@ -5,3 +5,4 @@ pub use ciglet_rs as dsp;
 pub use liblrhsmm_rs as hsmm;
 pub mod definition;
 pub mod features;
+pub mod rawfloat;

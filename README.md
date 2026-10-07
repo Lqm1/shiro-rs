@@ -2,7 +2,7 @@
 
 An idiomatic Rust reimplementation of the complete SHIRO toolkit, including its original C and Lua workflows. Upstream: https://github.com/Sleepwalking/SHIRO.
 
-The port is in progress. The package links the local `ciglet-rs` and `liblrhsmm-rs` Rust packages. Typed model definitions and `shiro-mkhsmm -c modeldef.json` are implemented, with binary output checked against the original C tool. The feature API now implements MFCC/MFBE/PLPCC with DC/energy and dynamic features, compared to the original xxcc pipeline. Its CLI, alignment/training orchestration, the remaining command-line tools, and label conversion are not implemented yet. No C ABI or WebAssembly bindings are implemented yet.
+The port is in progress. The package links the local `ciglet-rs` and `liblrhsmm-rs` Rust packages. Typed model definitions and `shiro-mkhsmm -c modeldef.json` are implemented, with binary output checked against the original C tool. The feature API now implements MFCC/MFBE/PLPCC with DC/energy and dynamic features, compared to the original xxcc pipeline. The shiro-xxcc command retains the original options and reads rawfloat files or piped stdin, writing rawfloat features to stdout. Alignment/training orchestration, the remaining command-line tools, and label conversion are not implemented yet. No C ABI or WebAssembly bindings are implemented yet.
 
 The three repositories are independent sibling Cargo packages. Local path dependencies permit development before publishing versions.
 

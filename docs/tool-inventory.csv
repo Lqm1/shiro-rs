@@ -12,4 +12,4 @@
 "shiro-untie","shiro-untie.c","","pending",""
 "shiro-wav2raw","shiro-wav2raw.c","","pending",""
 "shiro-wavsplit","shiro-wavsplit.lua","","pending",""
-"shiro-xxcc","shiro-xxcc.c","features::extract; CLI pending","partial","tests/features.rs; 72 original C pipeline configurations; rawfloat CLI pending"
+"shiro-xxcc","shiro-xxcc.c","shiro-xxcc and features::extract","implemented","tests/features.rs and tests/xxcc_cli.rs; original C pipeline comparisons; file/stdin rawfloat; all original options"
