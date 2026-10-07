@@ -63,6 +63,7 @@ pub struct SegmentedFile {
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct State {
+    #[serde(default)]
     pub time: f64,
     #[serde(rename = "dur", default, skip_serializing_if = "Option::is_none")]
     pub duration: Option<usize>,
@@ -72,6 +73,7 @@ pub struct State {
     pub jumps: Option<Vec<Value>>,
     /// Keep additional metadata after the phoneme and local state index.
     #[serde(rename = "ext")]
+    #[serde(default)]
     pub metadata: Vec<Value>,
     #[serde(flatten)]
     pub attributes: Map<String, Value>,

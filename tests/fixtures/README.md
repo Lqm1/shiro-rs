@@ -1,5 +1,12 @@
 # Model creation fixture
 
+The `init-*` fixtures compare shiro-init to original C across aligned,
+flat, tied and combined modes. The ten-frame fixture checks C float-duration
+rounding, and the two-file fixture exposes the original fallback-duration
+count bug. `init-input.bin` contains interleaved two/one-dimensional streams.
+Generation, driver and precision details are in
+`docs/initialization-compatibility.md`.
+
 `phones-input.txt` and `phones-original.json` cover the original phone-map,
 model-definition and initial-segmentation tools. The seven cases include
 four named topologies, an unknown topology, weak skips and one/two-state
