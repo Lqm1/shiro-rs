@@ -1,3 +1,6 @@
 * text=auto eol=lf
 *.hsmm binary
 *.bin binary
+
+# Retain the exact upstream CRLF phone inventory used by the corpus oracle.
+tests/fixtures/cmu-arpabet-phoneset.csv -text
