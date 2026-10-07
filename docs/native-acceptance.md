@@ -1,8 +1,39 @@
 # Native acceptance checkpoint
 
 Status: all installed bundled fastapprox function mappings are implemented.
-Complete native acceptance remains open while the combined execution matrix
-is refreshed and the requirement audit is completed. Bindings have not started.
+The combined bundled-function execution matrix has completed. Complete native
+acceptance remains open for the subsequent resampling conditioning fix and
+the requirement audit. Bindings have not started.
+
+## Completed bundled-function revision snapshot
+
+Production revisions ciglet `a838175`, liblrhsmm `1731f2e` and SHIRO `85e5127`
+pass the same full default-feature Debug invocation described below on every
+required target. All fifteen package logs have zero failed and zero ignored
+tests. Actual Gnuplot, default-name process launch, external Lua/SPTK extractors,
+real speech, model interoperability and learning workflows are enabled.
+
+| Target | ciglet | liblrhsmm | SHIRO |
+| --- | --- | --- | --- |
+| x86_64-pc-windows-msvc | 193 passed | 120 passed | 58 passed |
+| i686-pc-windows-msvc | 193 passed | 120 passed | 58 passed |
+| x86_64-pc-windows-gnu | 193 passed | 120 passed | 58 passed |
+| x86_64-unknown-linux-gnu | 193 passed | 120 passed | 58 passed |
+| i686-unknown-linux-gnu | 193 passed | 120 passed | 58 passed |
+
+Ciglet now has 190 integration and three unit tests. The other package counts
+retain their historical composition below. The liblrhsmm compile-fail Rustdoc
+tests intentionally emit E0502 and pass by proving stale-cache mutation cannot
+compile. Those diagnostics are not production compiler failures.
+
+A later independent optimizer audit reproduces severe original Lanczos kernel
+conditioning near zero. Ciglet now adds separately selectable Stable/Legacy
+kernel behavior and SHIRO routes its default/legacy modes accordingly.
+Those production changes postdate the completed matrix above. Their focused
+five-target Debug/Release tests pass; the completed snapshot must not
+be claimed as full execution evidence for the subsequent fix. Each configuration
+has thirteen ciglet and nine SHIRO passes, with zero failed or ignored tests.
+See ciglet's `docs/dsp-optimization-audit.md` for measurements and regressions.
 
 The historical completed execution snapshot uses ciglet `a16950d`, liblrhsmm
 `40a6e17` and SHIRO `70799ff`. Liblrhsmm `1731f2e` subsequently adds only a

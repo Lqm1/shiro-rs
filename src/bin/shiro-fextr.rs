@@ -1,5 +1,5 @@
 //! Original batch feature extraction with native presets and host adapters.
-use ciglet_rs::resampling::BoundaryPolicy;
+use ciglet_rs::resampling::{BoundaryPolicy, KernelPolicy};
 use clap::Parser;
 use rand::{RngExt, SeedableRng, rngs::StdRng};
 use shiro_rs::{
@@ -107,6 +107,11 @@ fn run(arguments: Arguments) -> Result<(), Box<dyn std::error::Error>> {
                 BoundaryPolicy::LegacySkipFirst
             } else {
                 BoundaryPolicy::IncludeFirst
+            },
+            kernel: if arguments.legacy_resample {
+                KernelPolicy::Legacy
+            } else {
+                KernelPolicy::Stable
             },
         },
         input_extension: arguments.extension,

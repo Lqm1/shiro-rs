@@ -18,6 +18,13 @@ omission. `--legacy-resample` retains the original boundary values. FIR and
 interpolation details are in ciglet-rs/docs/filter-resample-compatibility.md.
 Rawfloat output is headerless little-endian binary32.
 
+AudioOptions::kernel independently selects the Lanczos numerical policy.
+The default Stable policy corrects the reproduced near-zero approximate-sine
+division defect; the original kernel remains selectable as Legacy.
+Both native extraction commands select Legacy with `--legacy-resample`, alongside
+the original sample-zero omission. See ciglet's dsp-optimization-audit.md.
+The related ciglet and SHIRO suites pass on all five targets in Debug and Release.
+
 ## Dither
 
 The original command never calls srand, so its implicit seed-one sequence

@@ -1,7 +1,7 @@
 //! WAV-to-raw processing shared by the native command and library callers.
 use ciglet_rs::{
     Error,
-    resampling::{self, BoundaryPolicy},
+    resampling::{self, BoundaryPolicy, KernelPolicy},
     wave::Wave,
 };
 
@@ -63,6 +63,7 @@ pub struct AudioOptions {
     pub dither_level: f32,
     pub output_sample_rate: Option<u32>,
     pub boundary: BoundaryPolicy,
+    pub kernel: KernelPolicy,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -119,7 +120,8 @@ pub fn prepare(
     let sample_rate = options.output_sample_rate.unwrap_or(wave.sample_rate);
     if sample_rate != wave.sample_rate {
         let ratio = sample_rate as f32 / wave.sample_rate as f32;
-        samples = resampling::resample_with(&samples, ratio, options.boundary)?;
+        samples =
+            resampling::resample_with_kernel(&samples, ratio, options.boundary, options.kernel)?;
     }
     Ok(Audio {
         sample_rate,

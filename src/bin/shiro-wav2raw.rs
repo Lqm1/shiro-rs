@@ -1,5 +1,8 @@
 //! Original WAV-to-raw command with checked output and caller-seeded dither.
-use ciglet_rs::{resampling::BoundaryPolicy, wave};
+use ciglet_rs::{
+    resampling::{BoundaryPolicy, KernelPolicy},
+    wave,
+};
 use clap::Parser;
 use rand::{RngExt, SeedableRng, rngs::StdRng};
 use shiro_rs::{
@@ -63,6 +66,11 @@ fn run(arguments: Arguments) -> Result<(), Box<dyn std::error::Error>> {
                 BoundaryPolicy::LegacySkipFirst
             } else {
                 BoundaryPolicy::IncludeFirst
+            },
+            kernel: if arguments.legacy_resample {
+                KernelPolicy::Legacy
+            } else {
+                KernelPolicy::Stable
             },
         },
         || match &mut rng {
