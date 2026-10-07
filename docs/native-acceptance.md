@@ -1,7 +1,8 @@
 # Native acceptance checkpoint
 
-Status: the combined execution matrix is in progress. This document does not
-declare the native acceptance gate complete or authorize starting bindings.
+Status: the combined execution matrix below has passed. Complete native
+acceptance remains open because the installed bundled fastapprox interface
+audit found additional unimplemented functions. Bindings have not started.
 
 The current production implementations are ciglet `a16950d`, liblrhsmm
 `40a6e17` and SHIRO `70799ff`. Liblrhsmm `1731f2e` subsequently adds only a
@@ -24,8 +25,8 @@ the existing SHIRO test environment variables.
 | x86_64-pc-windows-msvc | 176 passed | 120 passed | 58 passed |
 | i686-pc-windows-msvc | 176 passed | 120 passed | 58 passed |
 | x86_64-pc-windows-gnu | 176 passed | 120 passed | 58 passed |
-| x86_64-unknown-linux-gnu | 176 passed | 120 passed | Running |
-| i686-unknown-linux-gnu | Pending | Pending | Pending |
+| x86_64-unknown-linux-gnu | 176 passed | 120 passed | 58 passed |
+| i686-unknown-linux-gnu | 176 passed | 120 passed | 58 passed |
 
 Ciglet's count comprises 173 integration tests and three LF preparation unit
 tests. Liblrhsmm's count comprises 117 integration tests, one duration-bound
@@ -52,8 +53,13 @@ license and numerical evidence remains in the corresponding compatibility
 documents and tests, including `real-audio-compatibility.md` and
 `training-compatibility.md`.
 
-The functionality inventories contain 246 ciglet symbol rows, 103 liblrhsmm
-symbol rows and 14 SHIRO tool rows, all marked implemented. The inventories
+The own-header inventories contain 246 ciglet rows, 103 liblrhsmm symbol rows
+and 14 SHIRO tool rows. Ciglet's two macro formal-parameter rows are explicitly
+not public symbols; the remaining own-header rows are marked implemented.
+The installed `external/fastapprox-all.h` additionally defines 44 scalar and
+44 four-lane functions. A separate bundled inventory now tracks them. These
+functions were not covered by the original own-header count, and pending rows
+must be implemented before declaring complete native acceptance. The inventories
 alone do not establish complete macro/configuration/structure coverage. Header
 and ownership audits, numerical limitations and intentional source corrections
 must be assessed alongside their test evidence.
@@ -65,8 +71,13 @@ remain unchanged in that corpus, while some scores/statistics change. This does
 not prove arbitrary near-tie decisions or replace repeated-learning/real-audio
 workflow evidence. See liblrhsmm's `docs/optimized-c-numerics.md` and reports.
 
-The remaining acceptance work includes completing the Linux execution matrix,
-reviewing outstanding public-definition/numerical evidence against the original
+The completed matrix applies to the production revisions named above, before
+new bundled hyperbolic/sigmoid operations. Subsequent additions require their
+own validation and a final combined revision check. All fifteen package logs
+were checked for exact counts, absence of failures and zero ignored tests.
+
+The remaining acceptance work includes implementing the pending installed
+bundled-header functions, reviewing public-definition/numerical evidence against the original
 accepted requirements, and making the final requirement-by-requirement decision.
 C ABI and browser/Node WebAssembly bindings for all three packages have not
 started. Deferred ARM64 Tier 1 execution remains separately unverified.
