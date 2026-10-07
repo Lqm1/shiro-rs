@@ -1,5 +1,5 @@
 "UpstreamTool","Source","RustEquivalent","Status","Evidence"
-"shiro-align","shiro-align.c","","pending",""
+"shiro-align","shiro-align.c","shiro-align; alignment module","implemented","tests/alignment.rs; nine original C path cases; embedded/isolated HMM/HSMM; pruning; safe interval and transition corrections"
 "shiro-fextr","shiro-fextr.lua","shiro-fextr; batch and index modules","implemented","tests/batch.rs; tests/fextr_cli.rs; tests/index.rs; tests/host_extractors.rs; original Lua/C presets; actual SPTK 3.9-3 on Linux x86_64; other actual SPTK targets pending"
 "shiro-init","shiro-init.c","shiro-init; dataset and initialization modules","implemented","tests/initialization.rs; original C model bytes in four modes and ten-frame flat start; multistream importer; corrected corpus fallback; 32-bit budget regression"
 "shiro-lab2seg","shiro-lab2seg.lua","shiro-lab2seg and labels::to_states","implemented","tests/labels.rs; unchanged Lua boundaries, duration/output indices and metadata; original CLI options"

@@ -1,0 +1,87 @@
+{
+  "file_list": [
+    {
+      "filename": "input.f",
+      "states": [
+        {
+          "time": 3,
+          "dur": 0,
+          "out": [
+            0,
+            0
+          ],
+          "ext": [
+            "a",
+            0,
+            "retained"
+          ]
+        },
+        {
+          "time": 5,
+          "dur": 1,
+          "out": [
+            1,
+            1
+          ],
+          "ext": [
+            "a",
+            1,
+            "retained"
+          ]
+        },
+        {
+          "time": 6,
+          "dur": 2,
+          "out": [
+            2,
+            2
+          ],
+          "ext": [
+            "a",
+            2,
+            "retained"
+          ]
+        },
+        {
+          "time": 8,
+          "dur": 0,
+          "out": [
+            0,
+            0
+          ],
+          "ext": [
+            "b",
+            0,
+            "retained"
+          ]
+        },
+        {
+          "time": 10,
+          "dur": 1,
+          "out": [
+            1,
+            1
+          ],
+          "ext": [
+            "b",
+            1,
+            "retained"
+          ]
+        },
+        {
+          "time": 12,
+          "dur": 2,
+          "out": [
+            2,
+            2
+          ],
+          "ext": [
+            "b",
+            2,
+            "retained"
+          ]
+        }
+      ]
+    }
+  ]
+}

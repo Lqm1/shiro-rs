@@ -2,7 +2,7 @@
 
 An idiomatic Rust reimplementation of the complete SHIRO toolkit, including its original C and Lua workflows. Upstream: https://github.com/Sleepwalking/SHIRO.
 
-The port is in progress. The package links the local `ciglet-rs` and `liblrhsmm-rs` Rust packages. Typed model definitions and `shiro-mkhsmm -c modeldef.json` are implemented, with binary output checked against the original C tool. The feature API now implements MFCC/MFBE/PLPCC with DC/energy and dynamic features, compared to the original xxcc pipeline. The shiro-xxcc command retains the original options and reads rawfloat files or piped stdin, writing rawfloat features to stdout. The shiro-wav2raw command reads WAV files, normalizes, dithers and resamples before writing rawfloat. It retains the original Windows/Linux GNU default dither sequences, corrects silent normalization, and provides explicit legacy resampling and opt-in seeded Rust dither. See docs/audio-compatibility.md for measured differences. Alignment/training orchestration and four remaining command-line tools are not implemented yet. No C ABI or WebAssembly bindings are implemented yet.
+The port is in progress. The package links the local `ciglet-rs` and `liblrhsmm-rs` Rust packages. Typed model definitions and `shiro-mkhsmm -c modeldef.json` are implemented, with binary output checked against the original C tool. The feature API now implements MFCC/MFBE/PLPCC with DC/energy and dynamic features, compared to the original xxcc pipeline. The shiro-xxcc command retains the original options and reads rawfloat files or piped stdin, writing rawfloat features to stdout. The shiro-wav2raw command reads WAV files, normalizes, dithers and resamples before writing rawfloat. It retains the original Windows/Linux GNU default dither sequences, corrects silent normalization, and provides explicit legacy resampling and opt-in seeded Rust dither. See docs/audio-compatibility.md for measured differences. Training orchestration and three remaining command-line tools are not implemented yet. No C ABI or WebAssembly bindings are implemented yet.
 
 The three repositories are independent sibling Cargo packages. Local path dependencies permit development before publishing versions.
 
@@ -21,7 +21,11 @@ Lua/C comparisons and the corrected shared-duration constraint handling.
 model-shaped rawfloat loading and relative variance floors. The original C
 models compare byte for byte on the reference corpus, with documented fixes
 for malformed feature files and multi-file fallback duration statistics.
-See `docs/initialization-compatibility.md`. Four other SHIRO tools remain pending.
+See `docs/initialization-compatibility.md`. Three other SHIRO tools remain pending.
+
+`shiro-align` supports embedded and isolated HMM/HSMM alignment, original
+pruning options and metadata-preserving JSON output. See
+`docs/alignment-compatibility.md` for C paths and corrected isolated boundaries.
 
 ```powershell
 cargo test

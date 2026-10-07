@@ -1,0 +1,58 @@
+{
+  "file_list": [
+    {
+      "filename": "input.f",
+      "states": [
+        {
+          "time": 3,
+          "dur": 0,
+          "out": [
+            0,
+            0
+          ],
+          "jmp": [
+            {
+              "d": 2,
+              "p": 0.02
+            },
+            {
+              "d": 3,
+              "p": 0.15
+            }
+          ],
+          "ext": [
+            "a",
+            0,
+            "retained"
+          ]
+        },
+        {
+          "time": 7,
+          "dur": 1,
+          "out": [
+            1,
+            1
+          ],
+          "ext": [
+            "a",
+            1,
+            "retained"
+          ]
+        },
+        {
+          "time": 12,
+          "dur": 2,
+          "out": [
+            2,
+            2
+          ],
+          "ext": [
+            "a",
+            2,
+            "retained"
+          ]
+        }
+      ]
+    }
+  ]
+}
