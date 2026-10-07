@@ -61,8 +61,9 @@ The installed `external/fastapprox-all.h` additionally defines 44 scalar and
 functions were not covered by the original own-header count. All 44 scalar
 functions now have Rust mappings. Ten four-lane exponential/logarithm/power
 functions and the conversion/index/splat/bit helpers now have safe Rust
-mappings verified against the original SSE2 header; 34 four-lane functions
-remain pending. Rust array splats also correct the reproduced original signed
+mappings verified against the original SSE2 header. Eight four-lane
+hyperbolic/sigmoid functions now also have source-order verified mappings;
+26 four-lane functions remain pending. Rust array splats also correct the reproduced original signed
 integer macro's accidental high-word sign extension.
 The scalar comparison also reproduced invalid negative/overflowing Lambert
 exponential refinements. Rust now corrects those results while preserving
