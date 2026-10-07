@@ -32,6 +32,11 @@ rewrites segmentation references and exports the original correspondence
 summary. Stream weights are retained, correcting their loss in the C tool.
 See `docs/untying-compatibility.md` for byte comparisons and validation.
 
+The `training` module implements HMM/HSMM re-estimation, DAEM scheduling,
+convergence, grouped-file likelihood reports and deterministic parallel
+statistics reduction. See `docs/training-compatibility.md`. The `shiro-rest`
+CLI and its isolated JSON loader are still under development.
+
 ```powershell
 cargo test
 cargo clippy --all-targets -- -D warnings

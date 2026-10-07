@@ -7,7 +7,7 @@
 "shiro-mkpm","shiro-mkpm.lua","shiro-mkpm and phonemap::create","implemented","tests/phones.rs; seven unchanged Lua cases; state IDs, duration rounding, topologies and weak skips"
 "shiro-mkseg","shiro-mkseg.lua","shiro-mkseg and segmentation::initial","implemented","tests/phones.rs; original topologies and short phones; frame rounding, padded index and mixed explicit/implicit jump probabilities"
 "shiro-pm2md","shiro-pm2md.lua","shiro-pm2md and phonemap::to_definition","implemented","tests/phones.rs; original state counts and duration constraints; deterministic tied-constraint correction; original C model construction byte comparison"
-"shiro-rest","shiro-rest.c","","pending",""
+"shiro-rest","shiro-rest.c","training API; CLI and isolated JSON loader pending","partial","tests/training.rs; corrected C models and likelihoods; DAEM; stopping; grouped samples; ordered parallel accumulators"
 "shiro-seg2lab","shiro-seg2lab.lua","shiro-seg2lab and labels::from_states","implemented","tests/labels.rs; unchanged Lua phoneme grouping and mixed state/phoneme output; empty and invalid data corrections"
 "shiro-untie","shiro-untie.c","shiro-untie; untying module","implemented","tests/untying.rs; original C model/JSON/summary; independent distributions; preserved stream weights; multi-file ordering and model stdin"
 "shiro-wav2raw","shiro-wav2raw.c","shiro-wav2raw and audio::prepare","implemented","tests/audio.rs; tests/wav2raw_cli.rs; unchanged C WAV conversion; Windows/Linux C dither sequences; normalization and boundary corrections documented"
