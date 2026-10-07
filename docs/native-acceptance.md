@@ -1,9 +1,51 @@
 # Native acceptance checkpoint
 
-Status: all installed bundled fastapprox function mappings are implemented.
-The combined bundled-function execution matrix has completed. Complete native
-acceptance remains open for the subsequent resampling conditioning fix and
-the requirement audit. Bindings have not started.
+Status: the native gate passes for the five agreed x86 targets and the recorded
+compatibility corpora. All public-functionality mappings are implemented.
+The subsequent C ABI and browser/Node WebAssembly gate remains required.
+
+## Final native phase execution
+
+The completed production snapshot is ciglet `4f8a2cd`, liblrhsmm `1731f2e`,
+and SHIRO `45a3420`. All three runners terminated successfully. Every package
+runs `cargo test --locked --target TARGET -- --include-ignored --nocapture`
+with default features, the Debug profile and required host fixtures.
+
+| Target | ciglet | liblrhsmm | SHIRO |
+| --- | --- | --- | --- |
+| x86_64-pc-windows-msvc | 195 passed | 120 passed | 58 passed |
+| i686-pc-windows-msvc | 195 passed | 120 passed | 58 passed |
+| x86_64-pc-windows-gnu | 195 passed | 120 passed | 58 passed |
+| x86_64-unknown-linux-gnu | 195 passed | 120 passed | 58 passed |
+| i686-unknown-linux-gnu | 195 passed | 120 passed | 58 passed |
+
+All fifteen logs have exact expected counts, zero failures and zero ignored
+tests. Ciglet has 192 integration tests plus three LF unit tests. Liblrhsmm
+has 117 integration tests, one duration unit test and two compile-fail Rustdoc
+tests. SHIRO has 58 integration tests and fourteen executable targets.
+Gnuplot actual rendering/default-name launch, external Lua/SPTK subprocess
+fixtures, real speech, model decoding/re-encoding and learning workflows run.
+The conditioning correction separately passes five-target Debug/Release focused
+suites. Both changed packages pass Clippy/Rustdoc with warnings denied and
+formatting/whitespace checks.
+
+The completed public/configuration/ownership mappings and requirement decision
+are recorded in `native-requirements-audit.md`. Subsequent frontend diagnostic
+files and documentation change no Rust source, manifest, original fixture or
+regression bound used by this snapshot. `frontend-optimization-audit.md` records
+the remaining synthetic frontend optimizer comparison, including the six silent
+delta nonfinite categories restored by disabling finite-math-only.
+
+The user's beta platform list was rechecked through Context7, Mintlify and the
+official rustc book. These five targets are Tier 1. i686 Windows MSVC is now
+listed without host tools, which does not change the executable target checks.
+Deferred Tier 1 ARM64 execution is not claimed. Primary reference:
+https://doc.rust-lang.org/beta/rustc/platform-support.html.
+
+This completes the native intermediate phase. All computational/public
+functionality remains in scope for the corresponding binding coverage.
+The complete task remains open until C/Python and browser/Node verification
+passes for bindings in all three existing packages.
 
 ## Completed bundled-function revision snapshot
 
@@ -103,8 +145,8 @@ integer macro's accidental high-word sign extension.
 The scalar comparison also reproduced invalid negative/overflowing Lambert
 exponential refinements. Rust now corrects those results while preserving
 positive finite source bits, with independent high-precision comparison in
-ciglet's `tests/lambert_exp.rs`. Pending rows
-must be implemented before declaring complete native acceptance. The inventories
+ciglet's `tests/lambert_exp.rs`. All function rows now have implemented mappings.
+The inventories
 alone do not establish complete macro/configuration/structure coverage. Header
 and ownership audits, numerical limitations and intentional source corrections
 must be assessed alongside their test evidence.
@@ -116,13 +158,12 @@ remain unchanged in that corpus, while some scores/statistics change. This does
 not prove arbitrary near-tie decisions or replace repeated-learning/real-audio
 workflow evidence. See liblrhsmm's `docs/optimized-c-numerics.md` and reports.
 
-The completed matrix applies to the production revisions named above, before
+The historical 176/120/58 matrix applies to its production revisions, before
 new bundled hyperbolic/sigmoid operations. Subsequent additions require their
 own validation and a final combined revision check. All fifteen package logs
 were checked for exact counts, absence of failures and zero ignored tests.
 
-The remaining acceptance work includes refreshing the completed bundled-function
-native matrix, reviewing public-definition/numerical evidence against the original
-accepted requirements, and making the final requirement-by-requirement decision.
-C ABI and browser/Node WebAssembly bindings for all three packages have not
-started. Deferred ARM64 Tier 1 execution remains separately unverified.
+The historical pending matrix and requirement review are resolved by the final
+native phase execution and `native-requirements-audit.md` above. C ABI and
+browser/Node WebAssembly bindings for all three packages remain the next phase.
+Deferred ARM64 Tier 1 execution remains separately unverified.

@@ -17,6 +17,12 @@ XCC1 contains uint32 record count 72, then records with uint32 kind/energy mode/
 Initial Windows MSVC x86_64 results compare 6,399 output values with maximum normalized finite difference 1.036708448346817e-5. Forty-two nonfinite energy/difference values have the same infinity sign or NaN category as C; NaN payloads are not used as a cross-platform criterion. Windows MSVC x86_64/i686 and Linux GNU x86_64/i686 have passed the initial matrix. Their maximum finite normalized differences are 1.036708448346817e-5 for 64-bit and 9.73520036245573e-6 for 32-bit. The scoped bound is 2e-5. All five current tests pass on Windows MSVC x86_64/i686, Windows GNU x86_64 and Linux GNU x86_64/i686 with this bound and the revised clap configuration. The five-target worst finite normalized difference is 1.036708448346817e-5; forty-two nonfinite output categories match on every target. Shape, parameter/finite validation, empty extraction, automatic channel adjustment, MFBE zero DC column and the endpoint RMS correction have independent checks. Formatting and Clippy with warnings denied pass. No complete real-audio/model/training acceptance is claimed.
 Primary clap feature reference: https://docs.rs/clap/4.6.7/clap/_features/index.html. The local clap_builder manifest confirms color enables optional anstream. No SHIRO parsing, generated help/usage, contextual errors or typo suggestions are removed by this configuration. Original SHIRO's help/error output is uncolored.
 
+The subsequent original-C optimizer comparison is complete for this synthetic
+corpus. See frontend-optimization-audit.md and compiler-specific reports for
+finite errors, exact dimensions, six silent-delta nonfinite category changes
+and the finite-math-only control experiment. Existing Rust fixtures and bounds
+are unchanged. Earlier pending optimizer statements describe the initial checkpoint.
+
 ## Command and binary streams
 
 shiro-xxcc implements the original -f/-m/-c/-l/-p/-w/-s/-W/-d/-a/-0/-e/-E options. Sample rate uses kHz, fractional hop remains supported, and -E selects RMS for zero or dB for any nonzero value when -e is present. Positional input defaults to stdin; explicit - is also stdin. Combined boolean short flags such as -da are accepted. Successful extraction writes only little-endian rawfloat features to stdout. Errors go to stderr. Generated help exits successfully.

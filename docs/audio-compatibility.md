@@ -66,7 +66,8 @@ Stage shiro-wav2raw.c, changing only its include path to ciglet.h. Build with
 gcc -O2 -DFP_TYPE=float -ffunction-sections -fdata-sections -I<upstream>
 <staged-source> <ciglet>/ciglet.c <ciglet>/external/wavfile.c
 -Wl,--gc-sections -lm. Retain the original unchecked-fread warnings.
-No fast-math is used; original -Ofast comparisons remain pending.
+No fast-math is used in those reference fixtures. The later original -Ofast and
+effective-fast-math comparisons are recorded in frontend-optimization-audit.md.
 
 `tests/fixtures/c-audio-input.wav` is a synthetic 257-frame, 16000-Hz mono PCM16
 file. Sample i is (i modulo 17 minus 8) times 1024. Its canonical 44-byte RIFF

@@ -5,6 +5,23 @@ This audit follows the accepted plan in
 functionality of three independent packages. Passing counts alone do not prove
 the requirements below. C ABI and browser/Node WebAssembly are a later phase.
 
+The native requirements are satisfied for the agreed targets and numerical
+corpora at the final snapshot documented below. The decision uses the following
+evidence, with detailed scope and limits in the following sections.
+
+| Accepted native item | Decision | Authoritative evidence |
+| --- | --- | --- |
+| 1. Libraries, executables and checks | Pass | Final five-target full matrix, Clippy/Rustdoc/fmt checks, fourteen Cargo executable targets |
+| 2. Public functions and Lua tool functionality | Pass | Three symbol/tool inventories, 88-function bundled inventory, configuration/header/ownership mappings and per-family tests |
+| 3. Existing pretrained model | Pass | Historical model byte roundtrip, original reader/parameter comparisons, real_audio.rs |
+| 4. Rust-to-C and C-to-Rust formats | Pass | Model/data/set codec oracles, original reader checks, definition/phone/label/rawfloat comparisons |
+| 5. Real speech to features/inference/labels | Pass | Licensed three-recording corpus, original C/Lua feature/state documents, real_audio.rs |
+| 6. Small initialization/training/save/reload/inference | Pass | Four C initialization modes, nine corrected-C training cases, real/synthetic composed workflow and precision-training codecs |
+| 7. Alternate modes and serial/parallel behavior | Pass | Isolated/embedded HMM/HSMM, ties/untying, skips, pruning, DAEM and ordered reduction regressions |
+| 8. Optional external Lua | Pass | Required host extractor execution in the native matrix; bundled native presets need no Lua |
+| 9. Malformed input and disclosed bug corrections | Pass | Codec/parameter/shape/resource/I/O regressions and independent corrected numerical references |
+| 10. Report actual target execution separately | Pass | Five executable target results; deferred ARM64 and external SPTK installation limits explicitly reported |
+
 ## Build, execution and independent package structure
 
 All three repositories have their own Cargo.toml, lockfile and Git history.
@@ -12,8 +29,8 @@ SHIRO's companion dependencies are local Cargo path dependencies. The completed
 bundled-function revision matrix in `native-acceptance.md` runs all package
 tests and all SHIRO executable targets on the five required x86 targets.
 Original C implementations are reference executables, not Rust library delegates.
-The later conditioning correction needs its focused matrix and a final combined
-execution result before this gate can be marked satisfied for the final revision.
+The later conditioning correction has its focused matrix and the final combined
+execution result recorded below, satisfying this gate for the final native snapshot.
 Warning-denied Clippy/Rustdoc and formatting checks accompany each changed package.
 
 ## Public functionality and original Lua tools
@@ -125,11 +142,24 @@ Effective fast-math comparisons record compiler flags/macros and measured
 differences. Liblrhsmm's `optimized-c-numerics.md` covers helpers, inference
 decisions and expectation statistics. Ciglet's DSP report additionally exposes
 the severe resampling conditioning defect. SHIRO's feature/audio optimized-C
-workflow diagnostics remain a separate numerical follow-up; no universal
+workflow diagnostics are now recorded in frontend-optimization-audit.md. The
+six silent-delta category changes are reproduced by effective fast-math and
+restored by disabling finite-math-only. Rust keeps strict source categories.
+These findings do not imply universal
 equivalence to every compiler's `-Ofast` output is claimed.
 
 Five-target execution evidence is specific to Windows MSVC x86_64/i686,
 Windows GNU x86_64 and Linux GNU x86_64/i686. Tier 1 ARM64 execution is deferred.
-Current native acceptance is open until the conditioning fix's validation and
-the final revision matrix complete and remaining numerical evidence is assessed.
-All three packages' C ABI and browser/Node bindings remain unstarted.
+The current combined matrix completes at ciglet 4f8a2cd, liblrhsmm 1731f2e and
+SHIRO 45a3420. All five targets pass 195/120/58 tests respectively, including
+required host fixtures, with zero failed or ignored tests. These revisions
+include the conditioning correction; later frontend diagnostics change no Rust
+source or original fixture. The focused five-target Debug/Release matrix also
+passes for the correction.
+
+The native gate is satisfied for the agreed five-target execution scope and
+recorded numerical corpora. This is an intermediate milestone. Deferred Tier 1
+ARM64 execution, caller-installed SPTK on additional targets, universal algorithm
+accuracy and compiler-dependent nonfinite fast-math outputs are not inferred
+from it. The complete public-functionality scope remains in place. All three
+packages' C ABI and browser/Node binding acceptance remains required.
