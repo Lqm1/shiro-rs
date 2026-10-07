@@ -1,5 +1,10 @@
 # Model creation fixture
 
+The `labels-*` fixtures compare both label conversion tools to the unchanged
+original Lua programs. Only the segmentation fixture's machine-specific
+filename was normalized. Generation, source pin and comparison criteria
+are in `docs/label-compatibility.md`.
+
 The three `c-fextr-*.bin` files contain the original Lua/C batch extractor
 outputs for `c-audio-input.wav`. `index-original.txt` and
 `index-original.json` compare the original Lua index loader with Rust,

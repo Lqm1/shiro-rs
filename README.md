@@ -2,7 +2,7 @@
 
 An idiomatic Rust reimplementation of the complete SHIRO toolkit, including its original C and Lua workflows. Upstream: https://github.com/Sleepwalking/SHIRO.
 
-The port is in progress. The package links the local `ciglet-rs` and `liblrhsmm-rs` Rust packages. Typed model definitions and `shiro-mkhsmm -c modeldef.json` are implemented, with binary output checked against the original C tool. The feature API now implements MFCC/MFBE/PLPCC with DC/energy and dynamic features, compared to the original xxcc pipeline. The shiro-xxcc command retains the original options and reads rawfloat files or piped stdin, writing rawfloat features to stdout. The shiro-wav2raw command reads WAV files, normalizes, dithers and resamples before writing rawfloat. It retains the original Windows/Linux GNU default dither sequences, corrects silent normalization, and provides explicit legacy resampling and opt-in seeded Rust dither. See docs/audio-compatibility.md for measured differences. Alignment/training orchestration, the remaining command-line tools, and label conversion are not implemented yet. No C ABI or WebAssembly bindings are implemented yet.
+The port is in progress. The package links the local `ciglet-rs` and `liblrhsmm-rs` Rust packages. Typed model definitions and `shiro-mkhsmm -c modeldef.json` are implemented, with binary output checked against the original C tool. The feature API now implements MFCC/MFBE/PLPCC with DC/energy and dynamic features, compared to the original xxcc pipeline. The shiro-xxcc command retains the original options and reads rawfloat files or piped stdin, writing rawfloat features to stdout. The shiro-wav2raw command reads WAV files, normalizes, dithers and resamples before writing rawfloat. It retains the original Windows/Linux GNU default dither sequences, corrects silent normalization, and provides explicit legacy resampling and opt-in seeded Rust dither. See docs/audio-compatibility.md for measured differences. Alignment/training orchestration and eight remaining command-line tools are not implemented yet. No C ABI or WebAssembly bindings are implemented yet.
 
 The three repositories are independent sibling Cargo packages. Local path dependencies permit development before publishing versions.
 
@@ -10,7 +10,10 @@ The three repositories are independent sibling Cargo packages. Local path depend
 extractors in Rust. The bundled SPTK workflow and custom Lua callbacks have
 host adapters. See `docs/batch-compatibility.md` for presets, original options,
 compatibility corrections, numerical comparisons and host verification limits.
-Ten other SHIRO tools remain pending.
+`shiro-lab2seg` and `shiro-seg2lab` implement timed label conversion and
+phoneme/state alignment output. See `docs/label-compatibility.md` for the
+original rounding, grouping, JSON schema and decimal-format differences.
+Eight other SHIRO tools remain pending.
 
 ```powershell
 cargo test
