@@ -58,7 +58,12 @@ and 14 SHIRO tool rows. Ciglet's two macro formal-parameter rows are explicitly
 not public symbols; the remaining own-header rows are marked implemented.
 The installed `external/fastapprox-all.h` additionally defines 44 scalar and
 44 four-lane functions. A separate bundled inventory now tracks them. These
-functions were not covered by the original own-header count, and pending rows
+functions were not covered by the original own-header count. All 44 scalar
+functions now have Rust mappings; all 44 four-lane functions remain pending.
+The scalar comparison also reproduced invalid negative/overflowing Lambert
+exponential refinements. Rust now corrects those results while preserving
+positive finite source bits, with independent high-precision comparison in
+ciglet's `tests/lambert_exp.rs`. Pending rows
 must be implemented before declaring complete native acceptance. The inventories
 alone do not establish complete macro/configuration/structure coverage. Header
 and ownership audits, numerical limitations and intentional source corrections
