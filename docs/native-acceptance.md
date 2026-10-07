@@ -65,7 +65,9 @@ mappings verified against the original SSE2 header. Eight four-lane
 hyperbolic/sigmoid functions now also have source-order verified mappings.
 Twelve four-lane trigonometric functions now retain their vector-specific
 sign-order and cosine-equality behavior. Fourteen four-lane special functions
-remain pending. Rust array splats also correct the reproduced original signed
+now also preserve audited source order and valid negative gamma/digamma domains,
+with independent per-lane Lambert correction verification. All 88 bundled
+function mappings are implemented. Rust array splats also correct the reproduced original signed
 integer macro's accidental high-word sign extension.
 The scalar comparison also reproduced invalid negative/overflowing Lambert
 exponential refinements. Rust now corrects those results while preserving
