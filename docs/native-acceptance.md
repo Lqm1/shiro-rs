@@ -1,15 +1,15 @@
 # Native acceptance checkpoint
 
-Status: the combined execution matrix below has passed. Complete native
-acceptance remains open because the installed bundled fastapprox interface
-audit found additional unimplemented functions. Bindings have not started.
+Status: all installed bundled fastapprox function mappings are implemented.
+Complete native acceptance remains open while the combined execution matrix
+is refreshed and the requirement audit is completed. Bindings have not started.
 
-The current production implementations are ciglet `a16950d`, liblrhsmm
+The historical completed execution snapshot uses ciglet `a16950d`, liblrhsmm
 `40a6e17` and SHIRO `70799ff`. Liblrhsmm `1731f2e` subsequently adds only a
 Python diagnostic, C optimization reports and documentation; it changes no
 Rust source, manifest or reference fixture used by the running native suites.
 
-## Combined execution evidence
+## Historical combined execution evidence
 
 Every package is tested with `cargo test --locked --target TARGET --
 --include-ignored --nocapture`, using default features and the Debug profile.
@@ -90,8 +90,8 @@ new bundled hyperbolic/sigmoid operations. Subsequent additions require their
 own validation and a final combined revision check. All fifteen package logs
 were checked for exact counts, absence of failures and zero ignored tests.
 
-The remaining acceptance work includes implementing the pending installed
-bundled-header functions, reviewing public-definition/numerical evidence against the original
+The remaining acceptance work includes refreshing the completed bundled-function
+native matrix, reviewing public-definition/numerical evidence against the original
 accepted requirements, and making the final requirement-by-requirement decision.
 C ABI and browser/Node WebAssembly bindings for all three packages have not
 started. Deferred ARM64 Tier 1 execution remains separately unverified.
