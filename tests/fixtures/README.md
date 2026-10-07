@@ -29,3 +29,13 @@ measured differences and the separate actual SPTK comparison.
 
 
 The synthetic c-audio-input.wav and its original-C plain/normalized/upsampled/downsampled/dither outputs verify the shiro-wav2raw command. The two DTH1 fixtures verify actual Windows and Linux GNU C-runtime draws and unchanged ciglet randu results. Generation commands, byte layout, scoped tolerances and intentional corrections are documented in docs/audio-compatibility.md. tests/dither_oracle.c is the original-header driver. These fixtures contain synthetic data and do not establish real-audio acceptance.
+
+## CMU SLT real speech
+
+`cmu-slt-arctic_a0001.wav` through `cmu-slt-arctic_a0003.wav` are unchanged
+CMU US SLT ARCTIC recordings. Their copyright and permission notice is retained
+in `../../LICENSES/CMU-ARCTIC.txt`. Corresponding `.param` files and
+`cmu-slt-c-{hmm,hsmm}.json` are derived C reference outputs for this port.
+The model, phone inventory and selected index rows come from upstream SHIRO.
+See `../../docs/real-audio-compatibility.md` for source URLs, checksums, numerical
+limits, model schema conversion, and the independent C/Lua reproduction command.

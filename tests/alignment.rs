@@ -28,6 +28,49 @@ fn source(isolated: bool) -> SegmentationDocument {
     })
     .unwrap()
 }
+
+#[test]
+fn unused_uninitialized_durations_do_not_block_alignment() {
+    let mut model = model();
+    let observation = observation(&model);
+    let states = source(false).files.remove(0).states;
+    let hsmm = alignment::align_states(&model, &observation, &states, Options::default()).unwrap();
+    let mut geometric = Options {
+        duration_mode: DurationMode::Geometric,
+        ..Options::default()
+    };
+    geometric.geometric.pruning_slope = 0.8;
+    let hmm = alignment::align_states(&model, &observation, &states, geometric).unwrap();
+    model.durations.push(liblrhsmm_rs::Duration {
+        mean: 0.0,
+        variance: 0.0,
+        ..liblrhsmm_rs::Duration::default()
+    });
+    assert_eq!(
+        serde_json::to_value(
+            alignment::align_states(&model, &observation, &states, Options::default()).unwrap()
+        )
+        .unwrap(),
+        serde_json::to_value(hsmm).unwrap()
+    );
+    assert_eq!(
+        serde_json::to_value(
+            alignment::align_states(&model, &observation, &states, geometric).unwrap()
+        )
+        .unwrap(),
+        serde_json::to_value(&hmm).unwrap()
+    );
+    // Geometric inference does not use any explicit duration density.
+    model.durations[0].variance = 0.0;
+    assert!(alignment::align_states(&model, &observation, &states, Options::default()).is_err());
+    assert_eq!(
+        serde_json::to_value(
+            alignment::align_states(&model, &observation, &states, geometric).unwrap()
+        )
+        .unwrap(),
+        serde_json::to_value(hmm).unwrap()
+    );
+}
 #[test]
 fn eight_modes_match_original_c_state_paths() {
     let model = model();

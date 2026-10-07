@@ -31,13 +31,24 @@ fn invalid(message: impl ToString) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message.to_string())
 }
 
-fn prepare(model: &Model, options: Options) -> io::Result<PreparedModel<'_>> {
+fn prepare<'a>(
+    model: &'a Model,
+    options: Options,
+    duration_states: impl Iterator<Item = usize>,
+) -> io::Result<PreparedModel<'a>> {
+    let durations: Vec<_> = match options.duration_mode {
+        DurationMode::Explicit => duration_states.collect(),
+        DurationMode::Geometric => Vec::new(),
+    };
     model
-        .prepare(PreparationOptions {
-            temperature: options.hsmm.temperature,
-            duration_weight: options.hsmm.duration_weight,
-            ..PreparationOptions::default()
-        })
+        .prepare_selected_durations(
+            PreparationOptions {
+                temperature: options.hsmm.temperature,
+                duration_weight: options.hsmm.duration_weight,
+                ..PreparationOptions::default()
+            },
+            &durations,
+        )
         .map_err(invalid)
 }
 
@@ -48,7 +59,11 @@ pub fn align_states(
     states: &[State],
     options: Options,
 ) -> io::Result<Vec<State>> {
-    let prepared = prepare(model, options)?;
+    let prepared = prepare(
+        model,
+        options,
+        states.iter().filter_map(|state| state.duration),
+    )?;
     align_prepared(model, &prepared, observation, states, options)
 }
 
@@ -60,7 +75,15 @@ pub fn align_document(
     options: Options,
 ) -> io::Result<SegmentationDocument> {
     let dimensions = dataset::dimensions(model)?;
-    let prepared = prepare(model, options)?;
+    let prepared = prepare(
+        model,
+        options,
+        document
+            .files
+            .iter()
+            .flat_map(|file| &file.states)
+            .filter_map(|state| state.duration),
+    )?;
     let mut result = document.clone();
     for file in &mut result.files {
         let observation = dataset::read_observation(

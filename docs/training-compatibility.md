@@ -7,8 +7,10 @@ The result owns the updated model and per-iteration reports. Reports expose
 temperature, corpus mean and one row of group likelihoods per file.
 
 The shiro-rest CLI, JSON-to-isolated-group loading and likelihood-file
-export are implemented. Wavsplit orchestration and full real-audio native
-acceptance are still pending.
+export are implemented. Wavsplit orchestration is implemented and tested.
+Real-speech initialization and training regressions are described in
+`real-audio-compatibility.md`. Full native acceptance remains incomplete while
+dependency public functions are still being ported.
 
 ## CLI and isolated JSON loading
 
