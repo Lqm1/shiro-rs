@@ -9,5 +9,6 @@ rust-version = "1.94"
 ciglet-rs = { version = "0.1.0", path = "../ciglet-rs" }
 clap = { version = "4.6.7", features = ["derive", "error-context", "help", "std", "suggestions", "usage"], default-features = false }
 liblrhsmm-rs = { version = "0.1.0", path = "../liblrhsmm-rs" }
+rand = { version = "0.10.3", default-features = false, features = ["std_rng"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"
