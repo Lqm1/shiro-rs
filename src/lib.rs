@@ -15,3 +15,4 @@ pub mod labels;
 pub mod phonemap;
 pub mod rawfloat;
 pub mod segmentation;
+pub mod untying;
