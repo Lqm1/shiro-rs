@@ -1,5 +1,12 @@
 # Model creation fixture
 
+The three `c-fextr-*.bin` files contain the original Lua/C batch extractor
+outputs for `c-audio-input.wav`. `index-original.txt` and
+`index-original.json` compare the original Lua index loader with Rust,
+including padding, empty phoneme fields and consecutive literal spaces.
+See `docs/batch-compatibility.md` for source pins, generation, sizes,
+measured differences and the separate actual SPTK comparison.
+
 `modeldef.json` covers two independent streams, default mixture count and stream weight, multiple mixtures, and duration constraints. `empty-c.hsmm` was generated from it by the original `shiro-mkhsmm.c` at SHIRO commit `203ef7b71bf382c8b5ce3f86b8116f63265e2711`, using its bundled cJSON and liblrhsmm commit `1df92da4b77377f4725509e7240a9107ed4c063b` built with `FP_TYPE=float`. The CLI test requires identical binary output from the Rust command.
 
 

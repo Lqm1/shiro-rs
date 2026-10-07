@@ -6,6 +6,12 @@ The port is in progress. The package links the local `ciglet-rs` and `liblrhsmm-
 
 The three repositories are independent sibling Cargo packages. Local path dependencies permit development before publishing versions.
 
+`shiro-fextr` now handles indexed WAV conversion and all three bundled xxcc
+extractors in Rust. The bundled SPTK workflow and custom Lua callbacks have
+host adapters. See `docs/batch-compatibility.md` for presets, original options,
+compatibility corrections, numerical comparisons and host verification limits.
+Ten other SHIRO tools remain pending.
+
 ```powershell
 cargo test
 cargo clippy --all-targets -- -D warnings

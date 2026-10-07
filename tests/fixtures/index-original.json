@@ -1,0 +1,10 @@
+[{
+    "path":"data/clip one",
+    "phonemes":["left","aa","bb","right"]
+  },{
+    "path":"data/sub/clip.two",
+    "phonemes":["left","cc","","dd","right"]
+  },{
+    "path":"data/silent",
+    "phonemes":["left","right"]
+  }]

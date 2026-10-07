@@ -1,6 +1,6 @@
 "UpstreamTool","Source","RustEquivalent","Status","Evidence"
 "shiro-align","shiro-align.c","","pending",""
-"shiro-fextr","shiro-fextr.lua","","pending",""
+"shiro-fextr","shiro-fextr.lua","shiro-fextr; batch and index modules","implemented","tests/batch.rs; tests/fextr_cli.rs; tests/index.rs; tests/host_extractors.rs; original Lua/C presets; actual SPTK 3.9-3 on Linux x86_64; other actual SPTK targets pending"
 "shiro-init","shiro-init.c","","pending",""
 "shiro-lab2seg","shiro-lab2seg.lua","","pending",""
 "shiro-mkhsmm","shiro-mkhsmm.c","shiro-mkhsmm","implemented","tests/definition.rs; tests/fixtures/empty-c.hsmm"

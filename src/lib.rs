@@ -4,6 +4,8 @@
 pub use ciglet_rs as dsp;
 pub use liblrhsmm_rs as hsmm;
 pub mod audio;
+pub mod batch;
 pub mod definition;
 pub mod features;
+pub mod index;
 pub mod rawfloat;
