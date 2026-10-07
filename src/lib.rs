@@ -17,3 +17,4 @@ pub mod rawfloat;
 pub mod segmentation;
 pub mod training;
 pub mod untying;
+pub mod utterances;

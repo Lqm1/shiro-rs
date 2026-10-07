@@ -1,0 +1,69 @@
+{
+  "file_list": [
+    {
+      "filename": "sample.param",
+      "states": [
+        {
+          "time": 8,
+          "dur": 0,
+          "out": [
+            0
+          ],
+          "jmp": [],
+          "ext": [
+            "sil",
+            0
+          ]
+        },
+        {
+          "time": 16,
+          "dur": 1,
+          "out": [
+            1
+          ],
+          "jmp": [],
+          "ext": [
+            "utt",
+            0
+          ]
+        },
+        {
+          "time": 24,
+          "dur": 0,
+          "out": [
+            0
+          ],
+          "jmp": [],
+          "ext": [
+            "sil",
+            0
+          ]
+        },
+        {
+          "time": 32,
+          "dur": 1,
+          "out": [
+            1
+          ],
+          "jmp": [],
+          "ext": [
+            "utt",
+            0
+          ]
+        },
+        {
+          "time": 40,
+          "dur": 0,
+          "out": [
+            0
+          ],
+          "jmp": [],
+          "ext": [
+            "sil",
+            0
+          ]
+        }
+      ]
+    }
+  ]
+}

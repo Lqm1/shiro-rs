@@ -1,0 +1,18 @@
+{
+  "phone_map":{
+    "sil":{
+      "states":[{
+          "dur":0,
+          "out":[0]
+        }],
+      "durfloor":[0.3]
+    },
+    "utt":{
+      "states":[{
+          "dur":1,
+          "out":[1]
+        }],
+      "durfloor":[0.3]
+    }
+  }
+}
