@@ -9,4 +9,6 @@ pub mod definition;
 pub mod features;
 pub mod index;
 pub mod labels;
+pub mod phonemap;
 pub mod rawfloat;
+pub mod segmentation;

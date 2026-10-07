@@ -1,0 +1,3 @@
+aa durfloor 0.071 durceil 0.403
+bb
+cc durfloor 0 durceil 1.3

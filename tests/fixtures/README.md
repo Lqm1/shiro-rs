@@ -1,5 +1,11 @@
 # Model creation fixture
 
+`phones-input.txt` and `phones-original.json` cover the original phone-map,
+model-definition and initial-segmentation tools. The seven cases include
+four named topologies, an unknown topology, weak skips and one/two-state
+phones. See `docs/phonemap-compatibility.md` for generation and the separate
+byte-identical original-C model comparison.
+
 The `labels-*` fixtures compare both label conversion tools to the unchanged
 original Lua programs. Only the segmentation fixture's machine-specific
 filename was normalized. Generation, source pin and comparison criteria
