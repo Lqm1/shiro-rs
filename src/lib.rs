@@ -1,6 +1,10 @@
 //! Phoneme-to-speech alignment toolkit, reimplemented from SHIRO.
 //! The complete upstream workflow is under development.
-#![forbid(unsafe_code)]
+#![deny(unsafe_code)]
+#![cfg_attr(not(feature = "c-api"), forbid(unsafe_code))]
+#[cfg(feature = "c-api")]
+#[allow(unsafe_code)]
+pub mod c_api;
 pub use ciglet_rs as dsp;
 pub use liblrhsmm_rs as hsmm;
 pub mod alignment;
