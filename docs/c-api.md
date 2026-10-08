@@ -3,10 +3,38 @@
 Build the optional interface with `cargo build --features c-api`. The package
 produces Rust, shared C and static C libraries from the same library target.
 The generated declarations are in `include/shiro_rs.h`; ABI version is 1.
-The current header declares 87 exports, twelve opaque owner types, eight settings
+The current header declares 95 exports, thirteen opaque owner types, ten settings
 and report descriptors, and one progress callback type.
 
 ## Current coverage
+
+### Standalone isolated groups
+
+Eight additional exports provide standalone native group splitting, an arbitrary
+complete-field constructor, length, position retrieval, independent observation
+and state snapshots, cloning and release. Both `first_state` and `first_frame`
+use target-width integers. Construction deep-copies every public native field
+in caller order and accepts empty collections and repeated input owners.
+It preserves arbitrary positions without imposing validation absent from the
+native public data structure. Splitting delegates native validation, phone-name
+and local-index grouping, frame-end capping and local jump filtering.
+State metadata and local times are retained even when the final sample interval
+is capped at the observation length.
+
+Focused Windows x86_64 Rust, optimized assertion-enabled C and Python callers
+pass. Tests compare original fixture positions and independent rawfloat slices,
+full state JSON, nested attributes, crossing-jump filtering and capped final
+intervals. Constructors retain full-width maximum position values and complete
+observation/state data; snapshots remain usable after parent and input owners
+are released. Invalid descriptors, oversized ranges, missing states and
+nonpositive intervals retain output slots. The focused Rust suite and Clippy
+pass. All five required native targets pass 46 suites and 86 tests per target,
+with no failed or ignored tests and all 14 original executable tests retained.
+All ten optimized C caller families pass on all five targets; all ten Python
+families pass on the three 64-bit targets. Both feature configurations pass
+formatting, Clippy and Rustdoc with warnings denied. Feature-disabled checks
+confirm all 95 ABI symbols are absent; generated-header and source-preservation
+verification pass. WASM remains required.
 
 The initial interface provides 13 exports: the ABI version, creation, length,
 copy, clone and release operations for byte and binary32 array owners, and

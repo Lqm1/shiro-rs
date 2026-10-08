@@ -24,6 +24,11 @@ typedef struct ShiroRsBytes ShiroRsBytes;
 typedef struct ShiroRsDataset ShiroRsDataset;
 
 /**
+ * Independent complete groups in original order.
+ */
+typedef struct ShiroRsIsolatedGroups ShiroRsIsolatedGroups;
+
+/**
  * Complete report. Callback reports are borrowed only for the callback; clone
  * before retaining one. Only constructor/getter/clone results may be released.
  */
@@ -178,6 +183,25 @@ typedef struct ShiroRsAssignment {
   uintptr_t file;
   uintptr_t segment;
 } ShiroRsAssignment;
+
+/**
+ * Every field needed to construct a native group. Owners are borrowed only
+ * during construction; the collection deep-copies observation and state data.
+ */
+typedef struct ShiroRsIsolatedGroupInput {
+  uintptr_t first_state;
+  uintptr_t first_frame;
+  const struct ShiroRsObservation *observation;
+  const struct ShiroRsStates *states;
+} ShiroRsIsolatedGroupInput;
+
+/**
+ * Both original target-width position fields of an isolated group.
+ */
+typedef struct ShiroRsIsolatedGroupInfo {
+  uintptr_t first_state;
+  uintptr_t first_frame;
+} ShiroRsIsolatedGroupInfo;
 
 /**
  * First revision of SHIRO's additive C interface.
@@ -1070,5 +1094,83 @@ uint32_t shiro_rs_untied_model_clone(const struct ShiroRsUntiedModel *owner,
  * null. Release requires exclusive access and transfers ownership.
  */
 uint32_t shiro_rs_untied_model_release(struct ShiroRsUntiedModel **slot);
+
+/**
+ * Construct arbitrary complete public native group fields in caller order.
+ * Empty collections and repeated input owners are permitted.
+ * # Safety
+ * Inputs are aligned initialized readable descriptors and live readable owners.
+ * Output is independent aligned writable storage holding no live owner on
+ * success. Inputs and failed outputs remain unchanged.
+ */
+uint32_t shiro_rs_isolated_groups_create(const struct ShiroRsIsolatedGroupInput *groups,
+                                         uintptr_t count,
+                                         struct ShiroRsIsolatedGroups **output);
+
+/**
+ * Split using native phone identity, boundary capping and local jump filtering.
+ * Preserve all groups, original positions, observation bits and state metadata.
+ * # Safety
+ * Inputs are live readable owners; output is independent aligned writable
+ * storage holding no live owner on success. Failed outputs remain unchanged.
+ */
+uint32_t shiro_rs_isolated_groups(const struct ShiroRsModel *model,
+                                  const struct ShiroRsObservation *observation,
+                                  const struct ShiroRsStates *states,
+                                  struct ShiroRsIsolatedGroups **output);
+
+/**
+ * Retrieve the ordered group count.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable storage.
+ */
+uint32_t shiro_rs_isolated_groups_length(const struct ShiroRsIsolatedGroups *groups,
+                                         uintptr_t *output);
+
+/**
+ * Copy both original position fields; an invalid index retains output.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable storage.
+ */
+uint32_t shiro_rs_isolated_groups_get_info(const struct ShiroRsIsolatedGroups *groups,
+                                           uintptr_t index,
+                                           struct ShiroRsIsolatedGroupInfo *output);
+
+/**
+ * Snapshot the complete observation into independent ownership.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable storage
+ * holding no live owner on success. Failed outputs remain unchanged.
+ */
+uint32_t shiro_rs_isolated_groups_get_observation(const struct ShiroRsIsolatedGroups *groups,
+                                                  uintptr_t index,
+                                                  struct ShiroRsObservation **output);
+
+/**
+ * Snapshot all states, including local times, jumps and extra metadata.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable storage
+ * holding no live owner on success. Failed outputs remain unchanged.
+ */
+uint32_t shiro_rs_isolated_groups_get_states(const struct ShiroRsIsolatedGroups *groups,
+                                             uintptr_t index,
+                                             struct ShiroRsStates **output);
+
+/**
+ * Deep-copy every original position, complete observation and full state sequence.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable storage
+ * holding no live owner on success. Failed outputs remain unchanged.
+ */
+uint32_t shiro_rs_isolated_groups_clone(const struct ShiroRsIsolatedGroups *groups,
+                                        struct ShiroRsIsolatedGroups **output);
+
+/**
+ * Release a unique owner and clear its slot; an empty slot succeeds.
+ * # Safety
+ * Slot is independent aligned writable storage holding a unique live owner or
+ * null. Release requires exclusive access and transfers ownership.
+ */
+uint32_t shiro_rs_isolated_groups_release(struct ShiroRsIsolatedGroups **slot);
 
 #endif  /* SHIRO_RS_H */
