@@ -24,6 +24,12 @@ typedef struct ShiroRsBytes ShiroRsBytes;
 typedef struct ShiroRsDataset ShiroRsDataset;
 
 /**
+ * Complete report. Callback reports are borrowed only for the callback; clone
+ * before retaining one. Only constructor/getter/clone results may be released.
+ */
+typedef struct ShiroRsIterationReport ShiroRsIterationReport;
+
+/**
  * Independent complete native model, including every stream and duration field.
  */
 typedef struct ShiroRsModel ShiroRsModel;
@@ -37,6 +43,16 @@ typedef struct ShiroRsObservation ShiroRsObservation;
  * Independent complete state sequence, including jumps and extra JSON metadata.
  */
 typedef struct ShiroRsStates ShiroRsStates;
+
+/**
+ * Independent ordered datasets, one per original file; each retains its groups.
+ */
+typedef struct ShiroRsTrainingFiles ShiroRsTrainingFiles;
+
+/**
+ * Independent complete trained model and every ordered iteration report.
+ */
+typedef struct ShiroRsTrainingResult ShiroRsTrainingResult;
 
 /**
  * All native alignment settings. Integer flags must be 0 or 1. Layout follows
@@ -68,6 +84,46 @@ typedef struct ShiroRsInitializationOptions {
   uint32_t globally_tied;
   float variance_floor_ratio;
 } ShiroRsInitializationOptions;
+
+/**
+ * All native training options. Flags/mode must be0/1; native numeric validation
+ * and per-iteration annealing temperature replacement remain unchanged.
+ */
+typedef struct ShiroRsTrainingOptions {
+  uintptr_t iterations;
+  /**
+   * 0 normal HSMM durations,1 geometric HMM durations.
+   */
+  uint32_t duration_mode;
+  float hsmm_temperature;
+  float duration_weight;
+  float state_radius;
+  uintptr_t duration_extra;
+  float duration_extra_factor;
+  float geometric_temperature;
+  float pruning_slope;
+  float termination_threshold;
+  uint32_t deterministic_annealing;
+  uint32_t mean_frame_likelihood;
+  uintptr_t workers;
+} ShiroRsTrainingOptions;
+
+/**
+ * Synchronous progress callback. Report is read-only and live only for this call.
+ * It may be queried or cloned, but must not be released or retained un-cloned.
+ * Callback must return normally without exceptions/unwinding across the C ABI;
+ * participating training input owners must not be mutated or released.
+ */
+typedef void (*ShiroRsProgressCallback)(void*, const struct ShiroRsIterationReport*);
+
+/**
+ * Exact native scalar report fields; nested file rows are retrieved separately.
+ */
+typedef struct ShiroRsIterationInfo {
+  uintptr_t iteration;
+  float temperature;
+  float mean_log_likelihood;
+} ShiroRsIterationInfo;
 
 /**
  * First revision of SHIRO's additive C interface.
@@ -501,5 +557,190 @@ uint32_t shiro_rs_initialize(const struct ShiroRsModel *model,
                              const struct ShiroRsDataset *dataset,
                              const struct ShiroRsInitializationOptions *options,
                              struct ShiroRsModel **output);
+
+/**
+ * Clone complete paired datasets into independent file order. Repeated and empty
+ * inputs are permitted; native training validates their applicability.
+ * # Safety
+ * Array is aligned initialized readable storage of count live owners from this
+ * library. Output is independent aligned writable storage holding no live owner
+ * on success. Inputs and failed outputs remain unchanged.
+ */
+uint32_t shiro_rs_training_files_create(const struct ShiroRsDataset *const *files,
+                                        uintptr_t count,
+                                        struct ShiroRsTrainingFiles **output);
+
+/**
+ * Load one complete paired dataset per original file, preserving isolated groups
+ * and file order via the unchanged native host loader. isolated must be0/1.
+ * # Safety
+ * Inputs are live readable owners. Output is independent aligned writable storage
+ * holding no live owner on success. Inputs and failed outputs remain unchanged.
+ */
+uint32_t shiro_rs_training_files_read_document(const struct ShiroRsModel *model,
+                                               const struct ShiroRsBytes *document,
+                                               uintptr_t maximum_frames,
+                                               uint32_t isolated,
+                                               struct ShiroRsTrainingFiles **output);
+
+/**
+ * Retrieve the ordered file count.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable storage.
+ */
+uint32_t shiro_rs_training_files_length(const struct ShiroRsTrainingFiles *files,
+                                        uintptr_t *output);
+
+/**
+ * Deep-copy one complete paired dataset, retaining all groups and scalar bits.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable storage
+ * holding no live owner on success. Failed outputs remain unchanged.
+ */
+uint32_t shiro_rs_training_files_get_dataset(const struct ShiroRsTrainingFiles *files,
+                                             uintptr_t index,
+                                             struct ShiroRsDataset **output);
+
+/**
+ * Deep-copy every ordered file and group.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable storage
+ * holding no live owner on success. Failed outputs remain unchanged.
+ */
+uint32_t shiro_rs_training_files_clone(const struct ShiroRsTrainingFiles *files,
+                                       struct ShiroRsTrainingFiles **output);
+
+/**
+ * Release unique files and clear their slot; empty slot succeeds.
+ * # Safety
+ * Slot is independent aligned writable storage holding a unique live owner or
+ * null. Release requires exclusive access and transfers ownership to this library.
+ */
+uint32_t shiro_rs_training_files_release(struct ShiroRsTrainingFiles **slot);
+
+/**
+ * Copy every unchanged native training default into the descriptor.
+ * # Safety
+ * Output is independent aligned exclusively writable descriptor storage.
+ */
+uint32_t shiro_rs_training_options_default(struct ShiroRsTrainingOptions *output);
+
+/**
+ * Train with every native setting, retaining all reports and the complete model.
+ * # Safety
+ * Inputs are live readable owners and options are initialized readable descriptor
+ * storage. Output is independent aligned writable storage holding no live owner
+ * on success. Inputs and failed output slots remain unchanged.
+ */
+uint32_t shiro_rs_train(const struct ShiroRsModel *model,
+                        const struct ShiroRsTrainingFiles *files,
+                        const struct ShiroRsTrainingOptions *options,
+                        struct ShiroRsTrainingResult **output);
+
+/**
+ * Train with synchronous progress after each model update and before report
+ * storage/stopping checks. Notifications already delivered are not rolled back
+ * if a later iteration fails. Null callback means no notifications.
+ * # Safety
+ * Inputs/options/output obey train's contract. Callback and context remain valid
+ * throughout the call and obey ShiroRsProgressCallback's borrowed-lifetime/no-unwind
+ * contract. Callback must not mutate/release participating training inputs.
+ */
+uint32_t shiro_rs_train_with_progress(const struct ShiroRsModel *model,
+                                      const struct ShiroRsTrainingFiles *files,
+                                      const struct ShiroRsTrainingOptions *options,
+                                      ShiroRsProgressCallback callback,
+                                      void *context,
+                                      struct ShiroRsTrainingResult **output);
+
+/**
+ * Retrieve the number of completed ordered iteration reports.
+ * # Safety
+ * Input is a live readable owner and output is independent aligned writable storage.
+ */
+uint32_t shiro_rs_training_result_length(const struct ShiroRsTrainingResult *training,
+                                         uintptr_t *output);
+
+/**
+ * Deep-copy every trained model parameter into independent storage.
+ * # Safety
+ * Input is a live readable owner. Output is independent aligned writable storage
+ * holding no live owner on success. Failed outputs remain unchanged.
+ */
+uint32_t shiro_rs_training_result_get_model(const struct ShiroRsTrainingResult *training,
+                                            struct ShiroRsModel **output);
+
+/**
+ * Deep-copy a complete report, including every ordered file/group likelihood.
+ * # Safety
+ * Input is a live readable owner. Output is independent aligned writable storage
+ * holding no live owner on success. Failed outputs remain unchanged.
+ */
+uint32_t shiro_rs_training_result_get_report(const struct ShiroRsTrainingResult *training,
+                                             uintptr_t index,
+                                             struct ShiroRsIterationReport **output);
+
+/**
+ * Deep-copy the complete model and every nested report field.
+ * # Safety
+ * Input is a live readable owner. Output is independent aligned writable storage
+ * holding no live owner on success. Failed outputs remain unchanged.
+ */
+uint32_t shiro_rs_training_result_clone(const struct ShiroRsTrainingResult *training,
+                                        struct ShiroRsTrainingResult **output);
+
+/**
+ * Release a unique training result and clear its slot; empty slot succeeds.
+ * # Safety
+ * Slot is independent aligned writable storage holding a unique live owner or
+ * null. Release requires exclusive access and transfers ownership to this library.
+ */
+uint32_t shiro_rs_training_result_release(struct ShiroRsTrainingResult **slot);
+
+/**
+ * Copy all exact native scalar report fields. Callback reports may be queried.
+ * # Safety
+ * Input is a live readable owned report or a live callback-borrowed report.
+ * Output is independent aligned writable descriptor storage.
+ */
+uint32_t shiro_rs_iteration_report_info(const struct ShiroRsIterationReport *report,
+                                        struct ShiroRsIterationInfo *output);
+
+/**
+ * Retrieve the original file count, retaining nested group boundaries.
+ * # Safety
+ * Input is a live readable owned/callback-borrowed report. Output is independent
+ * aligned writable storage.
+ */
+uint32_t shiro_rs_iteration_report_file_count(const struct ShiroRsIterationReport *report,
+                                              uintptr_t *output);
+
+/**
+ * Copy the complete binary32 group likelihood row for one original file.
+ * # Safety
+ * Input is a live readable owned/callback-borrowed report. Output is independent
+ * aligned writable storage holding no live owner on success; failures retain it.
+ */
+uint32_t shiro_rs_iteration_report_get_file(const struct ShiroRsIterationReport *report,
+                                            uintptr_t index,
+                                            struct ShiroRsArrayF32 **output);
+
+/**
+ * Clone a complete owned or callback-borrowed report into independent ownership.
+ * # Safety
+ * Input is a live readable owned/callback-borrowed report. Output is independent
+ * aligned writable storage holding no live owner on success; failures retain it.
+ */
+uint32_t shiro_rs_iteration_report_clone(const struct ShiroRsIterationReport *report,
+                                         struct ShiroRsIterationReport **output);
+
+/**
+ * Release a unique owned report and clear its slot; never release a callback's
+ * borrowed report. Empty slot succeeds.
+ * # Safety
+ * Slot holds a unique owned report from a getter/clone or null; aligned independent
+ * writable storage and exclusive access are required. Callback reports are excluded.
+ */
+uint32_t shiro_rs_iteration_report_release(struct ShiroRsIterationReport **slot);
 
 #endif  /* SHIRO_RS_H */

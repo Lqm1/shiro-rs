@@ -3,8 +3,8 @@
 Build the optional interface with `cargo build --features c-api`. The package
 produces Rust, shared C and static C libraries from the same library target.
 The generated declarations are in `include/shiro_rs.h`; ABI version is 1.
-The current header declares 40 exports, six opaque owner types and two settings
-descriptors.
+The current header declares 59 exports, nine opaque owner types, four settings
+and report descriptors, and one progress callback type.
 
 ## Current coverage
 
@@ -46,7 +46,8 @@ and all WASM bindings remain required.
 `native-binding-inventory.csv` separately lists the 35 explicit public native
 functions, including methods and host operations. Model definition construction
 and complete state-to-segmentation conversion and both alignment operations are
-implemented, as are native host dataset loading and initialization. Rawfloat and
+implemented, as are native host dataset loading, initialization and complete
+training with progress. Rawfloat and
 observation byte operations are present; stream callbacks and standalone model
 dimension retrieval remain pending. Other entries remain pending. Public types, fields, derived trait
 behavior and crate reexports require separate review; a function count alone
@@ -73,6 +74,43 @@ and Rust 2024's explicit unsafe attribute for symbol names. Panic containment
 applies to unwinding panics; it cannot recover from process aborts.
 
 ## Verification
+
+### Training interfaces
+
+Nineteen exports provide complete ordered training inputs, all thirteen native
+settings, training with or without synchronous progress, complete model/report
+results, independent snapshots, deep clones and releases. Each input dataset
+represents one original file and retains every embedded or isolated group.
+The host loader delegates to `dataset::load_training_files`. Results retain
+every iteration, temperature, mean likelihood and nested file/group likelihood.
+
+Mode and boolean flags accept integer codes 0 and 1. Other settings retain native
+validation. Both inference temperatures are replaced by the native per-iteration
+annealing schedule, including temperature 1 when annealing is disabled.
+Zero iterations retain the original model and produce no reports or callbacks.
+
+Progress runs after each model update and before report storage and stopping.
+The callback report is read-only and borrowed only for that invocation. It may
+be inspected or cloned, but only an owned clone or getter result may be released.
+Cloned reports survive the callback and training result. Callbacks must return
+normally without unwinding and must not mutate or release participating inputs.
+Already delivered notifications are retained if a later iteration fails.
+
+Focused Windows x86_64 Rust, optimized C and Python callers pass against all nine
+original C model/likelihood cases. Models match exact wire bytes; likelihoods
+use the established absolute tolerance of 1e-5. Tests cover full report fields,
+independent lifetimes, defaults, stopping, zero iterations and unchanged failure
+outputs. Rust additionally compares complete nondefault settings and ordered
+parallel reduction against independent native calls. Python saves and reloads
+trained models. Final combined initialization, training and inference acceptance
+and every remaining binding are still required. The five-target matrix passes
+42 suites and 78 tests per target, with no failed or ignored tests. All six C
+caller families pass all five targets; all six Python families pass the three
+64-bit targets. Feature isolation, Clippy and Rustdoc with warnings denied,
+generated-header verification and source-preservation checks pass. The i686 C
+oracle explicitly rounds its arithmetic to binary32 to avoid x87 excess
+precision during exact report comparisons. These checks use debug shared Rust
+libraries; release/static libraries and 32-bit Python remain unverified.
 
 ### Dataset and initialization interfaces
 
