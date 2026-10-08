@@ -81,6 +81,11 @@ typedef struct ShiroRsIsolatedGroups ShiroRsIsolatedGroups;
 typedef struct ShiroRsIterationReport ShiroRsIterationReport;
 
 /**
+ * Independent ordered native report collection, including every nested row.
+ */
+typedef struct ShiroRsIterationReports ShiroRsIterationReports;
+
+/**
  * Independent complete timed labels in original order.
  */
 typedef struct ShiroRsLabels ShiroRsLabels;
@@ -89,6 +94,11 @@ typedef struct ShiroRsLabels ShiroRsLabels;
  * Independent complete native model, including every stream and duration field.
  */
 typedef struct ShiroRsModel ShiroRsModel;
+
+/**
+ * Independent complete native definition; construction does not build a model.
+ */
+typedef struct ShiroRsModelDefinition ShiroRsModelDefinition;
 
 /**
  * Independent native observation, including every stream and every frame.
@@ -378,6 +388,36 @@ typedef struct ShiroRsBufferedReadStream {
   uint32_t (*fill)(void*, const uint8_t**, uintptr_t*);
   void (*consume)(void*, uintptr_t);
 } ShiroRsBufferedReadStream;
+
+/**
+ * Every native stream-definition field, with target-width dimensions and states.
+ */
+typedef struct ShiroRsStreamDefinition {
+  uintptr_t states;
+  uintptr_t dimensions;
+  uintptr_t mixtures;
+  float weight;
+} ShiroRsStreamDefinition;
+
+/**
+ * Complete native optional bounds; flags zero absent, one present.
+ */
+typedef struct ShiroRsDurationConstraint {
+  uintptr_t index;
+  uint32_t has_minimum;
+  int32_t minimum;
+  uint32_t has_maximum;
+  int32_t maximum;
+} ShiroRsDurationConstraint;
+
+/**
+ * Every top-level definition field; collections retain original ordering.
+ */
+typedef struct ShiroRsDefinitionInfo {
+  uintptr_t duration_states;
+  uintptr_t streams;
+  uintptr_t duration_constraints;
+} ShiroRsDefinitionInfo;
 
 /**
  * First revision of SHIRO's additive C interface.
@@ -2031,5 +2071,153 @@ uint32_t shiro_rs_batch_extract_file(const struct ShiroRsPath *stem,
                                      ShiroRsUniformCallback callback,
                                      void *context,
                                      struct ShiroRsBatchOutputs **output);
+
+/**
+ * Construct all native public fields without imposing model-building validation.
+ * Arbitrary target-width integers and every binary32 weight bit are retained.
+ * # Safety
+ * Descriptor arrays are initialized aligned readable ranges of the stated count;
+ * empty arrays permit null. Output is independent aligned writable storage holding
+ * no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_definition_create(uintptr_t duration_states,
+                                    const struct ShiroRsStreamDefinition *streams,
+                                    uintptr_t stream_count,
+                                    const struct ShiroRsDurationConstraint *constraints,
+                                    uintptr_t constraint_count,
+                                    struct ShiroRsModelDefinition **output);
+
+/**
+ * Retrieve every top-level scalar and collection length.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable storage.
+ */
+uint32_t shiro_rs_definition_get_info(const struct ShiroRsModelDefinition *definition,
+                                      struct ShiroRsDefinitionInfo *output);
+
+/**
+ * Copy every checked stream field without normalizing scalar values.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable storage.
+ * Failed output remains unchanged.
+ */
+uint32_t shiro_rs_definition_get_stream(const struct ShiroRsModelDefinition *definition,
+                                        uintptr_t index,
+                                        struct ShiroRsStreamDefinition *output);
+
+/**
+ * Copy every checked duration constraint, retaining optional bound presence.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable storage.
+ * Failed output remains unchanged.
+ */
+uint32_t shiro_rs_definition_get_constraint(const struct ShiroRsModelDefinition *definition,
+                                            uintptr_t index,
+                                            struct ShiroRsDurationConstraint *output);
+
+/**
+ * Read the original native JSON schema, including defaults and optional bounds.
+ * # Safety
+ * Bytes is a live readable owner; output is independent aligned writable storage
+ * holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_definition_read_json(const struct ShiroRsBytes *bytes,
+                                       struct ShiroRsModelDefinition **output);
+
+/**
+ * Write the original native JSON schema. Nonfinite weights fail rather than
+ * silently losing their bits through JSON null; typed getters retain every bit.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable storage
+ * holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_definition_write_json(const struct ShiroRsModelDefinition *definition,
+                                        struct ShiroRsBytes **output);
+
+/**
+ * Build a complete independent model using the native definition validation.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable storage
+ * holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_definition_build(const struct ShiroRsModelDefinition *definition,
+                                   struct ShiroRsModel **output);
+
+/**
+ * Deep-copy every public native definition field into independent ownership.
+ * # Safety
+ * Input is live and readable; output is independent aligned writable storage
+ * holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_definition_clone(const struct ShiroRsModelDefinition *definition,
+                                   struct ShiroRsModelDefinition **output);
+
+/**
+ * Release unique ownership and clear the slot; an empty slot succeeds.
+ * # Safety
+ * Slot is independent aligned writable storage holding a unique live owner or
+ * null; release requires exclusive access and transfers ownership.
+ */
+uint32_t shiro_rs_definition_release(struct ShiroRsModelDefinition **slot);
+
+/**
+ * Construct every native report field, retaining all binary32 bits and empty rows.
+ * Repeated immutable row owners are permitted; no training validation is imposed.
+ * # Safety
+ * Info is initialized aligned readable storage. Rows is an initialized readable
+ * pointer range for count live immutable array owners; empty input permits null.
+ * Output is independent aligned writable storage holding no live owner on success.
+ * Failed output remains unchanged.
+ */
+uint32_t shiro_rs_iteration_report_create(const struct ShiroRsIterationInfo *info,
+                                          const struct ShiroRsArrayF32 *const *rows,
+                                          uintptr_t count,
+                                          struct ShiroRsIterationReport **output);
+
+/**
+ * Copy complete reports in input order; repeated immutable owners are permitted.
+ * # Safety
+ * Input is aligned readable pointer storage for count live immutable report
+ * owners; empty input permits null. Output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_iteration_reports_create(const struct ShiroRsIterationReport *const *reports,
+                                           uintptr_t count,
+                                           struct ShiroRsIterationReports **output);
+
+/**
+ * Retrieve the complete ordered report count.
+ * # Safety
+ * Input is live and readable; output is independent aligned writable storage.
+ */
+uint32_t shiro_rs_iteration_reports_length(const struct ShiroRsIterationReports *reports,
+                                           uintptr_t *output);
+
+/**
+ * Snapshot every checked report field and nested row into independent ownership.
+ * # Safety
+ * Input is live and readable; output is independent aligned writable storage
+ * holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_iteration_reports_get(const struct ShiroRsIterationReports *reports,
+                                        uintptr_t index,
+                                        struct ShiroRsIterationReport **output);
+
+/**
+ * Deep-copy every ordered report field and nested row into independent ownership.
+ * # Safety
+ * Input is live and readable; output is independent aligned writable storage
+ * holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_iteration_reports_clone(const struct ShiroRsIterationReports *reports,
+                                          struct ShiroRsIterationReports **output);
+
+/**
+ * Release unique ownership and clear the slot; an empty slot succeeds.
+ * # Safety
+ * Slot is independent aligned writable storage holding a unique live owner or
+ * null; release requires exclusive access and transfers ownership.
+ */
+uint32_t shiro_rs_iteration_reports_release(struct ShiroRsIterationReports **slot);
 
 #endif  /* SHIRO_RS_H */

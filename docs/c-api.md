@@ -550,6 +550,34 @@ generated-header verification and native-source preservation checks pass.
 These checks use debug shared Rust libraries. Release libraries, static linking
 and Python on 32-bit targets have not been verified by this checkpoint.
 
+## Typed model definitions and report collections
+
+The definition owner retains every native duration count, stream field and
+optional integer bound. Its typed constructor and getters preserve target-width
+integers and every binary32 weight bit independently of model-build validation.
+JSON uses the original schema and defaults; writing nonfinite weights returns a
+native-input error rather than replacing them with JSON null. Build delegates to
+the existing native definition implementation.
+
+Individual reports can be constructed from complete iteration scalars and ordered
+likelihood row owners. Ordered report collections preserve empty rows, repeated
+inputs and every floating-point bit. Getters and clones return independent owners.
+These fifteen exports extend the header to 183 functions, 25 opaque owners and
+21 descriptors with ABI version 1.
+
+Focused Windows x86_64 Rust tests, optimized assert-enabled C and actual Python
+ctypes callers pass. All three original definition fixtures retain native defaults;
+two generated models match original C fixture bytes exactly. Tests also cover
+arbitrary public-field values, optional-bound presence, nested report rows,
+independent parent release and retained outputs on errors. The complete five-target
+matrix passes 55 suites and 113 tests per target, including all fourteen original
+tool tests, with no failed or ignored tests. All eighteen optimized assert-enabled
+C caller families pass all five targets; all eighteen Python caller families pass
+the three 64-bit targets. Both feature variants pass formatting, Clippy and Rustdoc
+with warnings denied; the feature-disabled library exposes none of the 183 C
+functions. Generated-header and native-source preservation checks pass.
+Full utterance workflows and all three WASM interfaces remain required.
+
 ## Primary references
 
 - [Native byte readers](https://doc.rust-lang.org/stable/std/io/trait.Read.html)

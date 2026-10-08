@@ -43,6 +43,10 @@ mod streams;
 pub use streams::*;
 mod batch;
 pub use batch::*;
+mod definitions;
+pub use definitions::*;
+mod reports;
+pub use reports::*;
 
 fn range<T>(pointer: *const T, count: usize) -> Result<(), u32> {
     if count > isize::MAX as usize / size_of::<T>().max(1) {
