@@ -116,6 +116,16 @@ typedef struct ShiroRsPath ShiroRsPath;
 typedef struct ShiroRsPhoneMap ShiroRsPhoneMap;
 
 /**
+ * Independent complete native document: ordered files and attributes.
+ */
+typedef struct ShiroRsSegmentationDocument ShiroRsSegmentationDocument;
+
+/**
+ * Independent complete native file: filename, ordered states and attributes.
+ */
+typedef struct ShiroRsSegmentedFile ShiroRsSegmentedFile;
+
+/**
  * Independent complete state sequence, including jumps and extra JSON metadata.
  */
 typedef struct ShiroRsStates ShiroRsStates;
@@ -420,6 +430,32 @@ typedef struct ShiroRsDefinitionInfo {
 } ShiroRsDefinitionInfo;
 
 /**
+ * Every native state field. Null outputs/jumps are absent, live empty values
+ * are present. Metadata is a JSON array; attributes is a JSON object. They are
+ * parsed independently without merging or overriding native fields.
+ */
+typedef struct ShiroRsStateInput {
+  double time;
+  uint32_t has_duration;
+  uintptr_t duration;
+  const struct ShiroRsArrayUsize *outputs;
+  const struct ShiroRsBytes *jumps;
+  const struct ShiroRsBytes *metadata;
+  const struct ShiroRsBytes *attributes;
+} ShiroRsStateInput;
+
+/**
+ * All typed scalars and optional presence flags for a checked native state.
+ */
+typedef struct ShiroRsStateInfo {
+  double time;
+  uint32_t has_duration;
+  uintptr_t duration;
+  uint32_t has_outputs;
+  uint32_t has_jumps;
+} ShiroRsStateInfo;
+
+/**
  * First revision of SHIRO's additive C interface.
  */
 uint32_t shiro_rs_abi_version(void);
@@ -690,6 +726,8 @@ uint32_t shiro_rs_states_read_json(const struct ShiroRsBytes *bytes, struct Shir
 
 /**
  * Serialize every typed state field and flattened additional JSON metadata.
+ * Nonfinite times fail instead of silently becoming JSON null; typed getters
+ * retain the original binary64 values.
  * # Safety
  * Input is a live readable owner. Output is independent aligned writable storage
  * holding no live owner and remains unchanged on error.
@@ -2219,5 +2257,196 @@ uint32_t shiro_rs_iteration_reports_clone(const struct ShiroRsIterationReports *
  * null; release requires exclusive access and transfers ownership.
  */
 uint32_t shiro_rs_iteration_reports_release(struct ShiroRsIterationReports **slot);
+
+/**
+ * Construct complete states in order, retaining every binary64 time bit and
+ * optional value. Construction does not perform alignment/training validation.
+ * # Safety
+ * Input is initialized aligned readable storage of count descriptors, with
+ * live immutable participating owners. Empty input permits null. Output is
+ * independent aligned writable storage holding no live owner on success.
+ * Failed output remains unchanged.
+ */
+uint32_t shiro_rs_states_create(const struct ShiroRsStateInput *values,
+                                uintptr_t count,
+                                struct ShiroRsStates **output);
+
+/**
+ * Retrieve the complete ordered state count.
+ * # Safety
+ * Input is live and readable; output is independent aligned writable storage.
+ */
+uint32_t shiro_rs_states_length(const struct ShiroRsStates *states, uintptr_t *output);
+
+/**
+ * Retrieve exact time, duration and optional presence flags. Absent duration
+ * returns scalar zero, distinct from a present zero via its presence flag.
+ * # Safety
+ * Input is live and readable; output is independent aligned writable storage.
+ * Invalid index leaves output unchanged.
+ */
+uint32_t shiro_rs_states_get_info(const struct ShiroRsStates *states,
+                                  uintptr_t index,
+                                  struct ShiroRsStateInfo *output);
+
+/**
+ * Snapshot complete outputs. Absent outputs or invalid index return two;
+ * present empty outputs produce an independent empty owner.
+ * # Safety
+ * Input is live and readable; output is independent aligned writable storage
+ * holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_states_get_outputs(const struct ShiroRsStates *states,
+                                     uintptr_t index,
+                                     struct ShiroRsArrayUsize **output);
+
+/**
+ * Snapshot one complete native JSON field: zero jumps, one metadata, two
+ * attributes. Each field is serialized independently, preserving reserved
+ * attribute names without merging them into typed state fields. Absent jumps,
+ * invalid index or invalid field code return two and retain failed output.
+ * # Safety
+ * Input is live and readable; output is independent aligned writable storage
+ * holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_states_get_json_field(const struct ShiroRsStates *states,
+                                        uintptr_t index,
+                                        uint32_t field,
+                                        struct ShiroRsBytes **output);
+
+/**
+ * Copy every native file field. Filename is full UTF-8, including embedded NUL;
+ * attributes is a JSON object decoded separately from the typed fields.
+ * Construction does not impose alignment or training validation.
+ * # Safety
+ * Inputs are live immutable owners. Output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_segmented_file_create(const struct ShiroRsBytes *filename,
+                                        const struct ShiroRsStates *states,
+                                        const struct ShiroRsBytes *attributes,
+                                        struct ShiroRsSegmentedFile **output);
+
+/**
+ * Snapshot the complete UTF-8 filename into an independent byte owner.
+ * # Safety
+ * Input is a live immutable owner. Output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_segmented_file_get_filename(const struct ShiroRsSegmentedFile *file,
+                                              struct ShiroRsBytes **output);
+
+/**
+ * Snapshot all ordered state fields without JSON conversion or time normalization.
+ * # Safety
+ * Input is a live immutable owner. Output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_segmented_file_get_states(const struct ShiroRsSegmentedFile *file,
+                                            struct ShiroRsStates **output);
+
+/**
+ * Snapshot complete attributes as a JSON object without merging reserved keys.
+ * # Safety
+ * Input is a live immutable owner. Output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_segmented_file_get_attributes(const struct ShiroRsSegmentedFile *file,
+                                                struct ShiroRsBytes **output);
+
+/**
+ * Deep-copy all native file fields into independent ownership.
+ * # Safety
+ * Input is a live immutable owner. Output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_segmented_file_clone(const struct ShiroRsSegmentedFile *file,
+                                       struct ShiroRsSegmentedFile **output);
+
+/**
+ * Release unique ownership and clear the slot; an empty slot succeeds.
+ * # Safety
+ * Slot is independent aligned writable storage holding a unique live owner or
+ * null; release requires exclusive access and transfers ownership.
+ */
+uint32_t shiro_rs_segmented_file_release(struct ShiroRsSegmentedFile **slot);
+
+/**
+ * Construct all ordered native files and attributes without workflow validation.
+ * Repeated immutable file owners are permitted; attributes is a JSON object
+ * decoded independently rather than merged into the typed file list.
+ * # Safety
+ * Files is an initialized aligned readable pointer range for count live
+ * immutable owners; empty input permits null. Attributes is a live immutable
+ * byte owner. Output is independent aligned writable storage holding no live
+ * owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_document_create(const struct ShiroRsSegmentedFile *const *files,
+                                  uintptr_t count,
+                                  const struct ShiroRsBytes *attributes,
+                                  struct ShiroRsSegmentationDocument **output);
+
+/**
+ * Retrieve the complete ordered file count.
+ * # Safety
+ * Input is live and readable; output is independent aligned writable storage.
+ */
+uint32_t shiro_rs_document_length(const struct ShiroRsSegmentationDocument *document,
+                                  uintptr_t *output);
+
+/**
+ * Snapshot every checked file field into independent ownership.
+ * # Safety
+ * Input is a live immutable owner. Output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_document_get_file(const struct ShiroRsSegmentationDocument *document,
+                                    uintptr_t index,
+                                    struct ShiroRsSegmentedFile **output);
+
+/**
+ * Snapshot complete document attributes independently of the typed file list.
+ * # Safety
+ * Input is a live immutable owner. Output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_document_get_attributes(const struct ShiroRsSegmentationDocument *document,
+                                          struct ShiroRsBytes **output);
+
+/**
+ * Read the complete original native segmentation JSON schema.
+ * # Safety
+ * Input is a live immutable byte owner. Output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_document_read_json(const struct ShiroRsBytes *bytes,
+                                     struct ShiroRsSegmentationDocument **output);
+
+/**
+ * Write the original schema. Nonfinite state times fail rather than silently
+ * becoming JSON null; typed file/state getters preserve their binary64 bits.
+ * # Safety
+ * Input is a live immutable owner. Output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_document_write_json(const struct ShiroRsSegmentationDocument *document,
+                                      struct ShiroRsBytes **output);
+
+/**
+ * Deep-copy every ordered file, state and attribute into independent ownership.
+ * # Safety
+ * Input is a live immutable owner. Output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_document_clone(const struct ShiroRsSegmentationDocument *document,
+                                 struct ShiroRsSegmentationDocument **output);
+
+/**
+ * Release unique ownership and clear the slot; an empty slot succeeds.
+ * # Safety
+ * Slot is independent aligned writable storage holding a unique live owner or
+ * null; release requires exclusive access and transfers ownership.
+ */
+uint32_t shiro_rs_document_release(struct ShiroRsSegmentationDocument **slot);
 
 #endif  /* SHIRO_RS_H */

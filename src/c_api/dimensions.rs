@@ -8,7 +8,7 @@ use std::io;
 
 /// Independently owned target-width unsigned integers.
 pub struct ShiroRsArrayUsize {
-    values: Vec<usize>,
+    pub(super) values: Vec<usize>,
 }
 
 fn copied(values: &[usize]) -> io::Result<Vec<usize>> {

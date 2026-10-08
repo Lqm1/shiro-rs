@@ -578,6 +578,34 @@ with warnings denied; the feature-disabled library exposes none of the 183 C
 functions. Generated-header and native-source preservation checks pass.
 Full utterance workflows and all three WASM interfaces remain required.
 
+## Typed states and segmentation documents
+
+Typed state construction and getters retain binary64 time bits, optional
+target-width duration, optional output rows and jumps, metadata and attributes.
+Absent values remain distinct from present empty rows. JSON fields are decoded
+independently so attributes with reserved names do not overwrite typed fields.
+File owners retain full UTF-8 filenames, ordered states and attributes; document
+owners retain ordered files and attributes. Snapshots and clones are independent.
+
+The nineteen new functions extend the generated header to 202 exports. Original
+state/document JSON remains available; writers reject nonfinite times instead
+of silently emitting null. Typed access preserves those times. Focused Windows
+x86_64 tests compare four original C document fixtures with full typed
+reconstruction and every native field. Arbitrary-field tests cover nonfinite
+times, full-width output values, reserved attributes, Unicode/NUL filenames,
+repeated files and independent lifetimes. All seven focused new/existing Rust
+tests, Clippy, Rustdoc and actual Python calls of all nineteen exports pass.
+All nineteen optimized assert-enabled C caller families pass all five targets;
+all nineteen Python caller families pass the three 64-bit targets. The complete
+matrix passes 57 suites and 117 tests per target with no failed or ignored tests,
+including all fourteen original tool tests. Both feature variants pass formatting,
+Clippy and Rustdoc with warnings denied, generated-header verification and the
+feature-disabled library's absence of all 202 functions. Source preservation
+checks confirm unchanged native algorithms, dependencies, fixtures and all old
+183 C declarations; the optional array field visibility and nonfinite state JSON
+writer guard are the only changes to existing optional implementation modules.
+Full utterance workflows and all WASM interfaces remain required.
+
 ## Primary references
 
 - [Native byte readers](https://doc.rust-lang.org/stable/std/io/trait.Read.html)

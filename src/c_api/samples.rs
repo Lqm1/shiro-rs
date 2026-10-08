@@ -155,6 +155,8 @@ pub unsafe extern "C" fn shiro_rs_states_read_json(
 }
 
 /// Serialize every typed state field and flattened additional JSON metadata.
+/// Nonfinite times fail instead of silently becoming JSON null; typed getters
+/// retain the original binary64 values.
 /// # Safety
 /// Input is a live readable owner. Output is independent aligned writable storage
 /// holding no live owner and remains unchanged on error.
@@ -169,6 +171,9 @@ pub unsafe extern "C" fn shiro_rs_states_write_json(
     // SAFETY: Live readable owner and independent output slot.
     unsafe {
         result(output, || {
+            if (*states).value.iter().any(|state| !state.time.is_finite()) {
+                return Err(io::Error::other("JSON requires finite state times"));
+            }
             let values = serde_json::to_vec(&(*states).value).map_err(io::Error::other)?;
             Ok(Box::into_raw(Box::new(ShiroRsBytes { values })))
         })
