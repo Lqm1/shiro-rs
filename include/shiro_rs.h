@@ -44,6 +44,11 @@ typedef struct ShiroRsDitherSequence ShiroRsDitherSequence;
 typedef struct ShiroRsFeatures ShiroRsFeatures;
 
 /**
+ * Independent ordered native index entries with every field retained.
+ */
+typedef struct ShiroRsIndexEntries ShiroRsIndexEntries;
+
+/**
  * Independent complete groups in original order.
  */
 typedef struct ShiroRsIsolatedGroups ShiroRsIsolatedGroups;
@@ -83,6 +88,11 @@ typedef struct ShiroRsPhoneMap ShiroRsPhoneMap;
  * Independent complete state sequence, including jumps and extra JSON metadata.
  */
 typedef struct ShiroRsStates ShiroRsStates;
+
+/**
+ * Independent ordered UTF-8 strings, including empty and embedded NUL strings.
+ */
+typedef struct ShiroRsStrings ShiroRsStrings;
 
 /**
  * Independent ordered datasets, one per original file; each retains its groups.
@@ -302,6 +312,14 @@ typedef struct ShiroRsWaveInfo {
  * Null is allowed when native preparation needs no draw; otherwise it fails.
  */
 typedef uint32_t (*ShiroRsUniformCallback)(void*, float*);
+
+/**
+ * Full native entry fields. Construction deep-copies both readable owners.
+ */
+typedef struct ShiroRsIndexEntryInput {
+  const struct ShiroRsPath *stem;
+  const struct ShiroRsStrings *phonemes;
+} ShiroRsIndexEntryInput;
 
 /**
  * First revision of SHIRO's additive C interface.
@@ -1558,5 +1576,119 @@ uint32_t shiro_rs_path_clone(const struct ShiroRsPath *path, struct ShiroRsPath 
  * null. Release requires exclusive access and transfers ownership.
  */
 uint32_t shiro_rs_path_release(struct ShiroRsPath **slot);
+
+/**
+ * Deep-copy complete strings in input order. Repeated owners are permitted.
+ * # Safety
+ * Input is readable aligned pointer storage for count live immutable byte
+ * owners; empty input permits null. Output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_strings_create(const struct ShiroRsBytes *const *values,
+                                 uintptr_t count,
+                                 struct ShiroRsStrings **output);
+
+/**
+ * Retrieve the complete ordered string count.
+ * # Safety
+ * Input is a live readable owner and output independent aligned writable storage.
+ */
+uint32_t shiro_rs_strings_length(const struct ShiroRsStrings *strings, uintptr_t *output);
+
+/**
+ * Snapshot every UTF-8 byte of a checked string into independent ownership.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable storage
+ * holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_strings_get(const struct ShiroRsStrings *strings,
+                              uintptr_t index,
+                              struct ShiroRsBytes **output);
+
+/**
+ * Deep-copy all strings into ownership independent of the source lifetime.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable storage
+ * holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_strings_clone(const struct ShiroRsStrings *strings,
+                                struct ShiroRsStrings **output);
+
+/**
+ * Release unique ownership and clear the slot; an empty slot succeeds.
+ * # Safety
+ * Slot is independent aligned writable storage holding a unique live owner or
+ * null. Release requires exclusive access and transfers ownership.
+ */
+uint32_t shiro_rs_strings_release(struct ShiroRsStrings **slot);
+
+/**
+ * Deep-copy complete native entries in order without restricting public fields.
+ * # Safety
+ * Input is readable aligned storage for count descriptors containing live
+ * immutable owners; empty input permits null. Output is independent aligned
+ * writable storage holding no live owner on success. Failed output is unchanged.
+ */
+uint32_t shiro_rs_index_entries_create(const struct ShiroRsIndexEntryInput *entries,
+                                       uintptr_t count,
+                                       struct ShiroRsIndexEntries **output);
+
+/**
+ * Retrieve the complete ordered entry count.
+ * # Safety
+ * Input is a live readable owner and output independent aligned writable storage.
+ */
+uint32_t shiro_rs_index_entries_length(const struct ShiroRsIndexEntries *entries,
+                                       uintptr_t *output);
+
+/**
+ * Snapshot every native path unit of a checked entry into independent ownership.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable storage
+ * holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_index_entries_get_stem(const struct ShiroRsIndexEntries *entries,
+                                         uintptr_t index,
+                                         struct ShiroRsPath **output);
+
+/**
+ * Snapshot all phonemes of a checked entry in order into independent ownership.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable storage
+ * holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_index_entries_get_phonemes(const struct ShiroRsIndexEntries *entries,
+                                             uintptr_t index,
+                                             struct ShiroRsStrings **output);
+
+/**
+ * Deep-copy every complete entry into ownership independent of the source.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable storage
+ * holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_index_entries_clone(const struct ShiroRsIndexEntries *entries,
+                                      struct ShiroRsIndexEntries **output);
+
+/**
+ * Release unique ownership and clear the slot; an empty slot succeeds.
+ * # Safety
+ * Slot is independent aligned writable storage holding a unique live owner or
+ * null. Release requires exclusive access and transfers ownership.
+ */
+uint32_t shiro_rs_index_entries_release(struct ShiroRsIndexEntries **slot);
+
+/**
+ * Parse complete index bytes using native directory joins and phoneme padding.
+ * Blank rows, CRLF, literal spaces and physical-line errors follow native read.
+ * # Safety
+ * Inputs are live readable owners; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_index_read_bytes(const struct ShiroRsBytes *bytes,
+                                   const struct ShiroRsPath *directory,
+                                   const struct ShiroRsStrings *left,
+                                   const struct ShiroRsStrings *right,
+                                   struct ShiroRsIndexEntries **output);
 
 #endif  /* SHIRO_RS_H */

@@ -3,10 +3,42 @@
 Build the optional interface with `cargo build --features c-api`. The package
 produces Rust, shared C and static C libraries from the same library target.
 The generated declarations are in `include/shiro_rs.h`; ABI version is 1.
-The current header declares 127 exports, eighteen opaque owner types, fourteen
+The current header declares 139 exports, twenty opaque owner types, fifteen
 settings and report descriptors, and progress and uniform callback types.
 
 ## Current coverage
+
+### Complete index fields and phoneme padding
+
+Twelve additional exports introduce independent ordered string and index-entry
+owners. String construction accepts an array of byte owners, validates every
+complete UTF-8 string, and retains empty strings, embedded NUL, whitespace and
+repeated inputs. Count, independent byte snapshots, deep clone and release expose
+the full collection. Entry construction accepts every native field: a complete
+native path and an ordered phoneme collection. It imposes no filesystem or
+phoneme-content restrictions beyond those of the native public fields. Count,
+independent path and phoneme snapshots, deep clone and release retain all fields
+after source and parent release. An invalid late descriptor or string leaves
+the caller's output slot unchanged.
+
+The byte reader delegates `index::read` with complete directory and left/right
+padding inputs. Original literal-space tokenization, empty phoneme fields,
+skipped blank rows, CRLF, native path joins, invalid UTF-8 and physical-line
+format errors follow the native reader. Non-Unicode directory units remain
+intact in returned stems. No lossy path conversion is used.
+
+Focused Windows x86_64 Rust, optimized assertion-enabled C and Python tests pass
+all twelve exports. They compare every field of the original index fixture and
+exercise whitespace/NUL padding, non-Unicode paths, repeated owners, independent
+lifetimes, empty collections and retained outputs after errors. Clippy and the
+native-source preservation audit pass. The complete five-target matrix passes
+51 suites and 100 tests per target, with no failures or ignored tests. All fifteen
+C caller families pass all five targets, and all fifteen Python families pass
+the three 64-bit targets. Both feature variants pass formatting, Clippy and
+Rustdoc with warnings denied; disabled builds exclude all 139 exports and
+generated-header checks pass. This byte entry point does not complete
+generic `BufRead` support; stream callbacks, batch extraction, utterance workflows
+and all WASM bindings remain required.
 
 ### Lossless native host paths
 
