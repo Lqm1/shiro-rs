@@ -21,6 +21,33 @@ CLI, filesystem and external Lua/SPTK operations as specified in ADR 0007.
 
 ## Ownership and errors
 
+### Model interface
+
+Five additional exports create a SHIRO-owned complete model from the original
+JSON definition, read model bytes with a cumulative array-entry limit, write
+model bytes with an explicit schema, clone all parameters and release the owner.
+They delegate to `ModelDefinition::build` and the unchanged native model codecs.
+Encoding 0 includes variance-floor fields. Encoding 1 uses the older schema and
+rejects nonzero variance floors. Reading rejects trailing bytes and accepts both
+historical schemas. The interface retains every stream and duration field.
+
+Rust, optimized C and Python callers pass against the
+original empty C model, CMU Arctic pretrained model, multistream initialized
+model, weighted model, DAEM trained model and utterance trained model. The full
+five-target matrix passes 38 suites and 65 tests per target with no failed or
+ignored tests. Both C caller families pass all five targets; both Python caller
+families pass the three 64-bit targets. Feature isolation and the quality gates
+also pass. Model generation covers the computation of `shiro-mkhsmm`; its native
+CLI still provides file and stdout handling. Remaining SHIRO workflow bindings
+and all WASM bindings remain required.
+
+`native-binding-inventory.csv` separately lists the 35 explicit public native
+functions, including methods and host operations. Model definition construction
+is implemented. Rawfloat byte operations are present; stream callbacks remain
+pending. All other entries remain pending. Public types, fields, derived trait
+behavior and crate reexports require separate review; a function count alone
+does not prove complete coverage.
+
 Inputs remain caller-owned. Copy operations write into caller-provided storage;
 the interface never returns a pointer into an internal vector. Release accepts
 an owner slot, clears it before dropping the owner, and accepts an empty slot.

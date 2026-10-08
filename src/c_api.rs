@@ -11,6 +11,8 @@ use std::{
 
 mod buffers;
 pub use buffers::*;
+mod models;
+pub use models::*;
 
 fn range<T>(pointer: *const T, count: usize) -> Result<(), u32> {
     if count > isize::MAX as usize / size_of::<T>().max(1) {

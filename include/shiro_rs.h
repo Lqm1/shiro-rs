@@ -19,6 +19,11 @@ typedef struct ShiroRsArrayF32 ShiroRsArrayF32;
 typedef struct ShiroRsBytes ShiroRsBytes;
 
 /**
+ * Independent complete native model, including every stream and duration field.
+ */
+typedef struct ShiroRsModel ShiroRsModel;
+
+/**
  * First revision of SHIRO's additive C interface.
  */
 uint32_t shiro_rs_abi_version(void);
@@ -180,5 +185,52 @@ uint32_t shiro_rs_rawfloat_read_bytes(const uint8_t *data,
  */
 uint32_t shiro_rs_rawfloat_write_bytes(const struct ShiroRsArrayF32 *handle,
                                        struct ShiroRsBytes **output);
+
+/**
+ * Build a model from the original UTF-8 JSON definition and its native defaults.
+ * # Safety
+ * Inputs are live owners created by this library. The output is independent,
+ * aligned writable storage holding no live owner; it remains unchanged on error.
+ */
+uint32_t shiro_rs_model_from_definition(const struct ShiroRsBytes *definition,
+                                        struct ShiroRsModel **output);
+
+/**
+ * Read a complete original model, reject trailing bytes and bound array entries.
+ * Supports historical models with and without variance-floor fields.
+ * # Safety
+ * Input is a live owner created by this library. The output is independent,
+ * aligned writable storage holding no live owner; it remains unchanged on error.
+ */
+uint32_t shiro_rs_model_read_bytes(const struct ShiroRsBytes *bytes,
+                                   uintptr_t maximum_array_entries,
+                                   struct ShiroRsModel **output);
+
+/**
+ * Write a complete original model. Encoding 0 includes variance floors; 1 omits
+ * them and rejects nonzero floors instead of losing parameters. Other codes fail.
+ * # Safety
+ * Input is a live readable owner. The output is independent aligned writable
+ * storage holding no live owner; it remains unchanged on error.
+ */
+uint32_t shiro_rs_model_write_bytes(const struct ShiroRsModel *model,
+                                    uint32_t encoding,
+                                    struct ShiroRsBytes **output);
+
+/**
+ * Clone every model parameter into independent storage.
+ * # Safety
+ * Input is a live readable owner. The output is independent aligned writable
+ * storage holding no live owner; it remains unchanged on error.
+ */
+uint32_t shiro_rs_model_clone(const struct ShiroRsModel *model, struct ShiroRsModel **output);
+
+/**
+ * Release a unique model and clear its initialized slot. An empty slot succeeds.
+ * # Safety
+ * Slot is independent aligned writable storage containing a unique live model
+ * from this library or null. No other call may use the model during release.
+ */
+uint32_t shiro_rs_model_release(struct ShiroRsModel **slot);
 
 #endif  /* SHIRO_RS_H */

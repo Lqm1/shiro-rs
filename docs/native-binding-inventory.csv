@@ -1,0 +1,36 @@
+Module,Function,SourceLine,CStatus,WasmStatus,Evidence
+alignment,align_states,56,pending,pending,Complete native C/WASM binding remains required
+alignment,align_document,72,pending,pending,Complete native C/WASM binding remains required
+audio,windows,19,pending,pending,Complete native C/WASM binding remains required
+audio,linux_gnu,24,pending,pending,Complete native C/WASM binding remains required
+audio,next_uniform,53,pending,pending,Complete native C/WASM binding remains required
+audio,prepare,78,pending,pending,Complete native C/WASM binding remains required
+batch,feature_options,72,pending,pending,Complete native C/WASM binding remains required
+batch,extract_file,142,pending,pending,Complete native C/WASM binding remains required
+dataset,dimensions,14,pending,pending,Complete native C/WASM binding remains required
+dataset,read_observation,36,pending,pending,Complete native C/WASM binding remains required
+dataset,read_segmentation,80,pending,pending,Complete native C/WASM binding remains required
+dataset,load,146,pending,pending,Complete native C/WASM binding remains required
+dataset,isolated_groups,181,pending,pending,Complete native C/WASM binding remains required
+dataset,load_training_files,261,pending,pending,Complete native C/WASM binding remains required
+definition,build,44,implemented,pending,model_from_definition; all original JSON fields/defaults; exact C model; tests/c_api_models.rs and C/Python callers
+features,extract,62,pending,pending,Complete native C/WASM binding remains required
+index,append_suffix,13,pending,pending,Complete native C/WASM binding remains required
+index,read,20,pending,pending,Complete native C/WASM binding remains required
+initialization,initialize,21,pending,pending,Complete native C/WASM binding remains required
+labels,output_path,12,pending,pending,Complete native C/WASM binding remains required
+labels,parse,93,pending,pending,Complete native C/WASM binding remains required
+labels,to_states,124,pending,pending,Complete native C/WASM binding remains required
+labels,from_states,176,pending,pending,Complete native C/WASM binding remains required
+labels,write,229,pending,pending,Complete native C/WASM binding remains required
+phonemap,create,30,pending,pending,Complete native C/WASM binding remains required
+phonemap,to_definition,117,pending,pending,Complete native C/WASM binding remains required
+rawfloat,read,6,partial,pending,Exact byte/array operations verified; generic stream callback interface remains pending
+rawfloat,write,45,partial,pending,Exact byte/array operations verified; generic stream callback interface remains pending
+segmentation,initial,20,pending,pending,Complete native C/WASM binding remains required
+training,train,50,pending,pending,Complete native C/WASM binding remains required
+training,train_with_progress,58,pending,pending,Complete native C/WASM binding remains required
+untying,untie,30,pending,pending,Complete native C/WASM binding remains required
+untying,write_summary,93,pending,pending,Complete native C/WASM binding remains required
+utterances,split_wave,25,pending,pending,Complete native C/WASM binding remains required
+utterances,split_features,116,pending,pending,Complete native C/WASM binding remains required

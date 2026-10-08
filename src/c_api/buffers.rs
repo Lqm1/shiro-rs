@@ -20,7 +20,7 @@ fn copied<T: Copy>(source: &[T]) -> io::Result<Vec<T>> {
     Ok(values)
 }
 
-unsafe fn release<T: RefUnwindSafe>(slot: *mut *mut T) -> u32 {
+pub(super) unsafe fn release<T: RefUnwindSafe>(slot: *mut *mut T) -> u32 {
     if let Err(status) = range(slot.cast_const(), 1) {
         return status;
     }
