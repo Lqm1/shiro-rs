@@ -3,10 +3,52 @@
 Build the optional interface with `cargo build --features c-api`. The package
 produces Rust, shared C and static C libraries from the same library target.
 The generated declarations are in `include/shiro_rs.h`; ABI version is 1.
-The current header declares 146 exports, twenty opaque owner types, eighteen
+The current header declares 168 exports, twenty-three opaque owner types, eighteen
 settings, report and IO descriptors, and progress and uniform callback types.
 
 ## Current coverage
+
+### Complete batch extraction fields and variants
+
+Twenty-two additional exports expose all three native presets, complete batch
+options, every extractor variant and all output paths. Preset codes zero, one
+and two select MFCC-DA, MFCC-DAE and PLPCC-DA. Feature settings are derived from
+the native preset. Batch options retain every audio field and complete UTF-8
+input suffix, including empty strings and NUL. Native numerical validation
+remains in extraction. Options have native defaults, full independent snapshots,
+deep clone and release.
+
+Extractor owners retain either the complete native preset, all three SPTK program
+paths or the Lua interpreter, script and executable directory. Variant-specific
+getters return range errors with unchanged outputs when that field is absent.
+All path snapshots preserve native units, including non-Unicode paths. Outputs
+retain raw, parameter and optional MFCC paths, including absence versus a present
+empty path. Arbitrary construction follows the native public fields without
+filesystem restrictions; snapshots and clones remain independent.
+
+File extraction delegates the full native workflow, including process execution,
+write order, output suffixes and caller-controlled uniform draws. Output storage
+is validated before file or callback effects. Failed output slots remain
+unchanged; files and RNG draws already consumed follow native behavior and are
+not rolled back.
+
+Focused Windows x86_64 Rust tests pass five cases and Clippy passes. They compare
+all three presets with original C raw/features, all feature/audio fields with
+native settings, non-Unicode/empty/NUL/repeated input ownership, complete output
+paths, optional presence, native option processing, controlled draw counts and
+validation/failure side effects. Actual Lua and SPTK protocol-fixture workflows
+pass, including process failures. Optimized assertion-enabled C and Python ctypes
+callers pass all twenty-two exports with full variant/field and original-fixture
+checks. The independent source audit confirms native code and all 146 previous
+C declarations are unchanged; the existing optional audio conversion is shared
+through module visibility only. The full five-target matrix passes 53 suites and
+110 tests per target, with no failures or ignored tests. All seventeen optimized
+C caller families pass all five targets, and all seventeen Python families pass
+the three 64-bit targets. Both feature variants pass formatting, Clippy and
+Rustdoc with warnings denied. Feature-disabled builds exclude all 168 exports,
+and generated-header verification passes. Protocol fixtures do not establish actual SPTK
+version compatibility on those platforms. Utterance workflows and all WASM
+interfaces remain required.
 
 ### Direct native streams
 
@@ -70,9 +112,8 @@ native-source preservation audit pass. The complete five-target matrix passes
 C caller families pass all five targets, and all fifteen Python families pass
 the three 64-bit targets. Both feature variants pass formatting, Clippy and
 Rustdoc with warnings denied; disabled builds exclude all 139 exports and
-generated-header checks pass. This byte entry point does not complete
-generic `BufRead` support; stream callbacks, batch extraction, utterance workflows
-and all WASM bindings remain required.
+generated-header checks pass. Direct `BufRead` support is verified by the later
+stream checkpoint above. Utterance workflows and all WASM bindings remain required.
 
 ### Lossless native host paths
 
@@ -100,8 +141,9 @@ no failed or ignored tests. All fourteen optimized C caller families pass all
 five targets, and all fourteen Python families pass the three 64-bit targets.
 Both feature variants pass formatting, Clippy and Rustdoc with warnings denied.
 Feature-disabled builds exclude all 127 exports; generated-header and native
-source-preservation checks pass. Complete index collections, generic input
-streams, batch extraction and utterance workflows remain required.
+source-preservation checks pass. Complete index collections, generic streams and
+batch extraction are verified by their later checkpoints above. Utterance
+workflows and all WASM bindings remain required.
 
 ### Complete audio preparation and legacy dither
 
@@ -271,9 +313,10 @@ and all WASM bindings remain required.
 functions, including methods and host operations. Model definition construction
 and complete state-to-segmentation conversion and both alignment operations are
 implemented, as are native host dataset loading, initialization and complete
-training with progress. Rawfloat and
-observation byte operations are present; stream callbacks and standalone model
-dimension retrieval remain pending. Other entries remain pending. Public types, fields, derived trait
+training with progress. Rawfloat and observation byte and stream operations,
+standalone dimensions, complete indices and batch extraction are implemented.
+The remaining two function mappings are utterance feature and waveform splitting.
+Public types, fields, derived trait
 behavior and crate reexports require separate review; a function count alone
 does not prove complete coverage.
 
@@ -318,8 +361,9 @@ The five-target matrix passes 45 suites and 84 tests per target, with no failed
 or ignored tests. All nine C caller families pass all five targets; all nine
 Python families pass the three 64-bit targets. Feature-disabled builds exclude
 all nine new exports. Formatting, Clippy and Rustdoc with warnings denied,
-generated-header verification and source-preservation checks pass. Generic
-summary-stream callbacks and all WASM bindings remain required.
+generated-header verification and source-preservation checks pass. Direct summary
+streams are verified by the later stream checkpoint above. All WASM bindings
+remain required.
 
 ### Timed labels and conversions
 
@@ -345,8 +389,8 @@ passes 44 suites and 82 tests per target, with no failed or ignored tests. All
 eight C caller families pass all five targets, and all eight Python families
 pass the three 64-bit targets. Feature-disabled builds exclude all eleven new
 exports. Formatting, Clippy and Rustdoc with warnings denied, generated-header
-verification and source-preservation checks pass. Generic output-stream
-callbacks and all WASM bindings remain required.
+verification and source-preservation checks pass. Direct output streams are
+verified by the later stream checkpoint above. All WASM bindings remain required.
 
 ### Phone maps and initial segmentation
 
@@ -436,8 +480,8 @@ caller families pass all five targets; all five Python caller families pass the
 three 64-bit targets. Feature isolation and quality gates pass. The initializer
 and document loader cover the computation and host loading of `shiro-init`;
 the existing native CLI retains argument, model-file and stdout handling.
-Training, isolated groups, ordered per-file datasets and progress
-callbacks remain required.
+Training, isolated groups, ordered per-file datasets and progress callbacks are
+verified by their later checkpoints in this document.
 
 ### Alignment interface
 
@@ -465,8 +509,8 @@ file checks retain outputs. The complete five-target matrix passes 40 suites and
 pass all five targets; all four Python caller families pass the three 64-bit
 targets. Feature isolation and quality gates pass. These operations cover the
 computation and host loading of `shiro-align`; its existing native CLI retains
-argument, model-file and stdout handling. Training and other pending workflows
-remain required.
+argument, model-file and stdout handling. Training is verified by its later
+checkpoint; utterance workflows and all WASM interfaces remain required.
 
 ### Observation and state interfaces
 
@@ -490,7 +534,8 @@ passes 39 suites and 68 tests per target with no failed or ignored tests. All
 three C caller families pass all five targets; all three Python caller families
 pass the three 64-bit targets. Feature isolation and quality gates pass. These
 interfaces do not complete alignment or training.
-Generic stream callbacks and the remaining host workflows are still required.
+Direct stream callbacks and batch workflows are verified by their later
+checkpoints; utterance workflows and all WASM interfaces remain required.
 
 The foundation passes the full native Rust suite and new ABI tests on
 x86_64/i686 Windows MSVC, x86_64 Windows GNU and x86_64/i686 Linux GNU:

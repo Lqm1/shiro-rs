@@ -41,6 +41,8 @@ mod index;
 pub use index::*;
 mod streams;
 pub use streams::*;
+mod batch;
+pub use batch::*;
 
 fn range<T>(pointer: *const T, count: usize) -> Result<(), u32> {
     if count > isize::MAX as usize / size_of::<T>().max(1) {

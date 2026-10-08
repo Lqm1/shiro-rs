@@ -30,6 +30,16 @@ typedef struct ShiroRsArrayUsize ShiroRsArrayUsize;
 typedef struct ShiroRsAudio ShiroRsAudio;
 
 /**
+ * Independent complete native batch settings and input suffix.
+ */
+typedef struct ShiroRsBatchOptions ShiroRsBatchOptions;
+
+/**
+ * Independent complete raw, parameter and optional MFCC output paths.
+ */
+typedef struct ShiroRsBatchOutputs ShiroRsBatchOutputs;
+
+/**
  * Independent owned u8 values; retrieve data through checked copies.
  */
 typedef struct ShiroRsBytes ShiroRsBytes;
@@ -43,6 +53,11 @@ typedef struct ShiroRsDataset ShiroRsDataset;
  * Exclusively mutable native legacy random sequence.
  */
 typedef struct ShiroRsDitherSequence ShiroRsDitherSequence;
+
+/**
+ * Independent complete Native, SPTK or Lua extractor.
+ */
+typedef struct ShiroRsExtractor ShiroRsExtractor;
 
 /**
  * All feature matrix fields in independent ownership.
@@ -1807,5 +1822,214 @@ uint32_t shiro_rs_index_read_stream(const struct ShiroRsBufferedReadStream *stre
  * and independent-context contract. No callback/context is retained.
  */
 uint32_t shiro_rs_write_stream_flush(const struct ShiroRsWriteStream *stream);
+
+/**
+ * All native settings for preset zero MFCC-DA, one MFCC-DAE, two PLPCC-DA.
+ * # Safety
+ * Output is independent aligned writable descriptor storage.
+ */
+uint32_t shiro_rs_batch_preset_feature_options(uint32_t code, struct ShiroRsFeatureOptions *output);
+
+/**
+ * Construct complete native default batch options.
+ * # Safety
+ * Output is independent aligned writable storage holding no live owner on success.
+ * Failed output remains unchanged.
+ */
+uint32_t shiro_rs_batch_options_default(struct ShiroRsBatchOptions **output);
+
+/**
+ * Construct every batch setting, retaining full UTF-8 including empty/NUL suffixes.
+ * Numerical audio validation remains native extraction's responsibility.
+ * # Safety
+ * Audio is aligned initialized readable metadata; suffix is a live readable byte
+ * owner. Output is independent aligned writable storage holding no live owner on
+ * success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_batch_options_create(const struct ShiroRsAudioOptions *audio,
+                                       const struct ShiroRsBytes *extension,
+                                       struct ShiroRsBatchOptions **output);
+
+/**
+ * Copy every audio setting, including optional-rate presence.
+ * # Safety
+ * Input is a live readable owner and output independent aligned writable storage.
+ */
+uint32_t shiro_rs_batch_options_get_audio(const struct ShiroRsBatchOptions *options,
+                                          struct ShiroRsAudioOptions *output);
+
+/**
+ * Snapshot every suffix byte into independent ownership.
+ * # Safety
+ * Input is live and readable; output is independent aligned writable storage
+ * holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_batch_options_get_input_extension(const struct ShiroRsBatchOptions *options,
+                                                    struct ShiroRsBytes **output);
+
+/**
+ * Deep-copy every native batch option into independent ownership.
+ * # Safety
+ * Input is live and readable; output is independent aligned writable storage
+ * holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_batch_options_clone(const struct ShiroRsBatchOptions *options,
+                                      struct ShiroRsBatchOptions **output);
+
+/**
+ * Release unique ownership and clear the slot; an empty slot succeeds.
+ * # Safety
+ * Slot is independent aligned writable storage holding a unique live owner or
+ * null; release requires exclusive access and transfers ownership.
+ */
+uint32_t shiro_rs_batch_options_release(struct ShiroRsBatchOptions **slot);
+
+/**
+ * Construct a native extractor with the complete selected preset.
+ * # Safety
+ * Output is independent aligned writable storage holding no live owner on success.
+ * Failed output remains unchanged.
+ */
+uint32_t shiro_rs_extractor_native(uint32_t code, struct ShiroRsExtractor **output);
+
+/**
+ * Construct SPTK with every default program path from the native implementation.
+ * # Safety
+ * Output is independent aligned writable storage holding no live owner on success.
+ * Failed output remains unchanged.
+ */
+uint32_t shiro_rs_extractor_sptk_default(struct ShiroRsExtractor **output);
+
+/**
+ * Construct all three SPTK program paths without Unicode conversion.
+ * # Safety
+ * All paths are live readable owners, including repeated inputs. Output is
+ * independent aligned writable storage holding no live owner on success.
+ * Failed output remains unchanged.
+ */
+uint32_t shiro_rs_extractor_sptk(const struct ShiroRsPath *frame,
+                                 const struct ShiroRsPath *mfcc,
+                                 const struct ShiroRsPath *delta,
+                                 struct ShiroRsExtractor **output);
+
+/**
+ * Construct the complete Lua interpreter, script and executable directory.
+ * # Safety
+ * All paths are live readable owners, including repeated inputs. Output is
+ * independent aligned writable storage holding no live owner on success.
+ * Failed output remains unchanged.
+ */
+uint32_t shiro_rs_extractor_lua(const struct ShiroRsPath *interpreter,
+                                const struct ShiroRsPath *script,
+                                const struct ShiroRsPath *executable_directory,
+                                struct ShiroRsExtractor **output);
+
+/**
+ * Retrieve variant zero native, one SPTK, two Lua.
+ * # Safety
+ * Input is live and readable; output is independent aligned writable storage.
+ */
+uint32_t shiro_rs_extractor_kind(const struct ShiroRsExtractor *extractor, uint32_t *output);
+
+/**
+ * Retrieve a native preset code; other extractor variants return range status.
+ * # Safety
+ * Input is live and readable; output is independent aligned writable storage.
+ * Failed output remains unchanged.
+ */
+uint32_t shiro_rs_extractor_get_preset(const struct ShiroRsExtractor *extractor, uint32_t *output);
+
+/**
+ * Snapshot path zero/one/two: SPTK frame/mfcc/delta or Lua interpreter/script/
+ * executable directory. Native extractors and invalid indices return range status.
+ * # Safety
+ * Input is live and readable; output is independent aligned writable storage
+ * holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_extractor_get_path(const struct ShiroRsExtractor *extractor,
+                                     uintptr_t index,
+                                     struct ShiroRsPath **output);
+
+/**
+ * Deep-copy every variant field into independent ownership.
+ * # Safety
+ * Input is live and readable; output is independent aligned writable storage
+ * holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_extractor_clone(const struct ShiroRsExtractor *extractor,
+                                  struct ShiroRsExtractor **output);
+
+/**
+ * Release unique ownership and clear the slot; an empty slot succeeds.
+ * # Safety
+ * Slot is independent aligned writable storage holding a unique live owner or
+ * null; release requires exclusive access and transfers ownership.
+ */
+uint32_t shiro_rs_extractor_release(struct ShiroRsExtractor **slot);
+
+/**
+ * Construct arbitrary complete Outputs fields without imposing filesystem rules.
+ * A null MFCC owner is absent; a live empty path is a present empty path.
+ * # Safety
+ * Required paths and optional nonnull MFCC are live readable owners. Output is
+ * independent aligned writable storage holding no live owner on success.
+ * Failed output remains unchanged.
+ */
+uint32_t shiro_rs_batch_outputs_create(const struct ShiroRsPath *raw,
+                                       const struct ShiroRsPath *parameters,
+                                       const struct ShiroRsPath *mfcc,
+                                       struct ShiroRsBatchOutputs **output);
+
+/**
+ * Retrieve exact optional MFCC presence as zero or one.
+ * # Safety
+ * Input is live and readable; output is independent aligned writable storage.
+ */
+uint32_t shiro_rs_batch_outputs_has_mfcc(const struct ShiroRsBatchOutputs *outputs,
+                                         uint32_t *output);
+
+/**
+ * Snapshot path zero raw, one parameters or two present MFCC. An absent MFCC
+ * or invalid index returns range status with output unchanged.
+ * # Safety
+ * Input is live and readable; output is independent aligned writable storage
+ * holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_batch_outputs_get_path(const struct ShiroRsBatchOutputs *outputs,
+                                         uintptr_t index,
+                                         struct ShiroRsPath **output);
+
+/**
+ * Deep-copy every output path and optional presence into independent ownership.
+ * # Safety
+ * Input is live and readable; output is independent aligned writable storage
+ * holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_batch_outputs_clone(const struct ShiroRsBatchOutputs *outputs,
+                                      struct ShiroRsBatchOutputs **output);
+
+/**
+ * Release unique ownership and clear the slot; an empty slot succeeds.
+ * # Safety
+ * Slot is independent aligned writable storage holding a unique live owner or
+ * null; release requires exclusive access and transfers ownership.
+ */
+uint32_t shiro_rs_batch_outputs_release(struct ShiroRsBatchOutputs **slot);
+
+/**
+ * Delegate the complete native file extraction workflow with every option/variant.
+ * Filesystem and RNG effects already performed are not rolled back after failure.
+ * # Safety
+ * Inputs are live immutable owners. Callback/context satisfy UniformCallback's
+ * synchronous non-unwinding independent-context contract. Output is independent
+ * aligned writable storage holding no live owner on success. Failed output
+ * remains unchanged and is validated before filesystem or callback effects.
+ */
+uint32_t shiro_rs_batch_extract_file(const struct ShiroRsPath *stem,
+                                     const struct ShiroRsBatchOptions *options,
+                                     const struct ShiroRsExtractor *extractor,
+                                     ShiroRsUniformCallback callback,
+                                     void *context,
+                                     struct ShiroRsBatchOutputs **output);
 
 #endif  /* SHIRO_RS_H */

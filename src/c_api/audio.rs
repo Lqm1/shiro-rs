@@ -52,7 +52,7 @@ impl From<AudioOptions> for ShiroRsAudioOptions {
     }
 }
 impl ShiroRsAudioOptions {
-    fn native(self) -> Result<AudioOptions, u32> {
+    pub(super) fn native(self) -> Result<AudioOptions, u32> {
         Ok(AudioOptions {
             normalize: match self.normalize {
                 0 => false,
