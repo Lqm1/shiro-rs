@@ -19,6 +19,11 @@ typedef struct ShiroRsArrayF32 ShiroRsArrayF32;
 typedef struct ShiroRsBytes ShiroRsBytes;
 
 /**
+ * Independent paired native observations and segmentations in sample order.
+ */
+typedef struct ShiroRsDataset ShiroRsDataset;
+
+/**
  * Independent complete native model, including every stream and duration field.
  */
 typedef struct ShiroRsModel ShiroRsModel;
@@ -54,6 +59,15 @@ typedef struct ShiroRsAlignmentOptions {
   float geometric_temperature;
   float pruning_slope;
 } ShiroRsAlignmentOptions;
+
+/**
+ * All native initializer settings. Flags must be 0 or 1.
+ */
+typedef struct ShiroRsInitializationOptions {
+  uint32_t flat_start;
+  uint32_t globally_tied;
+  float variance_floor_ratio;
+} ShiroRsInitializationOptions;
 
 /**
  * First revision of SHIRO's additive C interface.
@@ -396,5 +410,96 @@ uint32_t shiro_rs_align_document(const struct ShiroRsModel *model,
                                  const struct ShiroRsBytes *document,
                                  const struct ShiroRsAlignmentOptions *options,
                                  struct ShiroRsBytes **output);
+
+/**
+ * Deep-copy all observations and convert all state sequences using the model.
+ * Repeated owners are allowed; empty inputs create an empty paired dataset.
+ * # Safety
+ * Model and every array element are live readable owners from this library.
+ * Arrays are aligned initialized readable storage of sample_count elements.
+ * Output is independent aligned writable storage holding no live owner on success.
+ * Inputs remain unchanged; failed calls retain the initialized output slot.
+ */
+uint32_t shiro_rs_dataset_create(const struct ShiroRsModel *model,
+                                 const struct ShiroRsObservation *const *observations,
+                                 const struct ShiroRsStates *const *states,
+                                 uintptr_t sample_count,
+                                 struct ShiroRsDataset **output);
+
+/**
+ * Load a complete original JSON document with unchanged native filename/frame
+ * semantics. All samples remain paired in document order.
+ * # Safety
+ * Inputs are live readable owners. Output is independent aligned writable storage
+ * holding no live owner on success. Inputs and failed output slots remain unchanged.
+ */
+uint32_t shiro_rs_dataset_read_document(const struct ShiroRsModel *model,
+                                        const struct ShiroRsBytes *document,
+                                        uintptr_t maximum_frames,
+                                        struct ShiroRsDataset **output);
+
+/**
+ * Retrieve the paired sample count without borrowing internal storage.
+ * # Safety
+ * Input is a live readable owner and output is independent aligned writable storage.
+ */
+uint32_t shiro_rs_dataset_length(const struct ShiroRsDataset *dataset, uintptr_t *output);
+
+/**
+ * Retrieve a complete independent observation snapshot by sample index.
+ * # Safety
+ * Input is a live readable owner. Output is independent aligned writable storage
+ * holding no live owner on success. Failed outputs remain unchanged.
+ */
+uint32_t shiro_rs_dataset_get_observation(const struct ShiroRsDataset *dataset,
+                                          uintptr_t index,
+                                          struct ShiroRsObservation **output);
+
+/**
+ * Serialize every field of one complete segmentation in the original format.
+ * # Safety
+ * Input is a live readable owner. Output is independent aligned writable storage
+ * holding no live owner on success. Failed outputs remain unchanged.
+ */
+uint32_t shiro_rs_dataset_get_segmentation_bytes(const struct ShiroRsDataset *dataset,
+                                                 uintptr_t index,
+                                                 struct ShiroRsBytes **output);
+
+/**
+ * Deep-copy the complete paired dataset, retaining every scalar bit.
+ * # Safety
+ * Input is a live readable owner. Output is independent aligned writable storage
+ * holding no live owner on success. Failed outputs remain unchanged.
+ */
+uint32_t shiro_rs_dataset_clone(const struct ShiroRsDataset *dataset,
+                                struct ShiroRsDataset **output);
+
+/**
+ * Release a unique dataset and clear its slot. An empty slot succeeds.
+ * # Safety
+ * Slot is independent aligned initialized writable storage holding a unique live
+ * owner from this library or null. Release requires exclusive access.
+ */
+uint32_t shiro_rs_dataset_release(struct ShiroRsDataset **slot);
+
+/**
+ * Copy the unchanged native initializer defaults into caller storage.
+ * # Safety
+ * Output is independent aligned exclusively writable descriptor storage.
+ */
+uint32_t shiro_rs_initialization_options_default(struct ShiroRsInitializationOptions *output);
+
+/**
+ * Initialize all model parameters from the complete paired dataset. Inputs are
+ * never modified; native corpus fallback/tied/flat rounding corrections apply.
+ * # Safety
+ * Inputs are live readable owners and options are aligned initialized readable
+ * descriptor storage. Output is independent aligned writable storage holding no
+ * live owner on success. Failed outputs remain unchanged.
+ */
+uint32_t shiro_rs_initialize(const struct ShiroRsModel *model,
+                             const struct ShiroRsDataset *dataset,
+                             const struct ShiroRsInitializationOptions *options,
+                             struct ShiroRsModel **output);
 
 #endif  /* SHIRO_RS_H */

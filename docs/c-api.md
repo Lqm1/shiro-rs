@@ -3,8 +3,8 @@
 Build the optional interface with `cargo build --features c-api`. The package
 produces Rust, shared C and static C libraries from the same library target.
 The generated declarations are in `include/shiro_rs.h`; ABI version is 1.
-The current header declares 31 exports, five opaque owner types and one settings
-descriptor.
+The current header declares 40 exports, six opaque owner types and two settings
+descriptors.
 
 ## Current coverage
 
@@ -46,7 +46,7 @@ and all WASM bindings remain required.
 `native-binding-inventory.csv` separately lists the 35 explicit public native
 functions, including methods and host operations. Model definition construction
 and complete state-to-segmentation conversion and both alignment operations are
-implemented. Rawfloat and
+implemented, as are native host dataset loading and initialization. Rawfloat and
 observation byte operations are present; stream callbacks and standalone model
 dimension retrieval remain pending. Other entries remain pending. Public types, fields, derived trait
 behavior and crate reexports require separate review; a function count alone
@@ -73,6 +73,36 @@ and Rust 2024's explicit unsafe attribute for symbol names. Panic containment
 applies to unwinding panics; it cannot recover from process aborts.
 
 ## Verification
+
+### Dataset and initialization interfaces
+
+Nine exports provide complete paired dataset construction and host document
+loading, sample count, independent observation and segmentation snapshots,
+deep clone and release, initializer defaults and native initialization. Dataset
+construction accepts repeated input owners and any number of samples, including
+zero. All pointer elements are checked before conversion; output is published
+only after the whole dataset is built. Samples retain native document order.
+Native Dataset contains observations and numeric segmentations; retain the
+separate document/state owners when their JSON metadata is needed later.
+
+The initializer descriptor exposes flat start, global tying and variance floor
+ratio. Integer flags are checked before native conversion. All sample values and
+model parameters are processed by the unchanged native initializer, including
+corpus-wide fallback durations, boundary capping and binary32 flat-start rounding.
+Models, datasets and failed output slots remain unchanged.
+
+Focused Windows x86_64 Rust, optimized C and Python checks pass four original C
+model byte comparisons. Rust also verifies the original ten-frame model, multiple
+host samples, the corrected corpus fallback, full observation/segmentation fields,
+independent snapshot lifetimes, repeated inputs, empty datasets, late invalid
+samples and native/configuration errors. The complete five-target matrix passes
+41 suites and 74 tests per target with no failed or ignored tests. All five C
+caller families pass all five targets; all five Python caller families pass the
+three 64-bit targets. Feature isolation and quality gates pass. The initializer
+and document loader cover the computation and host loading of `shiro-init`;
+the existing native CLI retains argument, model-file and stdout handling.
+Training, isolated groups, ordered per-file datasets and progress
+callbacks remain required.
 
 ### Alignment interface
 

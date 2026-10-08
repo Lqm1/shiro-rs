@@ -17,6 +17,8 @@ mod samples;
 pub use samples::*;
 mod alignment;
 pub use alignment::*;
+mod initialization;
+pub use initialization::*;
 
 fn range<T>(pointer: *const T, count: usize) -> Result<(), u32> {
     if count > isize::MAX as usize / size_of::<T>().max(1) {
