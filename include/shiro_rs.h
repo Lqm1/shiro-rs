@@ -14,6 +14,11 @@
 typedef struct ShiroRsArrayF32 ShiroRsArrayF32;
 
 /**
+ * Independently owned target-width unsigned integers.
+ */
+typedef struct ShiroRsArrayUsize ShiroRsArrayUsize;
+
+/**
  * Independent owned u8 values; retrieve data through checked copies.
  */
 typedef struct ShiroRsBytes ShiroRsBytes;
@@ -1172,5 +1177,61 @@ uint32_t shiro_rs_isolated_groups_clone(const struct ShiroRsIsolatedGroups *grou
  * null. Release requires exclusive access and transfers ownership.
  */
 uint32_t shiro_rs_isolated_groups_release(struct ShiroRsIsolatedGroups **slot);
+
+/**
+ * Copy every integer without narrowing or restricting its value.
+ * # Safety
+ * Input is aligned initialized readable storage for the stated count; empty
+ * input permits null. Output is independent aligned writable storage holding
+ * no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_array_usize_create(const uintptr_t *values,
+                                     uintptr_t count,
+                                     struct ShiroRsArrayUsize **output);
+
+/**
+ * Retrieve the complete ordered value count.
+ * # Safety
+ * Input is a live readable owner and output independent aligned writable storage.
+ */
+uint32_t shiro_rs_array_usize_length(const struct ShiroRsArrayUsize *values, uintptr_t *output);
+
+/**
+ * Copy a complete checked range, retaining the output buffer on failure.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable
+ * storage for the stated count and must not alias input. Empty output permits
+ * null. Neither participating owner nor storage may be mutated concurrently.
+ */
+uint32_t shiro_rs_array_usize_copy(const struct ShiroRsArrayUsize *values,
+                                   uintptr_t offset,
+                                   uintptr_t *output,
+                                   uintptr_t count);
+
+/**
+ * Deep-copy all integers into an owner independent of the source lifetime.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_array_usize_clone(const struct ShiroRsArrayUsize *values,
+                                    struct ShiroRsArrayUsize **output);
+
+/**
+ * Release unique ownership and clear the slot; an empty slot succeeds.
+ * # Safety
+ * Slot is independent aligned writable storage holding a unique live owner
+ * or null. Release requires exclusive access and transfers ownership.
+ */
+uint32_t shiro_rs_array_usize_release(struct ShiroRsArrayUsize **slot);
+
+/**
+ * Retrieve every model stream dimension in original order with native validation.
+ * # Safety
+ * Model is a live readable owner; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_model_dimensions(const struct ShiroRsModel *model,
+                                   struct ShiroRsArrayUsize **output);
 
 #endif  /* SHIRO_RS_H */

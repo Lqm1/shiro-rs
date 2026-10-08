@@ -7,7 +7,7 @@ audio,next_uniform,53,pending,pending,Complete native C/WASM binding remains req
 audio,prepare,78,pending,pending,Complete native C/WASM binding remains required
 batch,feature_options,72,pending,pending,Complete native C/WASM binding remains required
 batch,extract_file,142,pending,pending,Complete native C/WASM binding remains required
-dataset,dimensions,14,partial,pending,Complete Native dimensions used in observation_from_model_rawfloat; standalone dimension result retrieval pending
+dataset,dimensions,14,implemented,pending,"Standalone complete ordered model dimensions and full-width unsigned owned array; original models/heterogeneous-width definition, independent snapshots/copy ranges/maximum integers/failures; Rust/C all5 and Python3x64"
 dataset,read_observation,36,partial,pending,observation_read_rawfloat explicit dimensions and from_model_rawfloat; complete Native deinterleaving/budget semantics; generic stream callbacks pending
 dataset,read_segmentation,80,implemented,pending,states_segmentation_bytes; all state/model inputs and complete legacy output; Native full fields and independent C/Python wire oracle; all5 targets
 dataset,load,146,implemented,pending,"Complete Native host dataset loader/initializer via same named C workflow; full sample fields and3 settings, original4 C model bytes,10-frame and corrected fallback Rust checks; Rust/C all5 and Python3x64"

@@ -3,10 +3,35 @@
 Build the optional interface with `cargo build --features c-api`. The package
 produces Rust, shared C and static C libraries from the same library target.
 The generated declarations are in `include/shiro_rs.h`; ABI version is 1.
-The current header declares 95 exports, thirteen opaque owner types, ten settings
+The current header declares 101 exports, fourteen opaque owner types, ten settings
 and report descriptors, and one progress callback type.
 
 ## Current coverage
+
+### Standalone dimensions and target-width arrays
+
+Six additional exports expose the native ordered model dimensions and an
+independent unsigned target-width array with creation, length, checked range
+copy, cloning and release. Model dimension retrieval delegates
+`dataset::dimensions`, preserving its validation and stream order. Arbitrary
+array construction retains every integer bit, including zero and the largest
+target-width value; it does not impose model dimension constraints on an array.
+Copies validate the entire range before writing and preserve output buffers
+on errors. No pointer into internal storage escapes.
+
+Focused Windows x86_64 Rust, optimized assertion-enabled C and Python checks
+pass. Original models and a three-stream definition with widths 7, 1 and 19
+verify the complete ordered result. Tests cover repeated independent model
+snapshots, release of input owners, full-width maximum values, subrange copying,
+overflow and bounds failures, null and misaligned input rejection, and empty
+owners. The full five-target matrix, including the heterogeneous-width definition
+case, passes 47 suites and 88 tests per target with no failed or ignored tests.
+All 14 original executable tests remain included. All eleven optimized C caller
+families pass on all five targets; all eleven Python families pass on the three
+64-bit targets. Both feature configurations pass formatting, Clippy and Rustdoc
+with warnings denied. Feature-disabled checks confirm all 101 ABI symbols are
+absent; generated-header and source-preservation verification pass. WASM and the
+remaining native workflows are still required.
 
 ### Standalone isolated groups
 
