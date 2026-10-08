@@ -150,12 +150,15 @@ equivalence to every compiler's `-Ofast` output is claimed.
 
 Five-target execution evidence is specific to Windows MSVC x86_64/i686,
 Windows GNU x86_64 and Linux GNU x86_64/i686. Tier 1 ARM64 execution is deferred.
-The current combined matrix completes at ciglet 4f8a2cd, liblrhsmm 1731f2e and
-SHIRO 45a3420. All five targets pass 195/120/58 tests respectively, including
-required host fixtures, with zero failed or ignored tests. These revisions
-include the conditioning correction; later frontend diagnostics change no Rust
-source or original fixture. The focused five-target Debug/Release matrix also
-passes for the correction.
+The refreshed combined default-feature Debug matrix completes at ciglet 70ac0fc,
+liblrhsmm f9bf303 and SHIRO 842e479. All five targets pass 198/120/58 tests
+respectively, including required host fixtures, with zero failed or ignored
+tests. All ignored tests are explicitly included. This snapshot includes both
+the conditioning correction and ciglet's generic, fallibly allocated f32/f64
+frame extraction. The two liblrhsmm compile-fail ownership doctests pass with
+their expected E0502 diagnostics. The earlier focused five-target Debug/Release
+matrix passes for the conditioning correction; it does not prove Release
+execution of the later frame change or subsequently added bindings.
 
 The native gate is satisfied for the agreed five-target execution scope and
 recorded numerical corpora. This is an intermediate milestone. Deferred Tier 1
