@@ -30,6 +30,11 @@ typedef struct ShiroRsDataset ShiroRsDataset;
 typedef struct ShiroRsIterationReport ShiroRsIterationReport;
 
 /**
+ * Independent complete timed labels in original order.
+ */
+typedef struct ShiroRsLabels ShiroRsLabels;
+
+/**
  * Independent complete native model, including every stream and duration field.
  */
 typedef struct ShiroRsModel ShiroRsModel;
@@ -142,6 +147,23 @@ typedef struct ShiroRsPhoneOptions {
    */
   uint32_t weak_skips;
 } ShiroRsPhoneOptions;
+
+/**
+ * Complete caller-supplied label. Name is a live readable UTF-8 byte owner.
+ */
+typedef struct ShiroRsLabelInput {
+  double start;
+  double end;
+  const struct ShiroRsBytes *name;
+} ShiroRsLabelInput;
+
+/**
+ * Exact binary64 label times; names are retrieved as independent byte owners.
+ */
+typedef struct ShiroRsLabelInfo {
+  double start;
+  double end;
+} ShiroRsLabelInfo;
 
 /**
  * First revision of SHIRO's additive C interface.
@@ -839,5 +861,113 @@ uint32_t shiro_rs_segmentation_initial(const struct ShiroRsBytes *names,
                                        const struct ShiroRsPhoneMap *map,
                                        uintptr_t frames,
                                        struct ShiroRsStates **output);
+
+/**
+ * Copy all caller labels, preserving every time bit and full UTF-8 name.
+ * Each native transformation retains its own validation; construction does not
+ * reject intervals that native Label itself can represent.
+ * # Safety
+ * Inputs are aligned initialized readable descriptors and live readable names.
+ * Output is independent aligned writable storage holding no live owner on
+ * success. Inputs and failed output slots remain unchanged.
+ */
+uint32_t shiro_rs_labels_create(const struct ShiroRsLabelInput *values,
+                                uintptr_t count,
+                                struct ShiroRsLabels **output);
+
+/**
+ * Retrieve the complete ordered label count.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable storage.
+ */
+uint32_t shiro_rs_labels_length(const struct ShiroRsLabels *labels, uintptr_t *output);
+
+/**
+ * Copy both binary64 time fields of a label. Invalid index retains output.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable storage.
+ */
+uint32_t shiro_rs_labels_get_info(const struct ShiroRsLabels *labels,
+                                  uintptr_t index,
+                                  struct ShiroRsLabelInfo *output);
+
+/**
+ * Copy the complete UTF-8 name into an independent byte owner.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_labels_get_name(const struct ShiroRsLabels *labels,
+                                  uintptr_t index,
+                                  struct ShiroRsBytes **output);
+
+/**
+ * Deep-copy every label, time bit and name.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_labels_clone(const struct ShiroRsLabels *labels, struct ShiroRsLabels **output);
+
+/**
+ * Release a unique owner and clear its slot; an empty slot succeeds.
+ * # Safety
+ * Slot is independent aligned writable storage holding a unique live label owner
+ * or null. Release requires exclusive access and transfers ownership.
+ */
+uint32_t shiro_rs_labels_release(struct ShiroRsLabels **slot);
+
+/**
+ * Parse UTF-8 text with the unchanged native tab/space and blank-row semantics.
+ * # Safety
+ * Input is a live readable byte owner; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_labels_parse(const struct ShiroRsBytes *text, struct ShiroRsLabels **output);
+
+/**
+ * Convert complete labels and phone map into all native states, retaining native
+ * binary64 boundary arithmetic and state metadata.
+ * # Safety
+ * Inputs are live readable owners; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_labels_to_states(const struct ShiroRsLabels *labels,
+                                   const struct ShiroRsPhoneMap *map,
+                                   double hop,
+                                   struct ShiroRsStates **output);
+
+/**
+ * Convert all states into original phone grouping, optionally interleaving state
+ * rows. include_states must be zero or one; hop retains native validation.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_labels_from_states(const struct ShiroRsStates *states,
+                                     double hop,
+                                     uint32_t include_states,
+                                     struct ShiroRsLabels **output);
+
+/**
+ * Write every label using native round-trip decimals and CRLF endings.
+ * Invalid names retain output; no partial buffer is published on failure.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_labels_write_bytes(const struct ShiroRsLabels *labels,
+                                     struct ShiroRsBytes **output);
+
+/**
+ * Compute the original label output path, preserving both legacy separators,
+ * leading-dot extension behavior and the literal suffix.
+ * # Safety
+ * Inputs are live readable UTF-8 byte owners; output is independent aligned
+ * writable storage holding no live owner on success. Failed output unchanged.
+ */
+uint32_t shiro_rs_labels_output_path(const struct ShiroRsBytes *filename,
+                                     const struct ShiroRsBytes *suffix,
+                                     struct ShiroRsBytes **output);
 
 #endif  /* SHIRO_RS_H */

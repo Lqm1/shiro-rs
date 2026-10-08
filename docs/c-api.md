@@ -3,7 +3,7 @@
 Build the optional interface with `cargo build --features c-api`. The package
 produces Rust, shared C and static C libraries from the same library target.
 The generated declarations are in `include/shiro_rs.h`; ABI version is 1.
-The current header declares 67 exports, ten opaque owner types, five settings
+The current header declares 78 exports, eleven opaque owner types, seven settings
 and report descriptors, and one progress callback type.
 
 ## Current coverage
@@ -74,6 +74,33 @@ and Rust 2024's explicit unsafe attribute for symbol names. Panic containment
 applies to unwinding panics; it cannot recover from process aborts.
 
 ## Verification
+
+### Timed labels and conversions
+
+Eleven exports expose complete timed labels, construction, count, scalar and name
+snapshots, clone/release, native text parsing, label/state conversion, text output
+and legacy output paths. Constructors retain every binary64 time bit and the
+complete UTF-8 name, including embedded NUL. Native `Label` permits arbitrary
+field values; each transformation retains its own validation. Name snapshots
+are independent byte owners and survive source release.
+
+Conversion uses the complete phone map and state owners. Hop remains binary64;
+the optional state-row flag accepts codes 0 and 1. Parsing retains native tab,
+space and blank-row behavior. Text output uses native round-trip decimals and
+CRLF endings. Byte output is published only after every row succeeds. Paths
+preserve slash/backslash handling and leading-dot extension behavior.
+
+Focused Windows x86_64 Rust, optimized C and Python callers pass against original
+Lua label rows and complete original state sequences. Tests retain signed
+zero, subnormals, NaN payloads and infinite constructor fields, all name bytes,
+independent owner lifetimes and unchanged outputs after invalid pointers,
+indices, flags, hops, parsing and late text-output errors. The five-target matrix
+passes 44 suites and 82 tests per target, with no failed or ignored tests. All
+eight C caller families pass all five targets, and all eight Python families
+pass the three 64-bit targets. Feature-disabled builds exclude all eleven new
+exports. Formatting, Clippy and Rustdoc with warnings denied, generated-header
+verification and source-preservation checks pass. Generic output-stream
+callbacks and all WASM bindings remain required.
 
 ### Phone maps and initial segmentation
 

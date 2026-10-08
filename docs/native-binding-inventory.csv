@@ -18,11 +18,11 @@ features,extract,62,pending,pending,Complete native C/WASM binding remains requi
 index,append_suffix,13,pending,pending,Complete native C/WASM binding remains required
 index,read,20,pending,pending,Complete native C/WASM binding remains required
 initialization,initialize,21,implemented,pending,"Complete Native host dataset loader/initializer via same named C workflow; full sample fields and3 settings, original4 C model bytes,10-frame and corrected fallback Rust checks; Rust/C all5 and Python3x64"
-labels,output_path,12,pending,pending,Complete native C/WASM binding remains required
-labels,parse,93,pending,pending,Complete native C/WASM binding remains required
-labels,to_states,124,pending,pending,Complete native C/WASM binding remains required
-labels,from_states,176,pending,pending,Complete native C/WASM binding remains required
-labels,write,229,pending,pending,Complete native C/WASM binding remains required
+labels,output_path,12,implemented,pending,"Complete Native label conversion/path via matching C export; all binary64 times/UTF8 names, original Lua states and rows, ownership/failures; Rust/C all5 and Python3x64"
+labels,parse,93,implemented,pending,"Complete Native label conversion/path via matching C export; all binary64 times/UTF8 names, original Lua states and rows, ownership/failures; Rust/C all5 and Python3x64"
+labels,to_states,124,implemented,pending,"Complete Native label conversion/path via matching C export; all binary64 times/UTF8 names, original Lua states and rows, ownership/failures; Rust/C all5 and Python3x64"
+labels,from_states,176,implemented,pending,"Complete Native label conversion/path via matching C export; all binary64 times/UTF8 names, original Lua states and rows, ownership/failures; Rust/C all5 and Python3x64"
+labels,write,229,partial,pending,"Complete Native CRLF byte output, exact Native Rust comparisons, C/Python roundtrip and retained outputs on late failure; all5; generic output-stream callbacks pending"
 phonemap,create,30,implemented,pending,"Complete Native phone map expansion/options and metadata, definition and initial states; original Lua cases, independent ownership and invalid outputs; Rust/C all5 and Python3x64"
 phonemap,to_definition,117,implemented,pending,"Complete Native phone map expansion/options and metadata, definition and initial states; original Lua cases, independent ownership and invalid outputs; Rust/C all5 and Python3x64"
 rawfloat,read,6,partial,pending,Exact byte/array operations verified; generic stream callback interface remains pending
