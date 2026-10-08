@@ -51,6 +51,8 @@ mod states;
 pub use states::*;
 mod documents;
 pub use documents::*;
+mod utterances;
+pub use utterances::*;
 
 fn range<T>(pointer: *const T, count: usize) -> Result<(), u32> {
     if count > isize::MAX as usize / size_of::<T>().max(1) {

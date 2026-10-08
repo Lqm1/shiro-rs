@@ -3,7 +3,7 @@
 Build the optional interface with `cargo build --features c-api`. The package
 produces Rust, shared C and static C libraries from the same library target.
 The generated declarations are in `include/shiro_rs.h`; ABI version is 1.
-The current header declares 168 exports, twenty-three opaque owner types, eighteen
+The current header declares 223 exports, twenty-nine opaque owner types, twenty-seven
 settings, report and IO descriptors, and progress and uniform callback types.
 
 ## Current coverage
@@ -605,6 +605,56 @@ checks confirm unchanged native algorithms, dependencies, fixtures and all old
 183 C declarations; the optional array field visibility and nonfinite state JSON
 writer guard are the only changes to existing optional implementation modules.
 Full utterance workflows and all WASM interfaces remain required.
+
+## Complete utterance result and workflow interfaces
+
+The utterance owner retains all ten native fields: phone map, typed model
+definition, phone sequence, initial segmentation, optional uninitialized and
+initialized models, final model, complete iteration reports, alignment and
+labels. Construction preserves arbitrary public fields without rebuilding
+artifacts. Independent getters, model-stage presence checks, clones and release
+retain optional models and complete nested metadata. The segmented-wave owner
+retains audio, features and utterance results with the same independent ownership.
+
+The two workflow entrypoints delegate to native feature segmentation and decoded
+wave processing. Inputs retain all five options, fresh/initialized/trained model
+sources, full UTF-8 filenames, every decoded wave header field and all three
+feature kinds. Uniform callbacks follow the existing audio contract; validation
+of output storage precedes native processing or random draws. Numerical workflow
+validation remains in the native implementation.
+
+Five focused Windows x86_64 Rust tests call all twenty-one new functions and pass
+with Clippy warnings denied. They compare all result fields and every nested
+report likelihood with native processing, match original C stage-model fixtures,
+exercise all model sources and feature kinds, zero iterations and nondefault
+options, decoded-header variations, exact random draw consumption, errors and
+independent lifetimes. Arbitrary construction tests preserve nonfinite typed
+definition/time/report/label values, reserved attributes, full-width integers and
+all four optional-stage combinations without normalization. The header contains
+223 functions, 29 opaque owners and 27 descriptors. Actual Windows x86_64 Python
+calls of all twenty-one functions pass, including original C stage-model bytes,
+complete finite result/report snapshots and reconstruction, all model sources,
+nondefault options, modified decoded headers, all feature kinds, callbacks and
+independent lifetimes. Python arbitrary-field construction also preserves all
+ten fields with nonfinite definition/time/report/label bits, nested and reserved
+attributes, full-width integers, repeated/empty report rows, empty/NUL strings
+and all four optional-model combinations after releasing the source owners.
+Arbitrary segmented-wave construction retains rate zero and an inconsistent
+feature matrix without imposing native workflow validation. An optimized,
+assert-enabled Windows x86_64 C caller also exercises all twenty-one functions,
+original C model/document/label fixtures, complete finite result reconstruction,
+all feature kinds, all model sources, nondefault options and decoded headers.
+It checks arbitrary nonfinite values, nested attributes, repeated and empty rows,
+all optional model combinations and complete waveform results after releasing
+source owners. All five native targets pass 58 suites and 122 tests, including
+all fourteen original tool tests. Twenty optimized assert-enabled C caller
+families pass on all five targets; twenty Python caller families pass on all
+three 64-bit targets. Formatting, Clippy and Rustdoc with warnings denied pass
+with and without the C interface. All 223 symbols are absent without `c-api`,
+and the generated header and original source-preservation audits pass. The
+native and tool inventories now record all 35 native and 14 tool C mappings.
+All three WASM interfaces and final combined
+end-to-end acceptance remain required.
 
 ## Primary references
 

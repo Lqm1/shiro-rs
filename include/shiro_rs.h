@@ -126,6 +126,11 @@ typedef struct ShiroRsSegmentationDocument ShiroRsSegmentationDocument;
 typedef struct ShiroRsSegmentedFile ShiroRsSegmentedFile;
 
 /**
+ * Independent complete audio, features and utterance workflow result.
+ */
+typedef struct ShiroRsSegmentedWave ShiroRsSegmentedWave;
+
+/**
  * Independent complete state sequence, including jumps and extra JSON metadata.
  */
 typedef struct ShiroRsStates ShiroRsStates;
@@ -149,6 +154,11 @@ typedef struct ShiroRsTrainingResult ShiroRsTrainingResult;
  * Independent complete model, segmentation document and assignment table.
  */
 typedef struct ShiroRsUntiedModel ShiroRsUntiedModel;
+
+/**
+ * Independent complete native utterance result, including every stage artifact.
+ */
+typedef struct ShiroRsUtterances ShiroRsUtterances;
 
 /**
  * All native alignment settings. Integer flags must be 0 or 1. Layout follows
@@ -454,6 +464,56 @@ typedef struct ShiroRsStateInfo {
   uint32_t has_outputs;
   uint32_t has_jumps;
 } ShiroRsStateInfo;
+
+/**
+ * Every native utterance option; numerical validation remains native.
+ */
+typedef struct ShiroRsUtteranceOptions {
+  uintptr_t utterances;
+  double hop_seconds;
+  double minimum_silence_seconds;
+  double minimum_voicing_seconds;
+  uintptr_t iterations;
+} ShiroRsUtteranceOptions;
+
+/**
+ * All ten native utterance result fields. Null optional model pointers are
+ * absent; all other owners are required and copied without workflow validation.
+ */
+typedef struct ShiroRsUtterancesInput {
+  const struct ShiroRsPhoneMap *phonemap;
+  const struct ShiroRsModelDefinition *definition;
+  const struct ShiroRsStrings *phones;
+  const struct ShiroRsSegmentationDocument *initial_segmentation;
+  const struct ShiroRsModel *uninitialized_model;
+  const struct ShiroRsModel *initialized_model;
+  const struct ShiroRsModel *model;
+  const struct ShiroRsIterationReports *iterations;
+  const struct ShiroRsSegmentationDocument *alignment;
+  const struct ShiroRsLabels *labels;
+} ShiroRsUtterancesInput;
+
+/**
+ * Mode zero fresh, one initialized, two trained. Fresh ignores model entirely;
+ * other modes borrow a live immutable model for the synchronous workflow.
+ */
+typedef struct ShiroRsModelSource {
+  uint32_t mode;
+  const struct ShiroRsModel *model;
+} ShiroRsModelSource;
+
+/**
+ * Complete decoded wave and feature-selection inputs. Encoding codes zero PCM,
+ * one float; feature kind zero MFCC, one MFBE, two PLPCC. All other fields retain
+ * their native values, including headers unused by decoded-sample preparation.
+ */
+typedef struct ShiroRsWaveSplitInput {
+  struct ShiroRsWaveInfo header;
+  const struct ShiroRsArrayF32 *samples;
+  const struct ShiroRsBytes *filename;
+  uintptr_t dimensions;
+  uint32_t kind;
+} ShiroRsWaveSplitInput;
 
 /**
  * First revision of SHIRO's additive C interface.
@@ -2448,5 +2508,207 @@ uint32_t shiro_rs_document_clone(const struct ShiroRsSegmentationDocument *docum
  * null; release requires exclusive access and transfers ownership.
  */
 uint32_t shiro_rs_document_release(struct ShiroRsSegmentationDocument **slot);
+
+/**
+ * Copy every native utterance default.
+ * # Safety
+ * Output is independent aligned writable initialized descriptor storage.
+ */
+uint32_t shiro_rs_utterance_options_default(struct ShiroRsUtteranceOptions *output);
+
+/**
+ * Construct all ten public fields, without rebuilding or normalizing artifacts.
+ * # Safety
+ * Input is initialized aligned readable storage with live immutable required
+ * and optional owners. Output is independent aligned writable storage holding
+ * no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_utterances_create(const struct ShiroRsUtterancesInput *input,
+                                    struct ShiroRsUtterances **output);
+
+/**
+ * Retrieve stage presence: zero uninitialized, one initialized, two final.
+ * # Safety
+ * Input is live immutable ownership; output is independent aligned writable
+ * storage. Invalid stage retains output.
+ */
+uint32_t shiro_rs_utterances_has_model(const struct ShiroRsUtterances *utterances,
+                                       uint32_t stage,
+                                       uint32_t *output);
+
+/**
+ * Snapshot a complete stage model: zero uninitialized, one initialized, two
+ * final. Absent models or invalid stage return two without changing output.
+ * # Safety
+ * Input is live immutable ownership; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_utterances_get_model(const struct ShiroRsUtterances *utterances,
+                                       uint32_t stage,
+                                       struct ShiroRsModel **output);
+
+/**
+ * Run the complete native feature-to-utterance workflow, including all stages.
+ * # Safety
+ * Owners and initialized options/source descriptors are live and immutable.
+ * Output is independent aligned writable storage holding no live owner on
+ * success. Failed output remains unchanged. Models stay live throughout the call.
+ */
+uint32_t shiro_rs_utterances_split_features(const struct ShiroRsFeatures *features,
+                                            const struct ShiroRsBytes *filename,
+                                            const struct ShiroRsUtteranceOptions *options,
+                                            const struct ShiroRsModelSource *source,
+                                            struct ShiroRsUtterances **output);
+
+/**
+ * Run complete native decoded-wave extraction and utterance segmentation.
+ * # Safety
+ * Input/options/source descriptors are initialized aligned readable storage;
+ * nested owners and optional models remain live immutable throughout the call.
+ * Callback/context obey ShiroRsUniformCallback. Output is independent aligned
+ * writable storage holding no live owner on success. Failed output remains
+ * unchanged; already consumed random draws are not rolled back.
+ */
+uint32_t shiro_rs_utterances_split_wave(const struct ShiroRsWaveSplitInput *input,
+                                        const struct ShiroRsUtteranceOptions *options,
+                                        const struct ShiroRsModelSource *source,
+                                        ShiroRsUniformCallback callback,
+                                        void *context,
+                                        struct ShiroRsSegmentedWave **output);
+
+/**
+ * Construct every native segmented-wave field without recomputing artifacts.
+ * # Safety
+ * Inputs are live immutable owners. Output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_segmented_wave_create(const struct ShiroRsAudio *audio,
+                                        const struct ShiroRsFeatures *features,
+                                        const struct ShiroRsUtterances *utterances,
+                                        struct ShiroRsSegmentedWave **output);
+
+/**
+ * Snapshot the complete native phonemap field into independent ownership.
+ * # Safety
+ * Input is a live immutable owner. Output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_utterances_get_phonemap(const struct ShiroRsUtterances *owner,
+                                          struct ShiroRsPhoneMap **output);
+
+/**
+ * Snapshot the complete native definition field into independent ownership.
+ * # Safety
+ * Input is a live immutable owner. Output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_utterances_get_definition(const struct ShiroRsUtterances *owner,
+                                            struct ShiroRsModelDefinition **output);
+
+/**
+ * Snapshot the complete native phones field into independent ownership.
+ * # Safety
+ * Input is a live immutable owner. Output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_utterances_get_phones(const struct ShiroRsUtterances *owner,
+                                        struct ShiroRsStrings **output);
+
+/**
+ * Snapshot the complete native initial_segmentation field into independent ownership.
+ * # Safety
+ * Input is a live immutable owner. Output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_utterances_get_initial_segmentation(const struct ShiroRsUtterances *owner,
+                                                      struct ShiroRsSegmentationDocument **output);
+
+/**
+ * Snapshot the complete native iterations field into independent ownership.
+ * # Safety
+ * Input is a live immutable owner. Output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_utterances_get_iterations(const struct ShiroRsUtterances *owner,
+                                            struct ShiroRsIterationReports **output);
+
+/**
+ * Snapshot the complete native alignment field into independent ownership.
+ * # Safety
+ * Input is a live immutable owner. Output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_utterances_get_alignment(const struct ShiroRsUtterances *owner,
+                                           struct ShiroRsSegmentationDocument **output);
+
+/**
+ * Snapshot the complete native labels field into independent ownership.
+ * # Safety
+ * Input is a live immutable owner. Output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_utterances_get_labels(const struct ShiroRsUtterances *owner,
+                                        struct ShiroRsLabels **output);
+
+/**
+ * Deep-copy every native public field into independent ownership.
+ * # Safety
+ * Input is a live immutable owner. Output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_utterances_clone(const struct ShiroRsUtterances *owner,
+                                   struct ShiroRsUtterances **output);
+
+/**
+ * Release unique ownership and clear the slot; an empty slot succeeds.
+ * # Safety
+ * Slot is independent aligned writable storage holding a unique live owner or
+ * null; release requires exclusive access and transfers ownership.
+ */
+uint32_t shiro_rs_utterances_release(struct ShiroRsUtterances **slot);
+
+/**
+ * Snapshot the complete native audio field into independent ownership.
+ * # Safety
+ * Input is a live immutable owner. Output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_segmented_wave_get_audio(const struct ShiroRsSegmentedWave *owner,
+                                           struct ShiroRsAudio **output);
+
+/**
+ * Snapshot the complete native features field into independent ownership.
+ * # Safety
+ * Input is a live immutable owner. Output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_segmented_wave_get_features(const struct ShiroRsSegmentedWave *owner,
+                                              struct ShiroRsFeatures **output);
+
+/**
+ * Snapshot the complete native utterances field into independent ownership.
+ * # Safety
+ * Input is a live immutable owner. Output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_segmented_wave_get_utterances(const struct ShiroRsSegmentedWave *owner,
+                                                struct ShiroRsUtterances **output);
+
+/**
+ * Deep-copy every native public field into independent ownership.
+ * # Safety
+ * Input is a live immutable owner. Output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_segmented_wave_clone(const struct ShiroRsSegmentedWave *owner,
+                                       struct ShiroRsSegmentedWave **output);
+
+/**
+ * Release unique ownership and clear the slot; an empty slot succeeds.
+ * # Safety
+ * Slot is independent aligned writable storage holding a unique live owner or
+ * null; release requires exclusive access and transfers ownership.
+ */
+uint32_t shiro_rs_segmented_wave_release(struct ShiroRsSegmentedWave **slot);
 
 #endif  /* SHIRO_RS_H */
