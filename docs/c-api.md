@@ -3,7 +3,7 @@
 Build the optional interface with `cargo build --features c-api`. The package
 produces Rust, shared C and static C libraries from the same library target.
 The generated declarations are in `include/shiro_rs.h`; ABI version is 1.
-The current header declares 59 exports, nine opaque owner types, four settings
+The current header declares 67 exports, ten opaque owner types, five settings
 and report descriptors, and one progress callback type.
 
 ## Current coverage
@@ -74,6 +74,30 @@ and Rust 2024's explicit unsafe attribute for symbol names. Panic containment
 applies to unwinding panics; it cannot recover from process aborts.
 
 ## Verification
+
+### Phone maps and initial segmentation
+
+Eight exports expose a complete phone map owner, native phone expansion defaults,
+creation, original JSON read/write, deep clone and release, model-definition
+conversion and initial segmentation. The descriptor retains state/stream counts
+and the weak-skip flag. Topology uses a separate optional UTF-8 byte owner so an
+absent value remains distinct from an empty or unknown topology string.
+All map, phone and state JSON attributes are retained. Initial state generation
+preserves native phone order, weak skips, topology edges, frame rounding and
+state metadata. Definition conversion preserves native tied-constraint handling.
+
+Focused Windows x86_64 Rust, optimized C and Python callers pass against all
+original Lua phone-map, definition and segmentation cases. JSON numbers use the
+existing binary64 tolerance of 1e-14; strings, arrays and attributes compare
+completely. Definition-generated model bytes match exactly. Tests cover defaults,
+independent copies, additional metadata and unchanged outputs after errors.
+The five-target matrix passes 43 suites and 80 tests per target with no failed
+or ignored tests. All seven C caller families pass all five targets, and all
+seven Python families pass the three 64-bit targets. Feature-disabled builds
+exclude all eight new exports; formatting, Clippy and Rustdoc with warnings
+denied, generated-header verification and source-preservation checks pass. Standalone
+label conversion, other remaining C operations and all WASM operations remain
+required.
 
 ### Training interfaces
 

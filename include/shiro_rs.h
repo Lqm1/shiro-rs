@@ -40,6 +40,11 @@ typedef struct ShiroRsModel ShiroRsModel;
 typedef struct ShiroRsObservation ShiroRsObservation;
 
 /**
+ * Independent complete phone map, including flattened JSON attributes.
+ */
+typedef struct ShiroRsPhoneMap ShiroRsPhoneMap;
+
+/**
  * Independent complete state sequence, including jumps and extra JSON metadata.
  */
 typedef struct ShiroRsStates ShiroRsStates;
@@ -124,6 +129,19 @@ typedef struct ShiroRsIterationInfo {
   float temperature;
   float mean_log_likelihood;
 } ShiroRsIterationInfo;
+
+/**
+ * Native phone expansion counts and flag. Topology is a separate optional UTF-8
+ * byte owner so an absent topology remains distinct from an empty string.
+ */
+typedef struct ShiroRsPhoneOptions {
+  uintptr_t states_per_phone;
+  uintptr_t streams;
+  /**
+   * Zero disables weak skips; one enables them. Other codes are invalid.
+   */
+  uint32_t weak_skips;
+} ShiroRsPhoneOptions;
 
 /**
  * First revision of SHIRO's additive C interface.
@@ -742,5 +760,84 @@ uint32_t shiro_rs_iteration_report_clone(const struct ShiroRsIterationReport *re
  * writable storage and exclusive access are required. Callback reports are excluded.
  */
 uint32_t shiro_rs_iteration_report_release(struct ShiroRsIterationReport **slot);
+
+/**
+ * Copy the native phone expansion defaults. Default topology is absent.
+ * # Safety
+ * Output is independent aligned exclusively writable descriptor storage.
+ */
+uint32_t shiro_rs_phone_options_default(struct ShiroRsPhoneOptions *output);
+
+/**
+ * Expand the original UTF-8 phone text using every native option. Null topology
+ * means absent; a byte owner may contain any UTF-8 topology, including empty.
+ * # Safety
+ * Text and optional topology are live readable byte owners. Options are aligned
+ * initialized readable storage. Output is independent aligned writable storage
+ * holding no live owner on success. Failed output slots remain unchanged.
+ */
+uint32_t shiro_rs_phone_map_create(const struct ShiroRsBytes *text,
+                                   const struct ShiroRsPhoneOptions *options,
+                                   const struct ShiroRsBytes *topology,
+                                   struct ShiroRsPhoneMap **output);
+
+/**
+ * Read the complete original JSON phone map, retaining all additional attributes.
+ * # Safety
+ * Input is a live readable byte owner; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_phone_map_read_json(const struct ShiroRsBytes *bytes,
+                                      struct ShiroRsPhoneMap **output);
+
+/**
+ * Write the complete original JSON map into independent byte storage.
+ * # Safety
+ * Input is a live readable map owner; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_phone_map_write_json(const struct ShiroRsPhoneMap *map,
+                                       struct ShiroRsBytes **output);
+
+/**
+ * Deep-copy every phone, state and additional JSON attribute.
+ * # Safety
+ * Input is a live readable map owner; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_phone_map_clone(const struct ShiroRsPhoneMap *map,
+                                  struct ShiroRsPhoneMap **output);
+
+/**
+ * Release a unique map and clear its slot; an empty slot succeeds.
+ * # Safety
+ * Slot is independent aligned writable storage holding a unique live map owner
+ * or null. Release requires exclusive access and transfers ownership.
+ */
+uint32_t shiro_rs_phone_map_release(struct ShiroRsPhoneMap **slot);
+
+/**
+ * Convert the complete map into original model-definition JSON using native
+ * state counts and deterministic tied-duration constraint intersections.
+ * # Safety
+ * Input is a live readable map owner; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_phone_map_to_definition(const struct ShiroRsPhoneMap *map,
+                                          uintptr_t dimensions,
+                                          double hop,
+                                          struct ShiroRsBytes **output);
+
+/**
+ * Generate all initial states from an ordered JSON array of UTF-8 phone names.
+ * Preserve native topology, skip edges, binary64 rounding and state metadata.
+ * # Safety
+ * Inputs are live readable owners; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_segmentation_initial(const struct ShiroRsBytes *names,
+                                       const struct ShiroRsPhoneMap *map,
+                                       uintptr_t frames,
+                                       struct ShiroRsStates **output);
 
 #endif  /* SHIRO_RS_H */

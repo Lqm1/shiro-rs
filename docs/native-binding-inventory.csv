@@ -23,11 +23,11 @@ labels,parse,93,pending,pending,Complete native C/WASM binding remains required
 labels,to_states,124,pending,pending,Complete native C/WASM binding remains required
 labels,from_states,176,pending,pending,Complete native C/WASM binding remains required
 labels,write,229,pending,pending,Complete native C/WASM binding remains required
-phonemap,create,30,pending,pending,Complete native C/WASM binding remains required
-phonemap,to_definition,117,pending,pending,Complete native C/WASM binding remains required
+phonemap,create,30,implemented,pending,"Complete Native phone map expansion/options and metadata, definition and initial states; original Lua cases, independent ownership and invalid outputs; Rust/C all5 and Python3x64"
+phonemap,to_definition,117,implemented,pending,"Complete Native phone map expansion/options and metadata, definition and initial states; original Lua cases, independent ownership and invalid outputs; Rust/C all5 and Python3x64"
 rawfloat,read,6,partial,pending,Exact byte/array operations verified; generic stream callback interface remains pending
 rawfloat,write,45,partial,pending,Exact byte/array operations verified; generic stream callback interface remains pending
-segmentation,initial,20,pending,pending,Complete native C/WASM binding remains required
+segmentation,initial,20,implemented,pending,"Complete Native phone map expansion/options and metadata, definition and initial states; original Lua cases, independent ownership and invalid outputs; Rust/C all5 and Python3x64"
 training,train,50,implemented,pending,"Complete Native training host/file/group input and13 options; complete model/reports and synchronous progress with independent snapshots; original9 C model/CSV cases, stopping/parallel/failures; Rust/C all5 and Python3x64"
 training,train_with_progress,58,implemented,pending,"Complete Native training host/file/group input and13 options; complete model/reports and synchronous progress with independent snapshots; original9 C model/CSV cases, stopping/parallel/failures; Rust/C all5 and Python3x64"
 untying,untie,30,pending,pending,Complete native C/WASM binding remains required
