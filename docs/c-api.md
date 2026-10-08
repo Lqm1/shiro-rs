@@ -3,10 +3,44 @@
 Build the optional interface with `cargo build --features c-api`. The package
 produces Rust, shared C and static C libraries from the same library target.
 The generated declarations are in `include/shiro_rs.h`; ABI version is 1.
-The current header declares 139 exports, twenty opaque owner types, fifteen
-settings and report descriptors, and progress and uniform callback types.
+The current header declares 146 exports, twenty opaque owner types, eighteen
+settings, report and IO descriptors, and progress and uniform callback types.
 
 ## Current coverage
+
+### Direct native streams
+
+Seven additional exports call native rawfloat reading/writing, multistream
+observation reading, label output, untied-model summary output and buffered index
+reading directly. An explicit flush operation completes the borrowed writer
+interface. Read/write callbacks report partial transfer counts with statuses
+zero success, one interrupted and any other value IO error. Invalid counts are
+rejected. Native operations retain their own retry and failure behavior, and
+never implicitly flush or close the caller's stream. Consumed input and partial
+output are retained after failure; independent output owners are published only
+after successful native processing.
+
+The buffered reader calls the caller's fill and infallible consume callbacks
+directly. It adds no buffer or read-ahead. Fill returns a borrowed initialized
+readable range valid until the next fill/consume, with an empty range indicating
+EOF. All callback contexts remain independent and live for the synchronous
+operation. Callbacks must return normally and must not release or modify active
+owners or output slots. The library retains no callback or context.
+
+Focused Windows x86_64 Rust tests pass five cases comparing complete native
+results, callback sequences, requested transfer sizes and consumed/emitted bytes
+with independent native Read/Write/BufRead implementations. They cover original
+fixtures, full binary32 bits, multistream data, one-byte fragmentation,
+interruption, EOF, budgets, partial scalars, invalid counts/buffer ranges, late
+IO failures, label-name/summary validation and retained output owners. Clippy
+passes. Optimized assertion-enabled C and Python ctypes callers pass all seven
+exports with actual callbacks and original fixtures. The native-source audit
+confirms existing functions and declarations are unchanged. The full five-target
+matrix passes 52 suites and 105 tests per target, with no failed or ignored tests.
+All sixteen optimized C caller families pass all five targets, and all sixteen
+Python families pass the three 64-bit targets. Both feature variants pass
+formatting, Clippy and Rustdoc with warnings denied. Feature-disabled builds
+exclude all 146 exports, and generated-header verification passes.
 
 ### Complete index fields and phoneme padding
 
@@ -473,6 +507,9 @@ and Python on 32-bit targets have not been verified by this checkpoint.
 
 ## Primary references
 
+- [Native byte readers](https://doc.rust-lang.org/stable/std/io/trait.Read.html)
+- [Native partial writers](https://doc.rust-lang.org/stable/std/io/trait.Write.html)
+- [Native buffered readers](https://doc.rust-lang.org/stable/std/io/trait.BufRead.html)
 - [Windows owned OS strings](https://doc.rust-lang.org/stable/std/os/windows/ffi/trait.OsStringExt.html)
 - [Windows borrowed OS strings](https://doc.rust-lang.org/stable/std/os/windows/ffi/trait.OsStrExt.html)
 - [Unix owned OS strings](https://doc.rust-lang.org/stable/std/os/unix/ffi/trait.OsStringExt.html)

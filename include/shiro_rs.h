@@ -8,6 +8,12 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#define SHIRO_RS_IO_SUCCESS 0
+
+#define SHIRO_RS_IO_INTERRUPTED 1
+
+#define SHIRO_RS_IO_ERROR 2
+
 /**
  * Independent owned f32 values; retrieve data through checked copies.
  */
@@ -320,6 +326,43 @@ typedef struct ShiroRsIndexEntryInput {
   const struct ShiroRsPath *stem;
   const struct ShiroRsStrings *phonemes;
 } ShiroRsIndexEntryInput;
+
+/**
+ * Direct reader: zero success, one interrupted, other statuses IO error.
+ * Read fills at most capacity bytes and reports count; zero count is EOF.
+ * Callback and independent context remain valid for the synchronous call.
+ * Callbacks must not unwind, retain buffers or modify active owners/output slots.
+ */
+typedef struct ShiroRsReadStream {
+  void *context;
+  uint32_t (*read)(void*, uint8_t*, uintptr_t, uintptr_t*);
+} ShiroRsReadStream;
+
+/**
+ * Direct partial writer with the reader's statuses. Count must not exceed input.
+ * No native workflow implicitly flushes, closes or retains this stream.
+ * Flush is optional except for explicit write_stream_flush. Callback and context
+ * must satisfy the same independent, synchronous, non-unwinding contract.
+ */
+typedef struct ShiroRsWriteStream {
+  void *context;
+  uint32_t (*write)(void*, const uint8_t*, uintptr_t, uintptr_t*);
+  uint32_t (*flush)(void*);
+} ShiroRsWriteStream;
+
+/**
+ * Direct BufRead callbacks, with no added buffer or read-ahead.
+ * Fill writes a borrowed initialized readable buffer pointer and length; empty
+ * means EOF. Statuses match ReadStream. Buffer remains valid until the next
+ * fill/consume. Consume is infallible and advances exactly the supplied count.
+ * Callbacks/context satisfy the synchronous non-unwinding contract, and must
+ * not mutate active owners or output slots. Neither callback is retained.
+ */
+typedef struct ShiroRsBufferedReadStream {
+  void *context;
+  uint32_t (*fill)(void*, const uint8_t**, uintptr_t*);
+  void (*consume)(void*, uintptr_t);
+} ShiroRsBufferedReadStream;
 
 /**
  * First revision of SHIRO's additive C interface.
@@ -1690,5 +1733,79 @@ uint32_t shiro_rs_index_read_bytes(const struct ShiroRsBytes *bytes,
                                    const struct ShiroRsStrings *left,
                                    const struct ShiroRsStrings *right,
                                    struct ShiroRsIndexEntries **output);
+
+/**
+ * Direct native rawfloat reader with the caller's full sample budget.
+ * # Safety
+ * Stream is aligned initialized metadata with a live independent context and
+ * non-unwinding callback. Output is independent aligned writable storage holding
+ * no live owner on success. Failure retains output; consumed input is not undone.
+ */
+uint32_t shiro_rs_rawfloat_read_stream(const struct ShiroRsReadStream *stream,
+                                       uintptr_t maximum_samples,
+                                       struct ShiroRsArrayF32 **output);
+
+/**
+ * Direct native rawfloat writes retain all binary32 bits and partial transfers.
+ * # Safety
+ * Input is a live readable owner; stream is aligned initialized metadata with
+ * an independent live context and non-unwinding callback. Already emitted bytes
+ * remain after failure. No flushing or closing is performed.
+ */
+uint32_t shiro_rs_rawfloat_write_stream(const struct ShiroRsArrayF32 *values,
+                                        const struct ShiroRsWriteStream *stream);
+
+/**
+ * Direct native observation read with every stream dimension and frame budget.
+ * # Safety
+ * Stream satisfies ReadStream's contract; dimensions are initialized aligned
+ * readable storage of the stated count. Output is independent aligned writable
+ * storage holding no live owner on success. Failure retains output, not input
+ * consumption. Empty dimensions permit null and follow native validation.
+ */
+uint32_t shiro_rs_observation_read_stream(const struct ShiroRsReadStream *stream,
+                                          const uintptr_t *dimensions,
+                                          uintptr_t stream_count,
+                                          uintptr_t maximum_frames,
+                                          struct ShiroRsObservation **output);
+
+/**
+ * Direct native label output with original CRLF and native partial-write errors.
+ * # Safety
+ * Input is a live immutable owner; stream satisfies WriteStream's contract.
+ * Partial emitted bytes are retained on failure. No implicit flush or close.
+ */
+uint32_t shiro_rs_labels_write_stream(const struct ShiroRsLabels *labels,
+                                      const struct ShiroRsWriteStream *stream);
+
+/**
+ * Direct native summary output, preserving native validation and write sequence.
+ * # Safety
+ * Input is a live immutable owner; stream satisfies WriteStream's contract.
+ * Partial emitted bytes are retained on failure. No implicit flush or close.
+ */
+uint32_t shiro_rs_untied_model_write_summary_stream(const struct ShiroRsUntiedModel *model,
+                                                    const struct ShiroRsWriteStream *stream);
+
+/**
+ * Direct native buffered index reader without additional read-ahead or buffering.
+ * # Safety
+ * Stream satisfies BufferedReadStream's borrowed-buffer contract; all input
+ * owners are live and immutable. Output is independent aligned writable storage
+ * holding no live owner on success. Failure retains output, not consumed input.
+ */
+uint32_t shiro_rs_index_read_stream(const struct ShiroRsBufferedReadStream *stream,
+                                    const struct ShiroRsPath *directory,
+                                    const struct ShiroRsStrings *left,
+                                    const struct ShiroRsStrings *right,
+                                    struct ShiroRsIndexEntries **output);
+
+/**
+ * Explicitly flush a borrowed stream; interrupted status is returned as IO failure.
+ * # Safety
+ * Stream is live aligned initialized metadata satisfying WriteStream's callback
+ * and independent-context contract. No callback/context is retained.
+ */
+uint32_t shiro_rs_write_stream_flush(const struct ShiroRsWriteStream *stream);
 
 #endif  /* SHIRO_RS_H */
