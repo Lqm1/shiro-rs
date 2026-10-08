@@ -1,10 +1,10 @@
 Module,Function,SourceLine,CStatus,WasmStatus,Evidence
 alignment,align_states,56,implemented,pending,"Complete native alignment descriptor and matching exported entrypoint; original9 C inference modes, independent nondefault Native config comparisons, full metadata and failure transactions; Rust/C all5 and Python3x64"
 alignment,align_document,72,implemented,pending,"Complete native alignment descriptor and matching exported entrypoint; original9 C inference modes, independent nondefault Native config comparisons, full metadata and failure transactions; Rust/C all5 and Python3x64"
-audio,windows,19,pending,pending,Complete native C/WASM binding remains required
-audio,linux_gnu,24,pending,pending,Complete native C/WASM binding remains required
-audio,next_uniform,53,pending,pending,Complete native C/WASM binding remains required
-audio,prepare,78,pending,pending,Complete native C/WASM binding remains required
+audio,windows,19,implemented,pending,"Complete native audio options/header/result and synchronous uniform source, both standalone legacy random sequences/exclusive advancement; originalCwave/draws/bytes, Native options/callbacks/ownership/failures; Rust/C all5 and Python3x64"
+audio,linux_gnu,24,implemented,pending,"Complete native audio options/header/result and synchronous uniform source, both standalone legacy random sequences/exclusive advancement; originalCwave/draws/bytes, Native options/callbacks/ownership/failures; Rust/C all5 and Python3x64"
+audio,next_uniform,53,implemented,pending,"Complete native audio options/header/result and synchronous uniform source, both standalone legacy random sequences/exclusive advancement; originalCwave/draws/bytes, Native options/callbacks/ownership/failures; Rust/C all5 and Python3x64"
+audio,prepare,78,implemented,pending,"Complete native audio options/header/result and synchronous uniform source, both standalone legacy random sequences/exclusive advancement; originalCwave/draws/bytes, Native options/callbacks/ownership/failures; Rust/C all5 and Python3x64"
 batch,feature_options,72,pending,pending,Complete native C/WASM binding remains required
 batch,extract_file,142,pending,pending,Complete native C/WASM binding remains required
 dataset,dimensions,14,implemented,pending,"Standalone complete ordered model dimensions and full-width unsigned owned array; original models/heterogeneous-width definition, independent snapshots/copy ranges/maximum integers/failures; Rust/C all5 and Python3x64"

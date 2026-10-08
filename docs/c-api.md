@@ -3,10 +3,53 @@
 Build the optional interface with `cargo build --features c-api`. The package
 produces Rust, shared C and static C libraries from the same library target.
 The generated declarations are in `include/shiro_rs.h`; ABI version is 1.
-The current header declares 108 exports, fifteen opaque owner types, twelve settings
-and report descriptors, and one progress callback type.
+The current header declares 120 exports, seventeen opaque owner types, fourteen
+settings and report descriptors, and progress and uniform callback types.
 
 ## Current coverage
+
+### Complete audio preparation and legacy dither
+
+Twelve additional exports expose every native audio option, complete decoded
+wave header inputs, complete audio results, and both legacy random sequences.
+Audio options retain normalization, binary32 dither level, explicit optional
+output-rate presence, and independent corrected/legacy boundary and kernel
+policies. Absence differs from a present zero rate, which native validation
+rejects. A decoded wave descriptor retains rate, bit depth, channels and encoding;
+samples are independently owned. Preparation delegates native validation without
+adding constraints on header fields that the native operation does not inspect.
+A bounded WAVE-byte entry point uses the native decoder before preparation.
+
+Audio constructors retain arbitrary public sample rates and every sample bit.
+Cloning and sample snapshots remain independent after input and parent release.
+The Windows and Linux GNU constructors create their explicit seed-one sequences;
+exclusive next-draw calls validate output storage before advancing state.
+
+Preparation accepts a synchronous uniform callback and caller context. Return
+zero and write a finite value in [0,1]; nonzero status or an invalid draw fails
+preparation with unchanged output. A null callback is allowed when no draw is
+needed and otherwise fails. Callbacks must return normally, retain their context
+for the call and avoid mutating or releasing active inputs. Consumption of RNG
+state already performed is not rolled back after a later failure. Nonpositive
+dither consumes no draws. All output slots are validated before preparation or
+callback invocation.
+
+Focused Windows x86_64 Rust, optimized assertion-enabled C and Python callers
+pass all five original WAVE conversion cases, both 64-draw original C sequences,
+the exact signed-noise outputs and original Linux dithered WAVE bytes. Native
+comparisons cover every option, unused header fields, corrected and legacy
+resampling, optional-rate presence, source preservation and callback failures.
+Arbitrary result constructors preserve signed zero, subnormals, NaN payloads and
+infinities with independent snapshots. The full five-target matrix passes
+49 suites and 95 tests per target with no failed or ignored tests, retaining all
+14 original executable tests. All thirteen optimized C caller families pass on
+all five targets; all thirteen Python families pass on the three 64-bit targets.
+Both feature configurations pass formatting, Clippy and Rustdoc with warnings
+denied. Feature-disabled checks confirm all 120 ABI symbols are absent; generated
+header and source-preservation verification pass. The initial Rustdoc interval
+link and GCC test-variable macro collision were corrected without changing
+native algorithms or comparison thresholds. Remaining native workflows and all
+WASM bindings are still required.
 
 ### Complete feature extraction
 

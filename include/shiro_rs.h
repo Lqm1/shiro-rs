@@ -19,6 +19,11 @@ typedef struct ShiroRsArrayF32 ShiroRsArrayF32;
 typedef struct ShiroRsArrayUsize ShiroRsArrayUsize;
 
 /**
+ * Independent complete native audio result.
+ */
+typedef struct ShiroRsAudio ShiroRsAudio;
+
+/**
  * Independent owned u8 values; retrieve data through checked copies.
  */
 typedef struct ShiroRsBytes ShiroRsBytes;
@@ -27,6 +32,11 @@ typedef struct ShiroRsBytes ShiroRsBytes;
  * Independent paired native observations and segmentations in sample order.
  */
 typedef struct ShiroRsDataset ShiroRsDataset;
+
+/**
+ * Exclusively mutable native legacy random sequence.
+ */
+typedef struct ShiroRsDitherSequence ShiroRsDitherSequence;
 
 /**
  * All feature matrix fields in independent ownership.
@@ -247,6 +257,46 @@ typedef struct ShiroRsFeatureInfo {
   uintptr_t frames;
   uintptr_t columns;
 } ShiroRsFeatureInfo;
+
+/**
+ * All five native options, including explicit optional-rate presence.
+ */
+typedef struct ShiroRsAudioOptions {
+  uint32_t normalize;
+  float dither_level;
+  uint32_t has_output_sample_rate;
+  uint32_t output_sample_rate;
+  /**
+   * Zero includes sample zero; one preserves the legacy omission.
+   */
+  uint32_t boundary;
+  /**
+   * Zero stable; one preserves the original approximate kernel.
+   */
+  uint32_t kernel;
+} ShiroRsAudioOptions;
+
+/**
+ * Every public native wave header field; samples are supplied separately.
+ */
+typedef struct ShiroRsWaveInfo {
+  uint32_t sample_rate;
+  uint16_t bits_per_sample;
+  uint16_t channels;
+  /**
+   * Zero PCM, one float. These codes do not change already decoded samples.
+   */
+  uint32_t encoding;
+} ShiroRsWaveInfo;
+
+/**
+ * Synchronous uniform source: write a finite value in `[0,1]` and return zero.
+ * Nonzero status fails preparation. Output is borrowed only during the call.
+ * Callback/context must remain valid, never unwind or mutate/release active
+ * inputs. Already consumed draws cannot be rolled back after a later error.
+ * Null is allowed when native preparation needs no draw; otherwise it fails.
+ */
+typedef uint32_t (*ShiroRsUniformCallback)(void*, float*);
 
 /**
  * First revision of SHIRO's additive C interface.
@@ -1337,5 +1387,114 @@ uint32_t shiro_rs_features_clone(const struct ShiroRsFeatures *features,
  * or null. Release requires exclusive access and transfers ownership.
  */
 uint32_t shiro_rs_features_release(struct ShiroRsFeatures **slot);
+
+/**
+ * Copy every native audio default.
+ * # Safety
+ * Output is independent aligned exclusively writable descriptor storage.
+ */
+uint32_t shiro_rs_audio_options_default(struct ShiroRsAudioOptions *output);
+
+/**
+ * Construct arbitrary public Audio fields, retaining every sample bit.
+ * # Safety
+ * Samples is a live readable owner; output is independent aligned writable
+ * storage holding no live owner on success. Failed outputs remain unchanged.
+ */
+uint32_t shiro_rs_audio_create(uint32_t sample_rate,
+                               const struct ShiroRsArrayF32 *samples,
+                               struct ShiroRsAudio **output);
+
+/**
+ * Prepare decoded samples using every header/option field and a uniform source.
+ * # Safety
+ * Samples is a live readable owner; header/options are aligned initialized
+ * readable descriptors. Output is independent aligned writable storage holding
+ * no live owner on success. Callback/context obey ShiroRsUniformCallback.
+ * Inputs and failed outputs remain unchanged; RNG consumption is not rolled back.
+ */
+uint32_t shiro_rs_audio_prepare(const struct ShiroRsArrayF32 *samples,
+                                const struct ShiroRsWaveInfo *header,
+                                const struct ShiroRsAudioOptions *options,
+                                ShiroRsUniformCallback callback,
+                                void *context,
+                                struct ShiroRsAudio **output);
+
+/**
+ * Decode complete WAVE bytes using the native bounded decoder, then prepare.
+ * # Safety
+ * Bytes is a live readable owner; options is an aligned initialized readable
+ * descriptor. Output is independent aligned writable storage holding no live
+ * owner on success. Callback/context obey ShiroRsUniformCallback. Failed outputs
+ * remain unchanged; already consumed draws are not rolled back.
+ */
+uint32_t shiro_rs_audio_prepare_wave_bytes(const struct ShiroRsBytes *bytes,
+                                           uintptr_t maximum_samples,
+                                           const struct ShiroRsAudioOptions *options,
+                                           ShiroRsUniformCallback callback,
+                                           void *context,
+                                           struct ShiroRsAudio **output);
+
+/**
+ * Copy the complete sample-rate field.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable storage.
+ */
+uint32_t shiro_rs_audio_sample_rate(const struct ShiroRsAudio *audio, uint32_t *output);
+
+/**
+ * Snapshot every sample into independent ownership.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_audio_get_samples(const struct ShiroRsAudio *audio,
+                                    struct ShiroRsArrayF32 **output);
+
+/**
+ * Deep-copy every public audio field.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_audio_clone(const struct ShiroRsAudio *audio, struct ShiroRsAudio **output);
+
+/**
+ * Release unique ownership and clear its slot; an empty slot succeeds.
+ * # Safety
+ * Slot is independent aligned writable storage holding a unique live owner or
+ * null. Release requires exclusive access and transfers ownership.
+ */
+uint32_t shiro_rs_audio_release(struct ShiroRsAudio **slot);
+
+/**
+ * Create the original Windows seed-one sequence.
+ * # Safety
+ * Output is independent aligned writable storage holding no live owner on success.
+ */
+uint32_t shiro_rs_dither_windows(struct ShiroRsDitherSequence **output);
+
+/**
+ * Create the original Linux GNU seed-one sequence, including warmup.
+ * # Safety
+ * Output is independent aligned writable storage holding no live owner on success.
+ */
+uint32_t shiro_rs_dither_linux_gnu(struct ShiroRsDitherSequence **output);
+
+/**
+ * Consume one draw. Invalid output storage is rejected before state mutation.
+ * # Safety
+ * Sequence is a live exclusively accessible owner. Output is independent aligned
+ * writable storage. No concurrent mutation or release is permitted.
+ */
+uint32_t shiro_rs_dither_next_uniform(struct ShiroRsDitherSequence *sequence, float *output);
+
+/**
+ * Release a unique sequence and clear its slot; an empty slot succeeds.
+ * # Safety
+ * Slot is independent aligned writable storage holding a unique live owner or
+ * null. Release requires exclusive access and transfers ownership.
+ */
+uint32_t shiro_rs_dither_release(struct ShiroRsDitherSequence **slot);
 
 #endif  /* SHIRO_RS_H */
