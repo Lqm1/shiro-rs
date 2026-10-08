@@ -24,6 +24,16 @@ typedef struct ShiroRsBytes ShiroRsBytes;
 typedef struct ShiroRsModel ShiroRsModel;
 
 /**
+ * Independent native observation, including every stream and every frame.
+ */
+typedef struct ShiroRsObservation ShiroRsObservation;
+
+/**
+ * Independent complete state sequence, including jumps and extra JSON metadata.
+ */
+typedef struct ShiroRsStates ShiroRsStates;
+
+/**
  * First revision of SHIRO's additive C interface.
  */
 uint32_t shiro_rs_abi_version(void);
@@ -232,5 +242,101 @@ uint32_t shiro_rs_model_clone(const struct ShiroRsModel *model, struct ShiroRsMo
  * from this library or null. No other call may use the model during release.
  */
 uint32_t shiro_rs_model_release(struct ShiroRsModel **slot);
+
+/**
+ * Deinterleave original rawfloat bytes with explicitly supplied stream widths.
+ * The frame budget and complete-frame validation are those of the native loader.
+ * # Safety
+ * Owners are live values from this library. Dimensions are initialized aligned
+ * readable storage of the stated length. Output is independent aligned writable
+ * storage holding no live owner. No writable storage aliases participating inputs.
+ */
+uint32_t shiro_rs_observation_read_rawfloat(const struct ShiroRsBytes *bytes,
+                                            const uintptr_t *dimensions,
+                                            uintptr_t stream_count,
+                                            uintptr_t maximum_frames,
+                                            struct ShiroRsObservation **output);
+
+/**
+ * Deinterleave rawfloat bytes using all stream dimensions of a complete model.
+ * # Safety
+ * Inputs are live readable owners from this library. Output is independent
+ * aligned writable storage holding no live owner and remains unchanged on error.
+ */
+uint32_t shiro_rs_observation_from_model_rawfloat(const struct ShiroRsBytes *bytes,
+                                                  const struct ShiroRsModel *model,
+                                                  uintptr_t maximum_frames,
+                                                  struct ShiroRsObservation **output);
+
+/**
+ * Serialize every observation field in the unchanged original MessagePack format.
+ * # Safety
+ * Input is a live readable owner. Output is independent aligned writable storage
+ * holding no live owner and remains unchanged on error.
+ */
+uint32_t shiro_rs_observation_write_bytes(const struct ShiroRsObservation *observation,
+                                          struct ShiroRsBytes **output);
+
+/**
+ * Deep-copy all observation fields; the clone survives release of the source.
+ * # Safety
+ * Input is a live readable owner. Output is independent aligned writable storage
+ * holding no live owner and remains unchanged on error.
+ */
+uint32_t shiro_rs_observation_clone(const struct ShiroRsObservation *observation,
+                                    struct ShiroRsObservation **output);
+
+/**
+ * Release a unique observation and clear its slot; an empty slot succeeds.
+ * # Safety
+ * Slot is aligned independent initialized writable storage holding a unique
+ * live owner from this library or null. Release requires exclusive access.
+ */
+uint32_t shiro_rs_observation_release(struct ShiroRsObservation **slot);
+
+/**
+ * Parse a complete JSON array of native states, retaining all additional fields.
+ * # Safety
+ * Input is a live readable bytes owner. Output is independent aligned writable
+ * storage holding no live owner and remains unchanged on error.
+ */
+uint32_t shiro_rs_states_read_json(const struct ShiroRsBytes *bytes, struct ShiroRsStates **output);
+
+/**
+ * Serialize every typed state field and flattened additional JSON metadata.
+ * # Safety
+ * Input is a live readable owner. Output is independent aligned writable storage
+ * holding no live owner and remains unchanged on error.
+ */
+uint32_t shiro_rs_states_write_json(const struct ShiroRsStates *states,
+                                    struct ShiroRsBytes **output);
+
+/**
+ * Deep-copy states, jumps, optional fields and all nested additional metadata.
+ * # Safety
+ * Input is a live readable owner. Output is independent aligned writable storage
+ * holding no live owner and remains unchanged on error.
+ */
+uint32_t shiro_rs_states_clone(const struct ShiroRsStates *states, struct ShiroRsStates **output);
+
+/**
+ * Release a unique state sequence and clear its slot; an empty slot succeeds.
+ * # Safety
+ * Slot is aligned independent initialized writable storage holding a unique
+ * live owner from this library or null. Release requires exclusive access.
+ */
+uint32_t shiro_rs_states_release(struct ShiroRsStates **slot);
+
+/**
+ * Construct and serialize the original segmentation from every state field.
+ * Uses the native boundary conversion and transition residual arithmetic, and
+ * retains both legacy MessagePack array-header mismatches for C readers.
+ * # Safety
+ * Inputs are live readable owners from this library. Output is independent
+ * aligned writable storage holding no live owner and remains unchanged on error.
+ */
+uint32_t shiro_rs_states_segmentation_bytes(const struct ShiroRsStates *states,
+                                            const struct ShiroRsModel *model,
+                                            struct ShiroRsBytes **output);
 
 #endif  /* SHIRO_RS_H */

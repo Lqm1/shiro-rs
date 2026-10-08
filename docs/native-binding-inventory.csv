@@ -7,9 +7,9 @@ audio,next_uniform,53,pending,pending,Complete native C/WASM binding remains req
 audio,prepare,78,pending,pending,Complete native C/WASM binding remains required
 batch,feature_options,72,pending,pending,Complete native C/WASM binding remains required
 batch,extract_file,142,pending,pending,Complete native C/WASM binding remains required
-dataset,dimensions,14,pending,pending,Complete native C/WASM binding remains required
-dataset,read_observation,36,pending,pending,Complete native C/WASM binding remains required
-dataset,read_segmentation,80,pending,pending,Complete native C/WASM binding remains required
+dataset,dimensions,14,partial,pending,Complete Native dimensions used in observation_from_model_rawfloat; standalone dimension result retrieval pending
+dataset,read_observation,36,partial,pending,observation_read_rawfloat explicit dimensions and from_model_rawfloat; complete Native deinterleaving/budget semantics; generic stream callbacks pending
+dataset,read_segmentation,80,implemented,pending,states_segmentation_bytes; all state/model inputs and complete legacy output; Native full fields and independent C/Python wire oracle; all5 targets
 dataset,load,146,pending,pending,Complete native C/WASM binding remains required
 dataset,isolated_groups,181,pending,pending,Complete native C/WASM binding remains required
 dataset,load_training_files,261,pending,pending,Complete native C/WASM binding remains required

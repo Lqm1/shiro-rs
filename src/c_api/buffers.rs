@@ -2,7 +2,7 @@
 use super::{boundary, range, result};
 use std::{io, panic::RefUnwindSafe};
 
-unsafe fn input<'a, T>(pointer: *const T, count: usize) -> &'a [T] {
+pub(super) unsafe fn input<'a, T>(pointer: *const T, count: usize) -> &'a [T] {
     if count == 0 {
         &[]
     } else {

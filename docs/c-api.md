@@ -3,6 +3,7 @@
 Build the optional interface with `cargo build --features c-api`. The package
 produces Rust, shared C and static C libraries from the same library target.
 The generated declarations are in `include/shiro_rs.h`; ABI version is 1.
+The current header declares 28 exports and five opaque owner types.
 
 ## Current coverage
 
@@ -43,8 +44,9 @@ and all WASM bindings remain required.
 
 `native-binding-inventory.csv` separately lists the 35 explicit public native
 functions, including methods and host operations. Model definition construction
-is implemented. Rawfloat byte operations are present; stream callbacks remain
-pending. All other entries remain pending. Public types, fields, derived trait
+and complete state-to-segmentation conversion are implemented. Rawfloat and
+observation byte operations are present; stream callbacks and standalone model
+dimension retrieval remain pending. Other entries remain pending. Public types, fields, derived trait
 behavior and crate reexports require separate review; a function count alone
 does not prove complete coverage.
 
@@ -69,6 +71,30 @@ and Rust 2024's explicit unsafe attribute for symbol names. Panic containment
 applies to unwinding panics; it cannot recover from process aborts.
 
 ## Verification
+
+### Observation and state interfaces
+
+Ten additional exports introduce independent observation and state-sequence
+owners. Rawfloat observation loading accepts either explicit stream dimensions
+or all dimensions from a complete model. It uses the native frame budget and
+deinterleaving rules. Serialization retains every observation field in the
+original MessagePack format. State JSON loading, writing and cloning preserve
+optional fields, jumps, `ext` metadata and flattened additional attributes.
+State-to-segmentation conversion uses the native truncating boundaries and
+mixed binary64/binary32 transition arithmetic. Its serialization preserves the
+original array-header mismatches required by C readers.
+
+Focused Windows x86_64 Rust, optimized C and Python callers pass. Independent
+C/Python oracles compare all deinterleaved binary32 values and the complete
+legacy segmentation wire, including ordinary-edge residual probabilities.
+Rust tests also compare the original multistream feature input with the native
+loader, optional JSON fields, nested metadata, malformed input, frame budgets
+and retained outputs after invalid state conversion. The full five-target matrix
+passes 39 suites and 68 tests per target with no failed or ignored tests. All
+three C caller families pass all five targets; all three Python caller families
+pass the three 64-bit targets. Feature isolation and quality gates pass. These
+interfaces do not complete alignment or training.
+Generic stream callbacks and the remaining host workflows are still required.
 
 The foundation passes the full native Rust suite and new ABI tests on
 x86_64/i686 Windows MSVC, x86_64 Windows GNU and x86_64/i686 Linux GNU:
