@@ -70,6 +70,11 @@ typedef struct ShiroRsModel ShiroRsModel;
 typedef struct ShiroRsObservation ShiroRsObservation;
 
 /**
+ * Complete independent native path, including non-Unicode platform strings.
+ */
+typedef struct ShiroRsPath ShiroRsPath;
+
+/**
  * Independent complete phone map, including flattened JSON attributes.
  */
 typedef struct ShiroRsPhoneMap ShiroRsPhoneMap;
@@ -1496,5 +1501,62 @@ uint32_t shiro_rs_dither_next_uniform(struct ShiroRsDitherSequence *sequence, fl
  * null. Release requires exclusive access and transfers ownership.
  */
 uint32_t shiro_rs_dither_release(struct ShiroRsDitherSequence **slot);
+
+/**
+ * Native wire encoding: one Unix bytes, two Windows little-endian u16 units,
+ * zero unavailable. Explicit lengths include embedded NUL; no terminator is added.
+ */
+uint32_t shiro_rs_path_native_encoding(void);
+
+/**
+ * Construct a complete native path from platform bytes without Unicode loss.
+ * # Safety
+ * Input is a live readable byte owner; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_path_from_native_bytes(const struct ShiroRsBytes *bytes,
+                                         struct ShiroRsPath **output);
+
+/**
+ * Construct from a complete UTF-8 string, including embedded NUL characters.
+ * # Safety
+ * Input is a live readable byte owner; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_path_from_utf8(const struct ShiroRsBytes *bytes, struct ShiroRsPath **output);
+
+/**
+ * Snapshot all platform-native units into independent bytes without a terminator.
+ * # Safety
+ * Input is a live readable path owner; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_path_native_bytes(const struct ShiroRsPath *path, struct ShiroRsBytes **output);
+
+/**
+ * Append an entire UTF-8 suffix through the native index operation.
+ * # Safety
+ * Inputs are live readable owners; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_path_append_suffix(const struct ShiroRsPath *path,
+                                     const struct ShiroRsBytes *suffix,
+                                     struct ShiroRsPath **output);
+
+/**
+ * Deep-copy every native path unit into independent ownership.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_path_clone(const struct ShiroRsPath *path, struct ShiroRsPath **output);
+
+/**
+ * Release unique ownership and clear its slot; an empty slot succeeds.
+ * # Safety
+ * Slot is independent aligned writable storage holding a unique live owner or
+ * null. Release requires exclusive access and transfers ownership.
+ */
+uint32_t shiro_rs_path_release(struct ShiroRsPath **slot);
 
 #endif  /* SHIRO_RS_H */

@@ -3,10 +3,39 @@
 Build the optional interface with `cargo build --features c-api`. The package
 produces Rust, shared C and static C libraries from the same library target.
 The generated declarations are in `include/shiro_rs.h`; ABI version is 1.
-The current header declares 120 exports, seventeen opaque owner types, fourteen
+The current header declares 127 exports, eighteen opaque owner types, fourteen
 settings and report descriptors, and progress and uniform callback types.
 
 ## Current coverage
+
+### Lossless native host paths
+
+Seven additional exports provide a complete independent native path owner,
+native encoding query, platform-byte and UTF-8 constructors, native-byte snapshots,
+suffix appending, cloning and release. Native encoding is 1 for Unix bytes and
+2 for Windows little-endian 16-bit units; 0 indicates an unavailable encoding.
+Lengths are explicit and no terminator is added. Unix non-UTF-8 bytes and Windows
+unpaired surrogates remain intact through native construction and retrieval.
+Odd Windows byte lengths are rejected. UTF-8 construction validates the entire
+string. Embedded NUL is retained in paths and suffixes; native file operations
+may impose their own restrictions later.
+
+Suffix appending delegates `index::append_suffix` with the complete path and
+validated UTF-8 suffix, preserving every original native unit. Copies and byte
+snapshots remain independent after input and parent release. No lossy Unicode
+conversion or internal pointer exposure is used. Platform conversions follow
+the official Rust `OsStringExt` and `OsStrExt` examples.
+
+Focused Windows x86_64 Rust, optimized assertion-enabled C and Python checks pass
+all seven exports. They cover invalid native Unicode, embedded NUL, non-BMP UTF-8,
+empty paths, suffixes, clone/snapshot lifetimes and retained outputs on errors.
+The complete five-target matrix passes 50 suites and 97 tests per target, with
+no failed or ignored tests. All fourteen optimized C caller families pass all
+five targets, and all fourteen Python families pass the three 64-bit targets.
+Both feature variants pass formatting, Clippy and Rustdoc with warnings denied.
+Feature-disabled builds exclude all 127 exports; generated-header and native
+source-preservation checks pass. Complete index collections, generic input
+streams, batch extraction and utterance workflows remain required.
 
 ### Complete audio preparation and legacy dither
 
@@ -411,6 +440,11 @@ These checks use debug shared Rust libraries. Release libraries, static linking
 and Python on 32-bit targets have not been verified by this checkpoint.
 
 ## Primary references
+
+- [Windows owned OS strings](https://doc.rust-lang.org/stable/std/os/windows/ffi/trait.OsStringExt.html)
+- [Windows borrowed OS strings](https://doc.rust-lang.org/stable/std/os/windows/ffi/trait.OsStrExt.html)
+- [Unix owned OS strings](https://doc.rust-lang.org/stable/std/os/unix/ffi/trait.OsStringExt.html)
+- [Unix borrowed OS strings](https://doc.rust-lang.org/stable/std/os/unix/ffi/trait.OsStrExt.html)
 
 - [Cargo library target types](https://doc.rust-lang.org/cargo/reference/cargo-targets.html#the-crate-type-field)
 - [Cargo features](https://doc.rust-lang.org/cargo/reference/features.html)

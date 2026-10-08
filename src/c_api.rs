@@ -35,6 +35,8 @@ mod features;
 pub use features::*;
 mod audio;
 pub use audio::*;
+mod paths;
+pub use paths::*;
 
 fn range<T>(pointer: *const T, count: usize) -> Result<(), u32> {
     if count > isize::MAX as usize / size_of::<T>().max(1) {
