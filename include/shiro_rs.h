@@ -29,6 +29,11 @@ typedef struct ShiroRsBytes ShiroRsBytes;
 typedef struct ShiroRsDataset ShiroRsDataset;
 
 /**
+ * All feature matrix fields in independent ownership.
+ */
+typedef struct ShiroRsFeatures ShiroRsFeatures;
+
+/**
  * Independent complete groups in original order.
  */
 typedef struct ShiroRsIsolatedGroups ShiroRsIsolatedGroups;
@@ -207,6 +212,41 @@ typedef struct ShiroRsIsolatedGroupInfo {
   uintptr_t first_state;
   uintptr_t first_frame;
 } ShiroRsIsolatedGroupInfo;
+
+/**
+ * Every native feature option; integer codes are stable across targets.
+ */
+typedef struct ShiroRsFeatureOptions {
+  /**
+   * Zero MFCC, one MFBE, two PLPCC.
+   */
+  uint32_t kind;
+  uintptr_t order;
+  uintptr_t channels;
+  uintptr_t frame_length;
+  float hop;
+  float sample_rate_hz;
+  float minimum_bandwidth_hz;
+  float warp;
+  /**
+   * Flags accept only zero or one.
+   */
+  uint32_t include_dc;
+  /**
+   * Zero absent, one RMS, two decibels.
+   */
+  uint32_t energy;
+  uint32_t delta;
+  uint32_t acceleration;
+} ShiroRsFeatureOptions;
+
+/**
+ * Complete native matrix dimensions; values are retrieved separately.
+ */
+typedef struct ShiroRsFeatureInfo {
+  uintptr_t frames;
+  uintptr_t columns;
+} ShiroRsFeatureInfo;
 
 /**
  * First revision of SHIRO's additive C interface.
@@ -1233,5 +1273,69 @@ uint32_t shiro_rs_array_usize_release(struct ShiroRsArrayUsize **slot);
  */
 uint32_t shiro_rs_model_dimensions(const struct ShiroRsModel *model,
                                    struct ShiroRsArrayUsize **output);
+
+/**
+ * Copy every native feature default into the descriptor.
+ * # Safety
+ * Output is independent aligned exclusively writable descriptor storage.
+ */
+uint32_t shiro_rs_feature_options_default(struct ShiroRsFeatureOptions *output);
+
+/**
+ * Construct all public matrix fields without imposing downstream validation.
+ * Arbitrary dimensions and every binary32 value are retained independently.
+ * # Safety
+ * Values is a live readable owner; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_features_create(uintptr_t frames,
+                                  uintptr_t columns,
+                                  const struct ShiroRsArrayF32 *values,
+                                  struct ShiroRsFeatures **output);
+
+/**
+ * Extract using every native option and the complete input signal.
+ * # Safety
+ * Signal is a live readable owner; options is aligned initialized readable
+ * storage. Output is independent aligned writable storage holding no live
+ * owner on success. Inputs and failed outputs remain unchanged.
+ */
+uint32_t shiro_rs_features_extract(const struct ShiroRsArrayF32 *signal,
+                                   const struct ShiroRsFeatureOptions *options,
+                                   struct ShiroRsFeatures **output);
+
+/**
+ * Retrieve both native dimensions without narrowing.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable storage.
+ */
+uint32_t shiro_rs_features_get_info(const struct ShiroRsFeatures *features,
+                                    struct ShiroRsFeatureInfo *output);
+
+/**
+ * Snapshot every binary32 value into independent ownership.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_features_get_values(const struct ShiroRsFeatures *features,
+                                      struct ShiroRsArrayF32 **output);
+
+/**
+ * Deep-copy all fields into an owner independent of the source lifetime.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_features_clone(const struct ShiroRsFeatures *features,
+                                 struct ShiroRsFeatures **output);
+
+/**
+ * Release unique ownership and clear its slot; an empty slot succeeds.
+ * # Safety
+ * Slot is independent aligned writable storage holding a unique live owner
+ * or null. Release requires exclusive access and transfers ownership.
+ */
+uint32_t shiro_rs_features_release(struct ShiroRsFeatures **slot);
 
 #endif  /* SHIRO_RS_H */

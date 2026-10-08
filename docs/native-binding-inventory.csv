@@ -14,7 +14,7 @@ dataset,load,146,implemented,pending,"Complete Native host dataset loader/initia
 dataset,isolated_groups,181,implemented,pending,"Standalone grouping and arbitrary complete-field constructor; original positions/full samples/state metadata, jump filtering, capped intervals and ownership/failures; Rust/C all5 and Python3x64"
 dataset,load_training_files,261,implemented,pending,"Complete Native training host/file/group input and13 options; complete model/reports and synchronous progress with independent snapshots; original9 C model/CSV cases, stopping/parallel/failures; Rust/C all5 and Python3x64"
 definition,build,44,implemented,pending,model_from_definition; all original JSON fields/defaults; exact C model; tests/c_api_models.rs and C/Python callers
-features,extract,62,pending,pending,Complete native C/WASM binding remains required
+features,extract,62,implemented,pending,"Complete12 native options and all Features fields, arbitrary constructor and independent snapshots; all72 C cases/6399 values, Native options/emptyframes/floatbits/ownership/failures; Rust/C all5 and Python3x64"
 index,append_suffix,13,pending,pending,Complete native C/WASM binding remains required
 index,read,20,pending,pending,Complete native C/WASM binding remains required
 initialization,initialize,21,implemented,pending,"Complete Native host dataset loader/initializer via same named C workflow; full sample fields and3 settings, original4 C model bytes,10-frame and corrected fallback Rust checks; Rust/C all5 and Python3x64"

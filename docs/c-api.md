@@ -3,10 +3,43 @@
 Build the optional interface with `cargo build --features c-api`. The package
 produces Rust, shared C and static C libraries from the same library target.
 The generated declarations are in `include/shiro_rs.h`; ABI version is 1.
-The current header declares 101 exports, fourteen opaque owner types, ten settings
+The current header declares 108 exports, fifteen opaque owner types, twelve settings
 and report descriptors, and one progress callback type.
 
 ## Current coverage
+
+### Complete feature extraction
+
+Seven additional exports provide every native feature setting and all public
+feature matrix fields. The descriptor contains kind, order, channels, frame
+length, fractional hop, sample rate, minimum bandwidth, warp, DC inclusion,
+optional energy, delta and acceleration. Kind codes are 0 MFCC, 1 MFBE and
+2 PLPCC; energy codes are 0 absent, 1 RMS and 2 decibels. Flags accept only 0 or
+1. Numeric validation delegates the native extractor. Defaults derive directly
+from the native defaults.
+
+The independent result owner retains frame count, column count and all binary32
+values. Arbitrary construction preserves every public native field, including
+inconsistent dimensions and nonfinite values; downstream consumers retain their
+native validation. Info, value snapshots, cloning and release preserve ownership
+independence. No internal buffer pointer escapes. Empty extraction retains the
+computed column count.
+
+Focused Windows x86_64 Rust, optimized assertion-enabled C and Python callers
+pass all 72 original C cases and 6,399 feature values using the native comparison
+threshold of normalized error below 2e-5, with independent checks for matching
+nonfinite outputs. Rust also compares every nondefault setting, all feature and
+energy modes and empty fractional-hop cases against independent native calls.
+Tests retain full-width arbitrary dimension fields and signed zero, subnormal,
+NaN-payload and infinity value bits after source and parent owners are released.
+Invalid codes, numeric inputs and pointers retain outputs. Focused Clippy passes.
+The full five-target matrix passes 48 suites and 91 tests per target with no
+failed or ignored tests and all 14 original executable tests retained. All
+twelve optimized C caller families pass on all five targets; all twelve Python
+families pass on the three 64-bit targets. Both feature configurations pass
+formatting, Clippy and Rustdoc with warnings denied. Feature-disabled checks
+confirm all 108 ABI symbols are absent; generated-header and source-preservation
+verification pass. Remaining native workflows and WASM are still required.
 
 ### Standalone dimensions and target-width arrays
 
