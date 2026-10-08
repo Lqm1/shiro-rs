@@ -3,7 +3,7 @@
 Build the optional interface with `cargo build --features c-api`. The package
 produces Rust, shared C and static C libraries from the same library target.
 The generated declarations are in `include/shiro_rs.h`; ABI version is 1.
-The current header declares 78 exports, eleven opaque owner types, seven settings
+The current header declares 87 exports, twelve opaque owner types, eight settings
 and report descriptors, and one progress callback type.
 
 ## Current coverage
@@ -74,6 +74,28 @@ and Rust 2024's explicit unsafe attribute for symbol names. Panic containment
 applies to unwinding panics; it cannot recover from process aborts.
 
 ## Verification
+
+### Untied models and assignment tables
+
+Nine exports expose complete native untying, an independent result owner,
+construction from all public model/document/assignment fields, model and document
+snapshots, assignment count and field getters, summary bytes, clone and release.
+Constructed assignments preserve target-width integers without enforcing summary
+validity. Summary generation retains native row validation and publishes bytes
+only after success. It does not open observation files.
+
+Focused Windows x86_64 Rust, optimized C and Python callers pass against the
+original C model, complete document and summary. All ordered assignment fields
+and independent snapshot lifetimes are checked, including maximum-width integer
+fields, late invalid assignments and unchanged failure outputs. Rust additionally
+compares complete weighted, multi-file results and all metadata against independent
+native calls, retaining stream weights corrected in the Rust implementation.
+The five-target matrix passes 45 suites and 84 tests per target, with no failed
+or ignored tests. All nine C caller families pass all five targets; all nine
+Python families pass the three 64-bit targets. Feature-disabled builds exclude
+all nine new exports. Formatting, Clippy and Rustdoc with warnings denied,
+generated-header verification and source-preservation checks pass. Generic
+summary-stream callbacks and all WASM bindings remain required.
 
 ### Timed labels and conversions
 

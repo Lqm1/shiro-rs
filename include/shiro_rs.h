@@ -65,6 +65,11 @@ typedef struct ShiroRsTrainingFiles ShiroRsTrainingFiles;
 typedef struct ShiroRsTrainingResult ShiroRsTrainingResult;
 
 /**
+ * Independent complete model, segmentation document and assignment table.
+ */
+typedef struct ShiroRsUntiedModel ShiroRsUntiedModel;
+
+/**
  * All native alignment settings. Integer flags must be 0 or 1. Layout follows
  * the target C ABI; duration_extra has the target size_t width.
  */
@@ -164,6 +169,15 @@ typedef struct ShiroRsLabelInfo {
   double start;
   double end;
 } ShiroRsLabelInfo;
+
+/**
+ * All native assignment fields in target-width integer representation.
+ */
+typedef struct ShiroRsAssignment {
+  uintptr_t state;
+  uintptr_t file;
+  uintptr_t segment;
+} ShiroRsAssignment;
 
 /**
  * First revision of SHIRO's additive C interface.
@@ -969,5 +983,92 @@ uint32_t shiro_rs_labels_write_bytes(const struct ShiroRsLabels *labels,
 uint32_t shiro_rs_labels_output_path(const struct ShiroRsBytes *filename,
                                      const struct ShiroRsBytes *suffix,
                                      struct ShiroRsBytes **output);
+
+/**
+ * Construct all public native result fields without narrowing them to successful
+ * untying results. Assignment validity is checked by native summary generation.
+ * # Safety
+ * Owners and assignment descriptors are live aligned initialized readable
+ * storage. Output is independent aligned writable storage holding no live owner
+ * on success. Inputs and failed output slots remain unchanged.
+ */
+uint32_t shiro_rs_untied_model_create(const struct ShiroRsModel *model,
+                                      const struct ShiroRsBytes *document,
+                                      const struct ShiroRsAssignment *assignments,
+                                      uintptr_t count,
+                                      struct ShiroRsUntiedModel **output);
+
+/**
+ * Clone distributions in original file/state order, preserving every document
+ * attribute and stream weight. Observation files are not opened.
+ * # Safety
+ * Inputs are live readable owners; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_untie(const struct ShiroRsModel *model,
+                        const struct ShiroRsBytes *document,
+                        struct ShiroRsUntiedModel **output);
+
+/**
+ * Snapshot every model parameter into independent ownership.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_untied_model_get_model(const struct ShiroRsUntiedModel *owner,
+                                         struct ShiroRsModel **output);
+
+/**
+ * Snapshot the complete original segmentation document as JSON bytes.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_untied_model_get_document(const struct ShiroRsUntiedModel *owner,
+                                            struct ShiroRsBytes **output);
+
+/**
+ * Retrieve the complete ordered assignment count.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable storage.
+ */
+uint32_t shiro_rs_untied_model_length(const struct ShiroRsUntiedModel *owner, uintptr_t *output);
+
+/**
+ * Copy all target-width fields of an ordered assignment.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable storage.
+ * Invalid index retains output.
+ */
+uint32_t shiro_rs_untied_model_get_assignment(const struct ShiroRsUntiedModel *owner,
+                                              uintptr_t index,
+                                              struct ShiroRsAssignment *output);
+
+/**
+ * Write the complete native summary into independent bytes. Native validation
+ * covers all rows before output; invalid assignments/metadata retain output.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_untied_model_summary_bytes(const struct ShiroRsUntiedModel *owner,
+                                             struct ShiroRsBytes **output);
+
+/**
+ * Deep-copy the complete model, document and assignments.
+ * # Safety
+ * Input is a live readable owner; output is independent aligned writable
+ * storage holding no live owner on success. Failed output remains unchanged.
+ */
+uint32_t shiro_rs_untied_model_clone(const struct ShiroRsUntiedModel *owner,
+                                     struct ShiroRsUntiedModel **output);
+
+/**
+ * Release a unique owner and clear its slot; an empty slot succeeds.
+ * # Safety
+ * Slot is independent aligned writable storage holding a unique live owner or
+ * null. Release requires exclusive access and transfers ownership.
+ */
+uint32_t shiro_rs_untied_model_release(struct ShiroRsUntiedModel **slot);
 
 #endif  /* SHIRO_RS_H */

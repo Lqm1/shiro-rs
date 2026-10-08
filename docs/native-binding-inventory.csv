@@ -30,7 +30,7 @@ rawfloat,write,45,partial,pending,Exact byte/array operations verified; generic 
 segmentation,initial,20,implemented,pending,"Complete Native phone map expansion/options and metadata, definition and initial states; original Lua cases, independent ownership and invalid outputs; Rust/C all5 and Python3x64"
 training,train,50,implemented,pending,"Complete Native training host/file/group input and13 options; complete model/reports and synchronous progress with independent snapshots; original9 C model/CSV cases, stopping/parallel/failures; Rust/C all5 and Python3x64"
 training,train_with_progress,58,implemented,pending,"Complete Native training host/file/group input and13 options; complete model/reports and synchronous progress with independent snapshots; original9 C model/CSV cases, stopping/parallel/failures; Rust/C all5 and Python3x64"
-untying,untie,30,pending,pending,Complete native C/WASM binding remains required
-untying,write_summary,93,pending,pending,Complete native C/WASM binding remains required
+untying,untie,30,implemented,pending,"Complete native result and all fields/snapshots/constructor; original C model/JSON/summary, Native weighted multi-file/full metadata, failures; Rust/C all5 and Python3x64"
+untying,write_summary,93,partial,pending,"Complete native summary bytes for arbitrary result fields, exact original C summary and late failure checks; Rust/C all5 and Python3x64; generic output-stream callbacks pending"
 utterances,split_wave,25,pending,pending,Complete native C/WASM binding remains required
 utterances,split_features,116,pending,pending,Complete native C/WASM binding remains required
