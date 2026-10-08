@@ -34,6 +34,28 @@ typedef struct ShiroRsObservation ShiroRsObservation;
 typedef struct ShiroRsStates ShiroRsStates;
 
 /**
+ * All native alignment settings. Integer flags must be 0 or 1. Layout follows
+ * the target C ABI; duration_extra has the target size_t width.
+ */
+typedef struct ShiroRsAlignmentOptions {
+  /**
+   * 0 explicit HSMM durations, 1 geometric HMM durations.
+   */
+  uint32_t duration_mode;
+  /**
+   * 0 embedded alignment, 1 isolated phone groups.
+   */
+  uint32_t isolated;
+  float hsmm_temperature;
+  float duration_weight;
+  float state_radius;
+  uintptr_t duration_extra;
+  float duration_extra_factor;
+  float geometric_temperature;
+  float pruning_slope;
+} ShiroRsAlignmentOptions;
+
+/**
  * First revision of SHIRO's additive C interface.
  */
 uint32_t shiro_rs_abi_version(void);
@@ -338,5 +360,41 @@ uint32_t shiro_rs_states_release(struct ShiroRsStates **slot);
 uint32_t shiro_rs_states_segmentation_bytes(const struct ShiroRsStates *states,
                                             const struct ShiroRsModel *model,
                                             struct ShiroRsBytes **output);
+
+/**
+ * Copy the unchanged native defaults into caller-provided descriptor storage.
+ * # Safety
+ * Output is independent aligned exclusively writable storage for one descriptor.
+ */
+uint32_t shiro_rs_alignment_options_default(struct ShiroRsAlignmentOptions *output);
+
+/**
+ * Align all input states without modifying any participating input owner.
+ * # Safety
+ * Inputs are live readable owners from this library. Options are aligned live
+ * initialized readable descriptor storage. Output is independent aligned writable
+ * storage holding no live owner and remains unchanged on failure. No participating
+ * owner or descriptor may be modified or released during this call.
+ */
+uint32_t shiro_rs_align_states(const struct ShiroRsModel *model,
+                               const struct ShiroRsObservation *observation,
+                               const struct ShiroRsStates *states,
+                               const struct ShiroRsAlignmentOptions *options,
+                               struct ShiroRsStates **output);
+
+/**
+ * Align a complete original JSON document using the unchanged native file loader.
+ * Filenames retain their process-relative meaning. All document, file and state
+ * metadata is retained. Output is complete UTF-8 JSON in independent storage.
+ * # Safety
+ * Inputs are live readable owners from this library. Options are aligned live
+ * initialized readable descriptor storage. Output is independent aligned writable
+ * storage holding no live owner and remains unchanged on failure. No participating
+ * owner or descriptor may be modified or released during this call.
+ */
+uint32_t shiro_rs_align_document(const struct ShiroRsModel *model,
+                                 const struct ShiroRsBytes *document,
+                                 const struct ShiroRsAlignmentOptions *options,
+                                 struct ShiroRsBytes **output);
 
 #endif  /* SHIRO_RS_H */

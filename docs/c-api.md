@@ -3,7 +3,8 @@
 Build the optional interface with `cargo build --features c-api`. The package
 produces Rust, shared C and static C libraries from the same library target.
 The generated declarations are in `include/shiro_rs.h`; ABI version is 1.
-The current header declares 28 exports and five opaque owner types.
+The current header declares 31 exports, five opaque owner types and one settings
+descriptor.
 
 ## Current coverage
 
@@ -44,7 +45,8 @@ and all WASM bindings remain required.
 
 `native-binding-inventory.csv` separately lists the 35 explicit public native
 functions, including methods and host operations. Model definition construction
-and complete state-to-segmentation conversion are implemented. Rawfloat and
+and complete state-to-segmentation conversion and both alignment operations are
+implemented. Rawfloat and
 observation byte operations are present; stream callbacks and standalone model
 dimension retrieval remain pending. Other entries remain pending. Public types, fields, derived trait
 behavior and crate reexports require separate review; a function count alone
@@ -71,6 +73,35 @@ and Rust 2024's explicit unsafe attribute for symbol names. Panic containment
 applies to unwinding panics; it cannot recover from process aborts.
 
 ## Verification
+
+### Alignment interface
+
+Three exports provide native defaults, in-memory state alignment and full host
+document alignment. The descriptor contains both mode flags, all five HSMM
+settings and both geometric settings. Its `repr(C)` layout follows the target
+C ABI, including padding and pointer-sized `duration_extra`. Mode and isolated
+flags use validated `u32` values rather than caller-controlled Rust enum or bool
+representations. Invalid codes return 2. Numerical validation remains native.
+
+The state operation returns an independent complete state owner. The document
+operation reads the original UTF-8 document, delegates to the native file loader
+and returns complete JSON bytes. Document, file and state metadata is preserved;
+filenames keep their native process-relative meaning. Inputs remain unchanged and
+failed calls retain output slots.
+
+Focused Windows x86_64 Rust, optimized C and Python tests pass all nine original
+C inference cases, including embedded/isolated, HMM/HSMM and pruning variants.
+Rust additionally compares nondefault values for every configuration field with
+independently constructed native settings and exercises nested state metadata.
+Host document tests read real feature files and compare complete JSON metadata.
+Pointer, invalid flag, native numerical failure, malformed document and missing
+file checks retain outputs. The complete five-target matrix passes 40 suites and
+71 tests per target, with no failed or ignored tests. All four C caller families
+pass all five targets; all four Python caller families pass the three 64-bit
+targets. Feature isolation and quality gates pass. These operations cover the
+computation and host loading of `shiro-align`; its existing native CLI retains
+argument, model-file and stdout handling. Training and other pending workflows
+remain required.
 
 ### Observation and state interfaces
 
@@ -114,5 +145,6 @@ and Python on 32-bit targets have not been verified by this checkpoint.
 - [Cargo library target types](https://doc.rust-lang.org/cargo/reference/cargo-targets.html#the-crate-type-field)
 - [Cargo features](https://doc.rust-lang.org/cargo/reference/features.html)
 - [Rust ABI](https://doc.rust-lang.org/reference/abi.html)
+- [Rust C representation and target layout](https://doc.rust-lang.org/reference/type-layout.html#the-c-representation)
 - [Rust lint attributes](https://doc.rust-lang.org/reference/attributes/diagnostics.html#lint-attributes)
 - [cbindgen 0.29.4 documentation](https://github.com/mozilla/cbindgen/blob/v0.29.4/docs.md)
