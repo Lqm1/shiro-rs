@@ -1,0 +1,32 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Three-crate real speech verification</title>
+<h1>Three-crate real speech verification</h1>
+<button id="run">Run real-speech verification</button>
+<pre id="progress">Ready to initialize independent WebAssembly modules.</pre>
+<pre id="result"></pre>
+<script type="module">
+import initializeC, * as C from '/ciglet/ciglet_rs.js';
+import initializeL, * as L from '/liblrhsmm/liblrhsmm_rs.js';
+import initializeS, * as S from '/shiro/shiro_rs.js';
+import {verifyThreeCrateSpeech} from '/three-crate-speech-checks.mjs';
+const progress = document.querySelector('#progress'), output = document.querySelector('#result');
+document.querySelector('#run').addEventListener('click', async () => {
+document.querySelector('#run').disabled = true;
+try {
+    await Promise.all([initializeC(), initializeL(), initializeS()]);
+    progress.textContent = 'Independent modules initialized; starting speech verification';
+    const report = await verifyThreeCrateSpeech(C, L, S, async name => {
+        const response = await fetch('/fixtures/' + name);
+        if (!response.ok) throw new Error('Fixture unavailable: ' + name);
+        return new Uint8Array(await response.arrayBuffer());
+    }, message => { progress.textContent = message; });
+    window.verificationResult = report;
+    progress.textContent = 'PASS: three independent crates, real speech, inference, training and reload';
+    output.textContent = JSON.stringify(report, null, 2);
+} catch (error) {
+    progress.textContent = 'FAIL'; output.textContent = String(error.stack || error);
+    window.verificationError = String(error);
+}
+});
+</script>

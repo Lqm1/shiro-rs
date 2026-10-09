@@ -1,8 +1,15 @@
 # Browser and Node.js WebAssembly API
 
+Current binding inventories cover every portable public computation. OS
+process operations retain their native implementation under ADR 0007. The
+following sections include historical checkpoints; their older pending
+statements are not the current implementation status. Final latest-source
+platform and composed acceptance remains in progress.
+
+
 The optional `wasm` feature exposes native computations through independent
-owners and copied byte/typed arrays. Full SHIRO bindings and final combined
-acceptance are still in progress. This checkpoint implements rawfloat, all
+owners and copied byte/typed arrays. All SHIRO computational bindings are implemented; final latest-source
+acceptance remains in progress. The interface implements rawfloat, all
 native label and phone-map operations, model construction/IO/parameter access,
 observation and segmentation import with complete owned field access,
 isolated grouping,

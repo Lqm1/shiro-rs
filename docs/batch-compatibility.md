@@ -96,6 +96,10 @@ identical output bytes:
 | `.mfcc` | 192 | `87030d969b2a527eba58819cc988c1c2930acf7a7b685dca86cf729342adaee8` |
 | `.param` | 576 | `ae0cec6978e43ddd40699cd30e6c6fd7674ee9c8e482a7add87c1ae84f2f9d31` |
 
-Actual SPTK on other native targets remains unverified. These synthetic
-fixtures do not establish real-audio/model/training acceptance. Ten other
-SHIRO tools, the full native acceptance gate and all bindings remain pending.
+The latest actual-SPTK comparison passes all five agreed Rust targets.
+See [host-tool verification](sptk-host-verification.md) for exact program
+hashes, output bytes, caller/host architectures and portable reproduction.
+These synthetic host fixtures supplement separate real-audio/model/training
+acceptance. Earlier test counts above describe their native checkpoint; the
+full native phase and computational bindings are now implemented, while final
+latest-source acceptance remains in progress.
