@@ -6,7 +6,7 @@ acceptance are still in progress. This checkpoint implements rawfloat, all
 native label and phone-map operations, model construction/IO/parameter access,
 observation and segmentation import with complete owned field access,
 isolated grouping,
-dataset owners and model initialization,
+dataset owners, document loading and model initialization,
 and complete JSON document owners used by
 the remaining workflows. CLI invocation, OS files and external Lua/SPTK
 processes remain native as specified by ADR 0007.
@@ -186,8 +186,8 @@ explicit forward-jump handling and fractional times. They check IEEE payloads,
 70 streams, large budgets with small inputs, invalid import shapes, all field
 edits, copied arrays, source release and atomic failed edits. Native
 `initialization` and `c_api_samples` integration suites provide related importer
-and model-initialization regression coverage. Dataset loading, inference,
-training and final combined platform acceptance remain in progress.
+and model-initialization regression coverage. Inference, training and final
+combined platform acceptance remain in progress.
 
 ## Isolated grouping
 
@@ -216,7 +216,7 @@ fractional times, self/backward jumps, out-of-group filtering and same-phone
 index reset; and check all field edits, collection operations, source release,
 maximum u32 positions and invalid inputs. Related native `c_api_isolation` and
 `rest_cli` suites check the shared operation and original trained model bytes.
-Remaining dataset workflows and final combined acceptance are still required.
+Training workflows and final combined acceptance are still required.
 
 ## Dataset ownership and initialization
 
@@ -225,8 +225,8 @@ Remaining dataset workflows and final combined acceptance are still required.
 replacement. Unpaired arrays are representable, matching native public fields;
 the consuming operation validates pairing. `Observations` and `Segmentations`
 provide empty construction, length, copied get/push, indexed replacement,
-clear and clone. This in-memory owner does not yet provide document-based
-feature-file resolution or the full training-file loading workflow.
+clear and clone. Document loading uses the in-memory feature-file inputs
+described below.
 
 `Model.initialize(dataset, options)` invokes the native SHIRO initializer and
 returns an independent model. `InitializationOptions` exposes all three native
@@ -246,3 +246,32 @@ dataset arrays, cloning, growth/shrinkage, independent child owners, all option
 fields, invalid settings, unpaired samples and invalid intervals. The related
 native `initialization` and `c_api_initialization` suites pass as regression
 coverage. Full training, inference and final combined acceptance remain open.
+
+## Document feature-file loading
+
+`FeatureFiles` stores independent byte snapshots addressed by exact UTF-8
+filenames. It provides construction, length, sorted copied names, copied get,
+set/replacement, remove, clear and cloning. Filenames are not normalized or
+case-folded; repeated set replaces that filename's contents. Repeated document
+entries resolve the same bytes independently and retain document order.
+
+`Dataset.load(document, model, files, maximum_frames)` loads every document
+entry into the complete paired arrays. `Datasets.load_training_files(document,
+model, files, maximum_frames, isolated)` returns one dataset per file; each
+contains either the embedded sample or its ordered isolated groups. `Datasets`
+also provides all standard copied collection operations. Loading validates
+model dimensions, per-file frame budgets, rawfloat frames and states using the
+same native assembly functions as OS-backed loading. Empty documents return
+empty datasets after model validation. Missing filenames and malformed inputs
+throw without changing any input or previously returned owner.
+
+`tests/wasm_loading_node.cjs` and `wasm_loading_browser.html` run all seven
+current families twice in opposite orders. They verify ordered and repeated
+files, UTF-8 names, complete observation and segmentation bytes, six isolated
+samples, boundary capping and local transition filtering, file replacement,
+independent snapshots, exact names, missing and late malformed files, frame
+budgets, empty documents and source release. A document-loading-to-initialization
+path produces the exact original C aligned model. Native initialization and
+training suites cover the shared OS-backed assembly, including original model
+bytes and likelihood reports. These bindings expose data loading without OS
+file APIs; training and final combined acceptance remain in progress.

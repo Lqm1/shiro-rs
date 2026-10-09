@@ -148,15 +148,26 @@ pub fn load(
     model: &Model,
     maximum_frames: usize,
 ) -> io::Result<Dataset> {
+    load_resolved(document, model, |filename, dimensions| {
+        read_observation(
+            BufReader::new(File::open(filename)?),
+            dimensions,
+            maximum_frames,
+        )
+    })
+}
+
+/// Share dataset assembly between host files and in-memory bindings.
+pub(crate) fn load_resolved(
+    document: &SegmentationDocument,
+    model: &Model,
+    mut resolve: impl FnMut(&str, &[usize]) -> io::Result<Observation>,
+) -> io::Result<Dataset> {
     let dimensions = dimensions(model)?;
     let mut observations = Vec::new();
     let mut segmentations = Vec::new();
     for file in &document.files {
-        let observation = read_observation(
-            BufReader::new(File::open(&file.filename)?),
-            &dimensions,
-            maximum_frames,
-        )?;
+        let observation = resolve(&file.filename, &dimensions)?;
         let segmentation = read_segmentation(&file.states, model)?;
         observations.push(observation);
         segmentations.push(segmentation);
@@ -264,16 +275,27 @@ pub fn load_training_files(
     maximum_frames: usize,
     isolated: bool,
 ) -> io::Result<Vec<Dataset>> {
+    load_training_resolved(document, model, isolated, |filename, dimensions| {
+        read_observation(
+            BufReader::new(File::open(filename)?),
+            dimensions,
+            maximum_frames,
+        )
+    })
+}
+
+pub(crate) fn load_training_resolved(
+    document: &SegmentationDocument,
+    model: &Model,
+    isolated: bool,
+    mut resolve: impl FnMut(&str, &[usize]) -> io::Result<Observation>,
+) -> io::Result<Vec<Dataset>> {
     let dimensions = dimensions(model)?;
     document
         .files
         .iter()
         .map(|file| {
-            let observation = read_observation(
-                BufReader::new(File::open(&file.filename)?),
-                &dimensions,
-                maximum_frames,
-            )?;
+            let observation = resolve(&file.filename, &dimensions)?;
             if !isolated {
                 return Ok(Dataset {
                     observations: vec![observation],
