@@ -6,7 +6,7 @@ acceptance are still in progress. This checkpoint implements rawfloat, all
 native label and phone-map operations, model construction/IO/parameter access,
 observation and segmentation import with complete owned field access,
 isolated grouping,
-dataset owners, document loading, model initialization and training,
+dataset owners, document loading, model initialization, training and alignment,
 and complete JSON document owners used by
 the remaining workflows. CLI invocation, OS files and external Lua/SPTK
 processes remain native as specified by ADR 0007.
@@ -186,7 +186,7 @@ explicit forward-jump handling and fractional times. They check IEEE payloads,
 70 streams, large budgets with small inputs, invalid import shapes, all field
 edits, copied arrays, source release and atomic failed edits. Native
 `initialization` and `c_api_samples` integration suites provide related importer
-and model-initialization regression coverage. Inference and final
+and model-initialization regression coverage. Final
 combined platform acceptance remain in progress.
 
 ## Isolated grouping
@@ -245,7 +245,7 @@ only the documented fallback-duration correction. Tests exercise both complete
 dataset arrays, cloning, growth/shrinkage, independent child owners, all option
 fields, invalid settings, unpaired samples and invalid intervals. The related
 native `initialization` and `c_api_initialization` suites pass as regression
-coverage. Inference and final combined acceptance remain open.
+coverage. Final combined acceptance remains open.
 
 ## Document feature-file loading
 
@@ -311,7 +311,7 @@ The callback uses `js-sys` 0.3.106, added as an optional target dependency with
 Cargo and activated by the `wasm` feature. Exception handling follows the
 official [Function API](https://wasm-bindgen.github.io/wasm-bindgen/api/js_sys/struct.Function.html)
 and [Result boundary](https://wasm-bindgen.github.io/wasm-bindgen/reference/types/result.html).
-Inference, remaining SHIRO operations and final cross-platform acceptance are
+Remaining SHIRO operations and final cross-platform acceptance are
 still required before claiming completion.
 
 `tests/wasm_training_node.cjs` and `wasm_training_browser.html` run all eight
@@ -328,3 +328,35 @@ actual OS workers for both duration modes and verify fallible progress stopping.
 The existing native `training`, `c_api_training` and `rest_cli` suites continue
 to pass. This checkpoint does not refresh the full platform matrix or establish
 final cross-crate acceptance.
+
+## State and document alignment
+
+`Model.align_states(observation, states, options)` returns independent complete
+states. `align_document(document, files, maximum_frames, options)` returns a
+complete independent document, retaining file order, filenames and all document,
+file and state attributes. The document path shares native assembly and prepares
+selected duration distributions once for the corpus. It resolves exact names
+through `FeatureFiles` and enforces the supplied per-file frame budget. Native
+OS-backed alignment retains its existing maximum and process-relative filenames.
+
+`AlignmentOptions` exposes all nine native fields with defaults, setters and
+clone: `duration_mode`, `isolated`, `hsmm_temperature`, `duration_weight`,
+`state_radius`, `duration_extra`, `duration_extra_factor`,
+`geometric_temperature` and `pruning_slope`. Mode 0 uses explicit HSMM durations;
+mode 1 uses geometric HMM. Options retain native numeric validation, including
+permitted zero temperature. Isolated alignment shares grouping and boundary
+capping; explicit and isolated outputs remove jump attributes as in native
+materialization, while embedded geometric output retains them. Unused explicit
+duration densities are not prepared, and HMM alignment does not require them.
+
+`tests/wasm_alignment_node.cjs` and `wasm_alignment_browser.html` run all nine
+current families twice in opposite orders. Nine original C modes provide 40
+state comparisons, covering embedded/isolated HMM/HSMM and pruning options.
+Additional assertions cover nested state/file/document metadata, independent
+results, reused corpus preparation, native no-path errors, zero temperature,
+invalid selected and unused uninitialized durations, capped intervals, local
+jump filtering, repeated-phone resets, invalid identity/interval/options,
+missing or malformed files and frame budgets. Native `alignment` and
+`c_api_alignment` regression suites validate the shared OS-backed path. This
+does not establish the remaining feature/audio/model workflows or final combined
+platform acceptance.

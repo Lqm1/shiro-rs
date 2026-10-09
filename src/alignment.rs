@@ -74,6 +74,21 @@ pub fn align_document(
     document: &SegmentationDocument,
     options: Options,
 ) -> io::Result<SegmentationDocument> {
+    align_document_resolved(model, document, options, |filename, dimensions| {
+        dataset::read_observation(
+            BufReader::new(File::open(filename)?),
+            dimensions,
+            i32::MAX as usize,
+        )
+    })
+}
+
+pub(crate) fn align_document_resolved(
+    model: &Model,
+    document: &SegmentationDocument,
+    options: Options,
+    mut resolve: impl FnMut(&str, &[usize]) -> io::Result<Observation>,
+) -> io::Result<SegmentationDocument> {
     let dimensions = dataset::dimensions(model)?;
     let prepared = prepare(
         model,
@@ -86,11 +101,7 @@ pub fn align_document(
     )?;
     let mut result = document.clone();
     for file in &mut result.files {
-        let observation = dataset::read_observation(
-            BufReader::new(File::open(&file.filename)?),
-            &dimensions,
-            i32::MAX as usize,
-        )?;
+        let observation = resolve(&file.filename, &dimensions)?;
         file.states = align_prepared(model, &prepared, &observation, &file.states, options)?;
     }
     Ok(result)

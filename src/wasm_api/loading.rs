@@ -42,7 +42,7 @@ impl FeatureFiles {
 }
 
 impl FeatureFiles {
-    fn resolve(
+    pub(super) fn resolve(
         &self,
         filename: &str,
         dimensions: &[usize],
