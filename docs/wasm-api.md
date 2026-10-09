@@ -6,7 +6,7 @@ acceptance are still in progress. This checkpoint implements rawfloat, all
 native label and phone-map operations, model construction/IO/parameter access,
 observation and segmentation import with complete owned field access,
 isolated grouping,
-dataset owners, document loading, model initialization, training and alignment,
+dataset owners, document loading, model initialization, training, alignment and untying,
 and complete JSON document owners used by
 the remaining workflows. CLI invocation, OS files and external Lua/SPTK
 processes remain native as specified by ADR 0007.
@@ -360,3 +360,33 @@ missing or malformed files and frame budgets. Native `alignment` and
 `c_api_alignment` regression suites validate the shared OS-backed path. This
 does not establish the remaining feature/audio/model workflows or final combined
 platform acceptance.
+
+## Distribution untying and summary output
+
+`Model.untie(document)` duplicates duration and emission distributions in
+file/state order and rewrites all document model references. It returns an
+independent `UntiedModel` with all three native fields: copied `model()`, copied
+`segmentation()` and copied `assignments()`. Each field has a complete setter;
+the owner also supports an arbitrary native-value constructor and clone.
+`Assignment` exposes mutable state/file/segment indices, construction and clone.
+`Assignments` provides length, copied get/push, indexed replacement, clear and
+clone. These arbitrary owners retain native validation boundaries rather than
+enforcing corpus constraints during field editing.
+
+`UntiedModel.write_summary()` returns the native summary byte sequence. All
+assignment locations and optional phone/index metadata are checked before
+output; empty metadata yields only the three assignment indices. Metadata state
+indices retain native truncating signed conversion. Untying does not open feature
+files. Times, jumps, full metadata and unknown document attributes are retained.
+The existing native correction preserves stream weights lost by the C tool.
+
+`tests/wasm_untying_node.cjs` and `wasm_untying_browser.html` run all ten current
+families twice in opposite orders. They compare the original C model's 521 bytes,
+JSON document and 60 summary bytes, six original and twelve multi-file assignments,
+complete result and assignment field editing, weighted parameter preservation,
+independence of repeated distributions, nested metadata/jumps, arbitrary u32
+indices, missing or invalid references, optional and invalid summary metadata,
+empty documents, cloning and source release. The weighted result reproduces the
+C model after changing only its two corrected weights back to C's values. Native
+`untying` and `c_api_untying` suites provide related regression coverage. Remaining
+feature/audio/utterance operations and final platform acceptance remain open.

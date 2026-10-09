@@ -12,6 +12,7 @@ mod models;
 mod phones;
 mod rawfloat;
 mod training;
+mod untying;
 pub use alignment::*;
 pub use data::*;
 pub use documents::*;
@@ -23,6 +24,7 @@ pub use models::*;
 pub use phones::*;
 pub use rawfloat::*;
 pub use training::*;
+pub use untying::*;
 
 use wasm_bindgen::prelude::*;
 
