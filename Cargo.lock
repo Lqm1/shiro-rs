@@ -40,6 +40,7 @@ dependencies = [
 [[package]]
 name = "ciglet-rs"
 version = "0.1.0"
+source = "git+https://github.com/Lqm1/ciglet-rs.git?rev=34208b5fb1757355c638a1c588ec8a7fa49fddc3#34208b5fb1757355c638a1c588ec8a7fa49fddc3"
 dependencies = [
  "rand",
  "rand_chacha",
@@ -150,6 +151,7 @@ checksum = "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2"
 [[package]]
 name = "liblrhsmm-rs"
 version = "0.1.0"
+source = "git+https://github.com/Lqm1/liblrhsmm-rs.git?rev=d1b32853ccc2381d04af1a1cbd0587a455e992f3#d1b32853ccc2381d04af1a1cbd0587a455e992f3"
 dependencies = [
  "rand",
  "rmp",

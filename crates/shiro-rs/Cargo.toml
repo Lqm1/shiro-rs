@@ -8,9 +8,9 @@ rust-version = "1.94"
 
 
 [dependencies]
-ciglet-rs = { version = "0.1.0", path = "../../../ciglet-rs/crates/ciglet-rs" }
+ciglet-rs = { version = "0.1.0", git = "https://github.com/Lqm1/ciglet-rs.git", rev = "34208b5fb1757355c638a1c588ec8a7fa49fddc3" }
 clap = { version = "4.6.7", features = ["derive", "error-context", "help", "std", "suggestions", "usage"], default-features = false }
-liblrhsmm-rs = { version = "0.1.0", path = "../../../liblrhsmm-rs/crates/liblrhsmm-rs" }
+liblrhsmm-rs = { version = "0.1.0", git = "https://github.com/Lqm1/liblrhsmm-rs.git", rev = "d1b32853ccc2381d04af1a1cbd0587a455e992f3" }
 rand = { version = "0.10.3", default-features = false, features = ["std_rng"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"

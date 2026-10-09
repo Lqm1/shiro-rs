@@ -34,12 +34,10 @@ Liblrhsmm serialization defaults and explicit opt-out behavior are preserved.
 
 Before the final Git dependency switch, the split working trees passed native
 workspace suites with `--locked --workspace -- --include-ignored` on
-Windows MSVC64, Windows MSVC32, Windows GNU64 and Linux GNU64.
+Windows MSVC64, Windows MSVC32, Windows GNU64, Linux GNU64 and Linux GNU32.
 Each target passed 463 ciglet, 259 liblrhsmm and 130 SHIRO tests, with zero
 failures and zero ignored tests. The liblrhsmm native/C packages also passed
 202 tests per target with serialization disabled.
-Linux GNU32 passed ciglet and liblrhsmm, including liblrhsmm serialization opt-out;
-SHIRO's Linux GNU32 refresh was still running at this checkpoint.
 
 Independent optimized C callers, with assertions enabled, passed on all five
 x86 targets: 7 ciglet, 33 liblrhsmm and 20 SHIRO programs per target.
@@ -79,9 +77,17 @@ sources, including initialization, HMM/HSMM training, save/reload and inference.
 `cargo check --locked --workspace --all-targets`, the wasm32 adapter build and
 all sixteen Node verification families also passed with the Git dependencies.
 
-The original SHIRO checkout keeps provisional sibling paths until its running
-Linux32 migration suite finishes. Final publication and fresh-clone verification
-are recorded after applying the validated manifest and lockfile.
+The native SHIRO package now uses those two GitHub URLs and exact revisions;
+there are no cross-repository path dependencies. Adapter-to-native dependencies
+remain local within their own workspace. This tests the edited native package
+and its adapters together. No crates.io publication is required.
+
+A fresh clone of the public SHIRO repository is the final publication gate;
+its result is recorded after the repository is published.
+
+See the official [Cargo Git dependency documentation](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html)
+and [workspace documentation](https://doc.rust-lang.org/cargo/reference/workspaces.html)
+for repository-root package discovery and flat workspace membership.
 
 ## Evidence scope
 
