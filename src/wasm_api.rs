@@ -3,10 +3,12 @@
 //! errors become JavaScript exceptions; a WebAssembly panic is not recoverable.
 mod documents;
 mod labels;
+mod models;
 mod phones;
 mod rawfloat;
 pub use documents::*;
 pub use labels::*;
+pub use models::*;
 pub use phones::*;
 pub use rawfloat::*;
 
