@@ -1,7 +1,9 @@
 use super::models::collection;
 use super::{Model, States, error};
 use liblrhsmm_rs::data::{Jump, ObservationStreamData};
-use liblrhsmm_rs::{Observation as NativeObservation, Segmentation as NativeSegmentation};
+use liblrhsmm_rs::{
+    Dataset as NativeDataset, Observation as NativeObservation, Segmentation as NativeSegmentation,
+};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -270,5 +272,48 @@ impl Segmentation {
         let mut bytes = Vec::new();
         self.inner.write_to(&mut bytes).map_err(error)?;
         Ok(bytes)
+    }
+}
+
+collection!(Observations, Observation, NativeObservation);
+collection!(Segmentations, Segmentation, NativeSegmentation);
+
+/// Complete editable native sample arrays. Pairing is checked by consumers.
+#[wasm_bindgen]
+#[derive(Clone, Default)]
+pub struct Dataset {
+    pub(crate) inner: NativeDataset,
+}
+
+#[wasm_bindgen]
+impl Dataset {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Self {
+        Self::default()
+    }
+    pub fn observations(&self) -> Observations {
+        Observations {
+            inner: self.inner.observations.clone(),
+        }
+    }
+    pub fn segmentations(&self) -> Segmentations {
+        Segmentations {
+            inner: self.inner.segmentations.clone(),
+        }
+    }
+    pub fn set_observations(&mut self, values: &Observations) {
+        self.inner.observations = values.inner.clone();
+    }
+    pub fn set_segmentations(&mut self, values: &Segmentations) {
+        self.inner.segmentations = values.inner.clone();
+    }
+    pub fn replace(&mut self, observations: &Observations, segmentations: &Segmentations) {
+        self.inner = NativeDataset {
+            observations: observations.inner.clone(),
+            segmentations: segmentations.inner.clone(),
+        };
+    }
+    pub fn cloned(&self) -> Self {
+        self.clone()
     }
 }

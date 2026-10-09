@@ -6,6 +6,7 @@ acceptance are still in progress. This checkpoint implements rawfloat, all
 native label and phone-map operations, model construction/IO/parameter access,
 observation and segmentation import with complete owned field access,
 isolated grouping,
+dataset owners and model initialization,
 and complete JSON document owners used by
 the remaining workflows. CLI invocation, OS files and external Lua/SPTK
 processes remain native as specified by ADR 0007.
@@ -216,3 +217,32 @@ index reset; and check all field edits, collection operations, source release,
 maximum u32 positions and invalid inputs. Related native `c_api_isolation` and
 `rest_cli` suites check the shared operation and original trained model bytes.
 Remaining dataset workflows and final combined acceptance are still required.
+
+## Dataset ownership and initialization
+
+`Dataset` retains both complete native arrays, accessible through copied
+`observations()` and `segmentations()`, independent setters and complete
+replacement. Unpaired arrays are representable, matching native public fields;
+the consuming operation validates pairing. `Observations` and `Segmentations`
+provide empty construction, length, copied get/push, indexed replacement,
+clear and clone. This in-memory owner does not yet provide document-based
+feature-file resolution or the full training-file loading workflow.
+
+`Model.initialize(dataset, options)` invokes the native SHIRO initializer and
+returns an independent model. `InitializationOptions` exposes all three native
+editable fields: `flat_start`, `globally_tied` and `variance_floor_ratio`.
+Defaults are false, false and binary32 0.1, respectively; cloning retains every
+field. Source parameters and datasets remain unchanged on success or failure.
+The shared native implementation preserves flat-start rounding and boundary
+capping and fixes the upstream overwritten segment count for corpus fallback.
+
+`tests/wasm_initialization_node.cjs` and `wasm_initialization_browser.html` run
+all six current families twice in opposite orders. Initialization compares five
+original C model files, totaling 1,440 output bytes, including all four option
+combinations and the ten-frame flat-start case. Reloaded results remain exact.
+The multi-file case compares the complete original C reference after applying
+only the documented fallback-duration correction. Tests exercise both complete
+dataset arrays, cloning, growth/shrinkage, independent child owners, all option
+fields, invalid settings, unpaired samples and invalid intervals. The related
+native `initialization` and `c_api_initialization` suites pass as regression
+coverage. Full training, inference and final combined acceptance remain open.
