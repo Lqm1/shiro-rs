@@ -47,7 +47,7 @@ impl AudioOptions {
     }
 }
 impl AudioOptions {
-    fn native(&self) -> Result<audio::AudioOptions, JsValue> {
+    pub(super) fn native(&self) -> Result<audio::AudioOptions, JsValue> {
         Ok(audio::AudioOptions {
             normalize: self.normalize,
             dither_level: self.dither_level,

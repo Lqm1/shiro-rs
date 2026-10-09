@@ -3,6 +3,7 @@
 //! errors become JavaScript exceptions; a WebAssembly panic is not recoverable.
 mod alignment;
 mod audio;
+mod batch;
 mod data;
 mod documents;
 mod features;
@@ -19,6 +20,7 @@ mod untying;
 mod utterances;
 pub use alignment::*;
 pub use audio::*;
+pub use batch::*;
 pub use data::*;
 pub use documents::*;
 pub use features::*;

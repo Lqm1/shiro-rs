@@ -7,10 +7,52 @@ native label and phone-map operations, model construction/IO/parameter access,
 observation and segmentation import with complete owned field access,
 isolated grouping,
 dataset owners, document loading, model initialization, training, alignment, untying,
-feature extraction, audio conversion, utterance segmentation and index parsing,
+feature extraction, audio conversion, utterance segmentation, index parsing
+and native-preset batch extraction,
 and complete JSON document owners used by
 the remaining workflows. CLI invocation, OS files and external Lua/SPTK
 processes remain native as specified by ADR 0007.
+
+## Batch extraction
+
+`batch_feature_options(preset)` returns all twelve native feature settings for
+0 MFCC12-DA-16k, 1 MFCC12-DAE-16k or 2 PLPCC12-DA-16k. Other codes fail.
+`BatchOptions` preserves audio options by copied getter/setter and editable
+input extension. Defaults and cloning match the native configuration.
+
+`BatchExtraction.extract(wave, stem, options, preset, uniform)` and
+`extract_with_sequence(..., sequence)` run the same native preparation and
+extraction functions as the file tool. Decode bytes with `Wave.read` first.
+The result retains full Audio, Features and BatchOutputs owners, each with
+copied access, complete replacement and independent cloning. It can also be
+constructed from arbitrary owners. Write raw or parameter bytes with
+`rawfloat_write` from the returned sample/value arrays.
+
+BatchOutputs exposes mutable raw/parameter paths and optional MFCC path,
+construction and cloning. For native presets the MFCC path is absent. Empty
+optional paths remain distinct from absence. Output names append `.raw` and
+`.param` to the original stem, including when the input extension is changed.
+Input/output aliases fail before drawing noise or publishing results. Callback
+exceptions retain their original identity and stop immediately.
+
+The native file tool shares output-path validation and the preparation/extraction
+helper with WASM; its filesystem side effects, external Lua scripts and SPTK
+process pipelines remain native under ADR 0007. These host extractors are still
+supported through native Rust and C ABI interfaces. WASM performs the three
+native-preset computations without opening files or spawning processes.
+
+`wasm_batch_node.cjs` and `wasm_batch_browser.html` run all fifteen current
+families twice in opposite orders. All three original C preset outputs compare
+333 feature values within the existing 2e-5 normalized-error threshold; observed
+maximum is 7.748603820800781e-7. Raw audio matches C bit for bit, including
+normalization/downsampling and Linux dither. Tests cover all twelve preset fields,
+both options fields, all three output/result fields, copied nested settings,
+optional paths, custom suffixes, Unicode stems, source release, callback
+consumption/errors, alias checks, invalid inputs and arbitrary result owners.
+Final combined acceptance and current-source platform verification remain open.
+
+String field access follows the official wasm-bindgen
+[getter_with_clone guide](https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-rust-exports/getter_with_clone.html).
 
 ## Index parsing
 

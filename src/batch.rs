@@ -145,26 +145,16 @@ pub fn extract_file(
     extractor: &Extractor,
     uniform: impl FnMut() -> f32,
 ) -> Result<Outputs, Error> {
-    let input = index::append_suffix(stem, &options.input_extension);
-    let raw = index::append_suffix(stem, ".raw");
-    let parameters = index::append_suffix(stem, ".param");
-    if input == raw
-        || input == parameters
-        || matches!(extractor, Extractor::Sptk(_)) && input == index::append_suffix(stem, ".mfcc")
-    {
-        return Err(io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "audio input must differ from extraction outputs",
-        )
-        .into());
-    }
+    let (input, outputs) = output_paths(stem, options, matches!(extractor, Extractor::Sptk(_)))?;
+    let raw = outputs.raw;
+    let parameters = outputs.parameters;
     let wave = wave::read_file(input, i32::MAX as usize)?;
-    let audio = audio::prepare(wave, options.audio, uniform)?;
-    let native = match extractor {
+    let (audio, native) = match extractor {
         Extractor::Native(preset) => {
-            Some(features::extract(&audio.samples, preset.feature_options())?)
+            let (audio, features) = prepare_native(wave, options.audio, *preset, uniform)?;
+            (audio, Some(features))
         }
-        _ => None,
+        _ => (audio::prepare(wave, options.audio, uniform)?, None),
     };
     write(&raw, &audio.samples)?;
     let mfcc = match extractor {
@@ -194,6 +184,42 @@ pub fn extract_file(
         parameters,
         mfcc,
     })
+}
+
+pub(crate) fn prepare_native(
+    wave: wave::Wave<f32>,
+    options: AudioOptions,
+    preset: Preset,
+    uniform: impl FnMut() -> f32,
+) -> Result<(audio::Audio, features::Features), Error> {
+    let audio = audio::prepare(wave, options, uniform)?;
+    let features = features::extract(&audio.samples, preset.feature_options())?;
+    Ok((audio, features))
+}
+
+pub(crate) fn output_paths(
+    stem: &Path,
+    options: &Options,
+    sptk: bool,
+) -> Result<(PathBuf, Outputs), Error> {
+    let input = index::append_suffix(stem, &options.input_extension);
+    let raw = index::append_suffix(stem, ".raw");
+    let parameters = index::append_suffix(stem, ".param");
+    if input == raw || input == parameters || sptk && input == index::append_suffix(stem, ".mfcc") {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "audio input must differ from extraction outputs",
+        )
+        .into());
+    }
+    Ok((
+        input,
+        Outputs {
+            raw,
+            parameters,
+            mfcc: sptk.then(|| index::append_suffix(stem, ".mfcc")),
+        },
+    ))
 }
 fn write(path: &Path, values: &[f32]) -> io::Result<()> {
     let mut output = BufWriter::new(File::create(path)?);
