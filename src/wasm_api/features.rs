@@ -79,7 +79,7 @@ impl FeatureOptions {
 #[wasm_bindgen]
 #[derive(Clone)]
 pub struct Features {
-    inner: features::Features,
+    pub(super) inner: features::Features,
 }
 #[wasm_bindgen]
 impl Features {

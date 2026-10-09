@@ -11,7 +11,7 @@ macro_rules! collection {
         #[wasm_bindgen]
         #[derive(Clone, Default)]
         pub struct $name {
-            inner: Vec<$native>,
+            pub(super) inner: Vec<$native>,
         }
         #[wasm_bindgen]
         impl $name {

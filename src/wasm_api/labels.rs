@@ -45,7 +45,7 @@ impl Label {
 #[wasm_bindgen]
 #[derive(Clone, Default)]
 pub struct Labels {
-    inner: Vec<NativeLabel>,
+    pub(super) inner: Vec<NativeLabel>,
 }
 
 #[wasm_bindgen]

@@ -15,6 +15,7 @@ mod phones;
 mod rawfloat;
 mod training;
 mod untying;
+mod utterances;
 pub use alignment::*;
 pub use audio::*;
 pub use data::*;
@@ -29,6 +30,7 @@ pub use phones::*;
 pub use rawfloat::*;
 pub use training::*;
 pub use untying::*;
+pub use utterances::*;
 
 use wasm_bindgen::prelude::*;
 

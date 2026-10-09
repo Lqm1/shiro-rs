@@ -1,0 +1,35 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>SHIRO WebAssembly utterances verification</title>
+<h1>SHIRO WebAssembly utterances verification</h1>
+<pre id="result">Running</pre>
+<script type="module">
+import init, * as api from '/bindings/shiro_rs.js';
+import {verifyUtterances} from './wasm_utterances_checks.mjs';
+import {verifyAudio} from './wasm_audio_checks.mjs';
+import {verifyFeatures} from './wasm_features_checks.mjs';
+import {verifyUntying} from './wasm_untying_checks.mjs';
+import {verifyAlignment} from './wasm_alignment_checks.mjs';
+import {verifyTraining} from './wasm_training_checks.mjs';
+import {verifyLoading} from './wasm_loading_checks.mjs';
+import {verifyInitialization} from './wasm_initialization_checks.mjs';
+import {verifyIsolation} from './wasm_isolation_checks.mjs';
+import {verifyData} from './wasm_data_checks.mjs';
+import {verifyModels} from './wasm_models_checks.mjs';
+import {verifyPhones} from './wasm_phones_checks.mjs';
+import {verifyInterchange} from './wasm_interchange_checks.mjs';
+try {
+    await init();
+    const load = async name => {
+        const response = await fetch('./fixtures/' + name);
+        if (!response.ok) throw new Error('Fixture fetch failed: ' + name);
+        return new Uint8Array(await response.arrayBuffer());
+    };
+    const checks = [['utterances', verifyUtterances], ['audio', verifyAudio], ['features', verifyFeatures], ['untying', verifyUntying], ['alignment', verifyAlignment], ['training', verifyTraining], ['loading', verifyLoading], ['initialization', verifyInitialization], ['isolation', verifyIsolation], ['data', verifyData], ['models', verifyModels], ['phones', verifyPhones], ['interchange', verifyInterchange]], results = {};
+    for (const [name, verify] of checks) results[name] = await verify(api, load);
+    for (const [name, verify] of [...checks].reverse()) if (JSON.stringify(await verify(api, load)) !== JSON.stringify(results[name])) throw new Error('Repeated verification changed: ' + name);
+    document.querySelector('#result').textContent = 'PASS ' + JSON.stringify({passes: 2, results});
+} catch (error) {
+    document.querySelector('#result').textContent = 'FAIL ' + (error.stack || error);
+}
+</script>

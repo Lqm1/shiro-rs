@@ -8,7 +8,7 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct DitherSequence {
-    inner: audio::DitherSequence,
+    pub(super) inner: audio::DitherSequence,
 }
 #[wasm_bindgen]
 impl DitherSequence {
@@ -69,7 +69,7 @@ impl AudioOptions {
 #[wasm_bindgen]
 #[derive(Clone)]
 pub struct Wave {
-    inner: wave::Wave<f32>,
+    pub(super) inner: wave::Wave<f32>,
 }
 #[wasm_bindgen]
 impl Wave {
@@ -153,7 +153,7 @@ fn encoding_value(value: u32) -> Result<Encoding, JsValue> {
 #[wasm_bindgen]
 #[derive(Clone)]
 pub struct Audio {
-    inner: audio::Audio,
+    pub(super) inner: audio::Audio,
 }
 #[wasm_bindgen]
 impl Audio {

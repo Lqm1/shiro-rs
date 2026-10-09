@@ -7,7 +7,7 @@ native label and phone-map operations, model construction/IO/parameter access,
 observation and segmentation import with complete owned field access,
 isolated grouping,
 dataset owners, document loading, model initialization, training, alignment, untying,
-feature extraction and audio conversion,
+feature extraction, audio conversion and utterance segmentation,
 and complete JSON document owners used by
 the remaining workflows. CLI invocation, OS files and external Lua/SPTK
 processes remain native as specified by ADR 0007.
@@ -412,6 +412,51 @@ cloning, empty signals, invalid codes/settings/nonfinite input, independent
 arrays, arbitrary shapes, all result fields and IEEE payloads. Related native
 `features` and `c_api_features` suites pass. Audio and utterance workflows and
 final combined platform acceptance remain open.
+
+## Utterance segmentation
+
+`SegmentedUtterances.split_features(features, filename, options, source)` runs
+the native in-memory utterance workflow. `UtteranceOptions` retains all five
+editable native settings and defaults: utterance count, hop seconds, minimum
+silence/voicing seconds and iterations. `UtteranceModelSource.fresh()`,
+`.initialized(model)` and `.trained(model)` select all three native paths.
+Sources own independent model copies, expose kind 0/1/2 and an optional copied
+model, and support cloning. Fresh models initialize and train; initialized
+models train; trained models align without estimation.
+
+`SegmentedWave.split` accepts a Wave, filename, dimensions, feature kind 0/1/2,
+options, source and synchronous uniform callback. `split_with_sequence` takes
+a mutable DitherSequence instead. The native pipeline resamples to 16 kHz,
+adds level-0.01 dither and extracts MFCC/MFBE/PLPCC with RMS energy. Invalid
+feature setup consumes no draws; callback failure stops with its original
+JavaScript exception value. Other validation and calculation boundaries match
+the native workflow.
+
+All ten SegmentedUtterances fields are preserved: phonemap, definition, phones,
+initial segmentation, optional uninitialized/initialized models, final model,
+iteration reports, alignment and labels. Child owners are copied, setters borrow
+and copy complete values, and each optional model has separate set/clear methods.
+Phones use a JSON string array with atomic replacement, retaining arbitrary
+strings. Construction accepts model/map/definition/initial/aligned owners; the
+remaining collections start empty and optional models absent, and every field
+can be replaced independently. SegmentedWave retains audio, features and
+utterances with complete setters, construction and independent cloning.
+
+`wasm_utterances_node.cjs` and `wasm_utterances_browser.html` run all thirteen
+families twice in opposite orders. They compare all three original C intermediate
+models, totaling 1,386 bytes, full reference documents and five C/Lua labels.
+The waveform pipeline matches all 64,000 C audio samples exactly and compares
+520 feature values within the existing 2e-5 normalized-error gate; maximum
+observed error is 8.493661880493164e-6. Coverage includes all source variants,
+all feature kinds, complete reports/results/field replacement, zero iterations,
+nondefault timing and floors, UTF-8 filenames, callback consumption/errors,
+invalid inputs and source release. Related native `utterances` and
+`c_api_utterances` suites pass. Remaining batch/index/stream workflows and final
+combined platform acceptance remain open.
+
+Ownership follows the official wasm-bindgen
+[exported Rust types guide](https://wasm-bindgen.github.io/wasm-bindgen/reference/types/exported-rust-types.html):
+borrowed parameters remain usable and returned owners have independent storage.
 
 ## Audio conversion
 
