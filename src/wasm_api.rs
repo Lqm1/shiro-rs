@@ -2,6 +2,7 @@
 //! Returned arrays and document owners are independent copies. Native validation
 //! errors become JavaScript exceptions; a WebAssembly panic is not recoverable.
 mod alignment;
+mod audio;
 mod data;
 mod documents;
 mod features;
@@ -15,6 +16,7 @@ mod rawfloat;
 mod training;
 mod untying;
 pub use alignment::*;
+pub use audio::*;
 pub use data::*;
 pub use documents::*;
 pub use features::*;

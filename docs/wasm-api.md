@@ -6,7 +6,8 @@ acceptance are still in progress. This checkpoint implements rawfloat, all
 native label and phone-map operations, model construction/IO/parameter access,
 observation and segmentation import with complete owned field access,
 isolated grouping,
-dataset owners, document loading, model initialization, training, alignment and untying,
+dataset owners, document loading, model initialization, training, alignment, untying,
+feature extraction and audio conversion,
 and complete JSON document owners used by
 the remaining workflows. CLI invocation, OS files and external Lua/SPTK
 processes remain native as specified by ADR 0007.
@@ -410,4 +411,40 @@ existing 2e-5 normalized-error threshold. They also verify defaults, option
 cloning, empty signals, invalid codes/settings/nonfinite input, independent
 arrays, arbitrary shapes, all result fields and IEEE payloads. Related native
 `features` and `c_api_features` suites pass. Audio and utterance workflows and
+final combined platform acceptance remain open.
+
+## Audio conversion
+
+`Wave.read(bytes, maximum_frames)` uses the native bounded WAV decoder. Its
+sample rate, bits per sample, channels, encoding and samples remain accessible
+and editable. Encoding 0 selects PCM and 1 selects float; other codes fail.
+The constructor and clone retain independent samples and arbitrary native field
+values. Decoding selects the left channel, as in the native implementation.
+
+`AudioOptions` exposes all five native settings and cloning: normalization,
+dither level, optional output sample rate, boundary policy and kernel policy.
+The default output rate is absent; explicit zero is invalid. Boundary 0/1 selects
+include-first/legacy-skip-first and kernel 0/1 selects stable/legacy. Unknown
+codes fail. Normalization precedes dither, which precedes resampling. Nonpositive
+dither levels do not call the random source. Silent normalization preserves
+signed zero.
+
+`Audio.prepare(wave, options, uniform)` accepts a synchronous JavaScript function
+returning a number in [0, 1]. Invalid draws stop processing immediately. A thrown
+JavaScript value is returned with its original identity; partial audio is not
+published. `Audio.prepare_with_sequence` accepts a mutable `DitherSequence`,
+whose `windows()` and `linux_gnu()` factories retain the original seed-one
+runtime sequences. `next_uniform()` advances the sequence; preparation consumes
+one draw per input sample when dither is enabled. Audio sample rate and samples
+support full editing, arbitrary construction and independent cloning.
+
+`wasm_audio_node.cjs` and `wasm_audio_browser.html` run all twelve current families
+twice in opposite orders. Five original C conversions compare 1,286 samples at
+the existing 2e-7 normalized-error gate, with zero observed error. Both runtime
+sequences compare 128 exact uniform draws and 128 exact signed noise values.
+The complete original C dithered WAV is checked bit for bit. Tests also cover
+all fields, optional-rate presence, both policies, mutable sequence consumption,
+callback order/errors/recovery, frame budgets, truncated WAVs, copied arrays,
+source release, empty signals and arbitrary IEEE audio values. Native `audio`
+and `c_api_audio` suites pass. Remaining batch/utterance/stream workflows and
 final combined platform acceptance remain open.
