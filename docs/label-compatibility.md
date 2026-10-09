@@ -73,7 +73,7 @@ The generated JSON fixture changes only its machine-specific filename to
 metadata remain unchanged. Label fixtures preserve the original bytes in
 the working tree; tests parse either Git newline representation.
 
-`tests/labels.rs` compares all seven generated states, three phoneme rows
+`crates/shiro-rs/tests/labels.rs` compares all seven generated states, three phoneme rows
 and ten combined state/phoneme rows to the original tools. Numeric label
 comparison uses absolute tolerance 1e-14 seconds to cover Lua decimal
 formatting; state boundaries and indices compare exactly. Other checks

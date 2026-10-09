@@ -56,7 +56,7 @@ inference and Rust features with Rust inference yield equal complete state
 JSON for these three files. This checks algorithm compatibility, not recognition
 accuracy against manually annotated phonetic boundaries.
 
-`tests/real_audio.rs` also builds a fresh model, performs flat globally tied
+`crates/shiro-rs/tests/real_audio.rs` also builds a fresh model, performs flat globally tied
 initialization with variance-floor ratio one, and trains two DAEM iterations in
 each of HMM and HSMM mode. HMM training uses pruning slope 0.8. It checks finite
 per-file reports, changed model parameters, byte-stable saving after reload,

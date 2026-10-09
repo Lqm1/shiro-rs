@@ -55,7 +55,7 @@ finite-math-only restores the strict category, providing a separate compiler
 control experiment in addition to inspection of the source expression.
 
 Rust retains the strict source arithmetic and nonfinite categories tested in
-`tests/features.rs`. It does not replace a silent derivative with compiler-specific
+`crates/shiro-rs/tests/features.rs`. It does not replace a silent derivative with compiler-specific
 infinity to imitate a finite-only optimization. The existing fixture and category
 regressions remain authoritative. The unchanged frame/column decisions are
 verified separately from finite values and nonfinite categories.

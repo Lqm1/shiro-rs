@@ -16,13 +16,13 @@ state and the same source commit before and after its package execution.
 
 ```text
 cargo test --locked --target TARGET -- --include-ignored --nocapture
-cargo test --locked --features c-api --target TARGET -- --include-ignored --nocapture
+cargo test -p shiro-rs-capi --locked  --target TARGET -- --include-ignored --nocapture
 ```
 
 Liblrhsmm additionally ran:
 
 ```text
-cargo test --locked --no-default-features --features c-api --target TARGET -- --include-ignored --nocapture
+cargo test -p shiro-rs-capi --locked --no-default-features  --target TARGET -- --include-ignored --nocapture
 ```
 
 All tests use the Debug profile. Host rendering uses actual Gnuplot. Required

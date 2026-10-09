@@ -1,5 +1,10 @@
 # Requirements verification
 
+The current package organization is documented in [workspace layout](workspace-layout.md).
+The split and public Git dependency checks are recorded separately in
+[workspace split verification](workspace-split-verification.md). Earlier execution
+checkpoints retain the source revisions and package organization they actually tested.
+
 This audit applies the accepted requirements and acceptance plan without
 reducing the scope to functionality already used by SHIRO. It distinguishes
 implementation mappings, executable evidence and deferred platform validation.
@@ -11,7 +16,7 @@ platform execution remains explicitly unverified as authorized.
 
 | Requirement | Current-state evidence and decision |
 | --- | --- |
-| Three independent repositories under the requested project directory | Each of shiro-rs, ciglet-rs and liblrhsmm-rs has its own Git repository, Cargo.toml and Cargo.lock under D:\Desktop\Projects. Cargo metadata reports one workspace member and one library target for each. SHIRO additionally has fourteen executable targets. Pass. |
+| Three independent repositories under the requested project directory | Each of shiro-rs, ciglet-rs and liblrhsmm-rs has its own Git repository, Cargo.toml and Cargo.lock under D:\Desktop\Projects. Cargo metadata reports three flat workspace packages per repository: native, C ABI and WASM. Each package has one library target. The native SHIRO package additionally has fourteen executable targets. Pass. |
 | Cargo-generated initial packages | The accepted requirements document records the executed cargo new --lib --edition 2024 --vcs git initialization after authorization. Subsequent source files implement the generated packages. Pass. |
 | Modern Rust reimplementation rather than mechanical C translation or delegation | The calculation modules use checked owned storage, borrowed preparation, Result errors, generic binary32/binary64 numerical engines, Rust readers/writers and explicit settings. Cargo manifests have no C build dependency; original C files are reference/caller tests and generated ABI declarations. Core implementation uses Rust, not original C delegates. Pass. |
 | Official Rust primary references | Requirements, ownership/configuration audits, and algorithm/API compatibility documents link the official Rust/Cargo/standard-library references used for their implementations. Binding docs additionally link primary wasm-bindgen and cbindgen documentation. Context7 and Mintlify retrieval are recorded in the accepted design and execution history. Pass. |

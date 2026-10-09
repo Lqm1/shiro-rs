@@ -154,7 +154,7 @@ Current complete native/binding execution is recorded in
 
 ## Sequential HMM bootstrap and HSMM refinement
 
-`tests/bootstrap_training.rs` builds the original synthetic definition,
+`crates/shiro-rs/tests/bootstrap_training.rs` builds the original synthetic definition,
 initializes its twelve-frame/two-stream corpus, saves/reloads the complete
 initial model, runs two geometric-duration HMM iterations, saves/reloads that
 bootstrap model, and passes it directly to two explicit-duration HSMM updates.

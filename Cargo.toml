@@ -1,25 +1,11 @@
-[package]
-name = "shiro-rs"
+[workspace]
+members = ["crates/*"]
+default-members = ["crates/shiro-rs"]
+resolver = "3"
+
+[workspace.package]
 version = "0.1.0"
 edition = "2024"
 license = "GPL-3.0-or-later"
 rust-version = "1.94"
-
-[lib]
-crate-type = ["rlib", "cdylib", "staticlib"]
-
-[features]
-c-api = []
-wasm = ["dep:wasm-bindgen", "dep:js-sys"]
-
-[dependencies]
-ciglet-rs = { version = "0.1.0", path = "../ciglet-rs" }
-clap = { version = "4.6.7", features = ["derive", "error-context", "help", "std", "suggestions", "usage"], default-features = false }
-liblrhsmm-rs = { version = "0.1.0", path = "../liblrhsmm-rs" }
-rand = { version = "0.10.3", default-features = false, features = ["std_rng"] }
-serde = { version = "1.0.229", features = ["derive"] }
-serde_json = "1.0.151"
-
-[target.wasm32-unknown-unknown.dependencies]
-js-sys = { version = "=0.3.106", optional = true }
-wasm-bindgen = { version = "=0.2.129", optional = true }
+repository = "https://github.com/Lqm1/shiro-rs"

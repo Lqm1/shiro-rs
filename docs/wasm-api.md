@@ -1,5 +1,10 @@
 # Browser and Node.js WebAssembly API
 
+The current adapter is the separate `shiro-rs-wasm` workspace package.
+See [workspace layout](workspace-layout.md) for current build commands and artifact names.
+Public C symbols, headers, JavaScript API names and numerical behavior are retained.
+Older implementation checkpoints below describe the original feature-based layout.
+
 The accepted native and binding gates are verified within the agreed execution
 scope. The final requirement decision, exact evidence and authorized deferred
 targets are recorded in the SHIRO package's `docs/requirements-verification.md`.
@@ -118,7 +123,7 @@ with `cargo add wasm-bindgen@=0.2.129 --target wasm32-unknown-unknown --optional
 The `wasm` feature activates that dependency on the WASM target.
 
 ```text
-cargo build --target wasm32-unknown-unknown --features wasm --lib
+cargo build -p shiro-rs-wasm --target wasm32-unknown-unknown  --lib
 wasm-bindgen target/wasm32-unknown-unknown/debug/shiro_rs.wasm --target nodejs --out-dir bindings-node
 node tests/wasm_interchange_node.cjs bindings-node
 wasm-bindgen target/wasm32-unknown-unknown/debug/shiro_rs.wasm --target web --out-dir bindings-web

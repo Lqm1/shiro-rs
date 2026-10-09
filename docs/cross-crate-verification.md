@@ -63,7 +63,7 @@ does not stand in for an actual compiled C caller.
 Build each package in its own output directory. An explicitly shared target
 directory can also contain dependency builds with different features; verify
 that the selected shared library exports its C ABI. For example, run
-`cargo build --locked --features c-api --lib --target-dir target/c-api` in
+`cargo build -p shiro-rs-capi --locked  --lib --target-dir target/c-api` in
 each independent checkout. Cargo documents output isolation through
 [`--target-dir` and `CARGO_TARGET_DIR`](https://doc.rust-lang.org/cargo/reference/build-cache.html).
 

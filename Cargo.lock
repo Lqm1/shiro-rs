@@ -340,11 +340,27 @@ version = "0.1.0"
 dependencies = [
  "ciglet-rs",
  "clap",
- "js-sys",
  "liblrhsmm-rs",
  "rand",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "shiro-rs-capi"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
+ "shiro-rs",
+]
+
+[[package]]
+name = "shiro-rs-wasm"
+version = "0.1.0"
+dependencies = [
+ "js-sys",
+ "serde_json",
+ "shiro-rs",
  "wasm-bindgen",
 ]
 

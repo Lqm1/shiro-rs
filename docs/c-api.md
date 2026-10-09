@@ -1,4 +1,9 @@
-# C interface
+# C ABI
+
+The current adapter is the separate `shiro-rs-capi` workspace package.
+See [workspace layout](workspace-layout.md) for current build commands and artifact names.
+Public C symbols, headers, JavaScript API names and numerical behavior are retained.
+Older implementation checkpoints below describe the original feature-based layout.
 
 The accepted native and binding gates are verified within the agreed execution
 scope. The final requirement decision, exact evidence and authorized deferred
@@ -6,9 +11,9 @@ targets are recorded in the SHIRO package's `docs/requirements-verification.md`.
 Historical checkpoints below retain their original scope.
 
 
-Build the optional interface with `cargo build --features c-api`. The package
+Build the optional interface with `cargo build -p shiro-rs-capi `. The package
 produces Rust, shared C and static C libraries from the same library target.
-The generated declarations are in `include/shiro_rs.h`; ABI version is 1.
+The generated declarations are in `crates/shiro-rs-capi/include/shiro_rs.h`; ABI version is 1.
 The current header declares 229 exports, twenty-nine opaque owner types, twenty-seven
 settings, report and IO descriptors, and progress and uniform callback types.
 

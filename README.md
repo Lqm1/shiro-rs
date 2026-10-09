@@ -1,14 +1,16 @@
 # shiro-rs
 
+This repository is a Cargo workspace containing `shiro-rs`, `shiro-rs-capi` and `shiro-rs-wasm` under `crates/`. See [workspace layout](docs/workspace-layout.md) for package selection, artifact names and binding commands. See [workspace split verification](docs/workspace-split-verification.md) for migration checks and their scope.
+
 An idiomatic Rust reimplementation of the complete SHIRO toolkit, including its original C and Lua workflows. Upstream: https://github.com/Sleepwalking/SHIRO.
 
 The native Rust phase passes the agreed five-target acceptance gate. C ABI and browser/Node.js WebAssembly bindings are implemented. See [C API](docs/c-api.md), [WASM API](docs/wasm-api.md) and [cross-crate speech verification](docs/cross-crate-verification.md) for invocation and coverage. The complete accepted native and binding gates pass. See [requirements verification](docs/requirements-verification.md) and [latest execution checkpoint](docs/latest-execution-checkpoint.md) for exact evidence and deferred targets.
 
-The package links the local `ciglet-rs` and `liblrhsmm-rs` Rust packages.
+The native package uses the complete `ciglet-rs` and `liblrhsmm-rs` Rust implementations.
 
 Typed model definitions and `shiro-mkhsmm -c modeldef.json` are implemented, with binary output checked against the original C tool. The feature API now implements MFCC/MFBE/PLPCC with DC/energy and dynamic features, compared to the original xxcc pipeline. The shiro-xxcc command retains the original options and reads rawfloat files or piped stdin, writing rawfloat features to stdout. The shiro-wav2raw command reads WAV files, normalizes, dithers and resamples before writing rawfloat. It retains the original Windows/Linux GNU default dither sequences, corrects silent normalization, and provides explicit legacy resampling and opt-in seeded Rust dither. See docs/audio-compatibility.md for measured differences. The native shiro-wavsplit pipeline now trains and aligns utterances with in-memory audio/feature processing and original intermediate files. See docs/utterance-compatibility.md for measured comparisons and remaining edge cases. Real CMU SLT recordings now exercise feature extraction, supplied historical-model inference, fresh initialization, and HMM/HSMM training with save/reload inference. See docs/real-audio-compatibility.md for corpus licensing, numerical limits, and independent C/Lua reproduction.
 
-The three repositories are independent sibling Cargo packages. Local path dependencies permit development before publishing versions.
+The three projects remain independent Git repositories. Each contains its own three-package workspace.
 
 `shiro-fextr` now handles indexed WAV conversion and all three bundled xxcc
 extractors in Rust. The bundled SPTK workflow and custom Lua callbacks have
