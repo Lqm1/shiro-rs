@@ -5,6 +5,7 @@ owners and copied byte/typed arrays. Full SHIRO bindings and final combined
 acceptance are still in progress. This checkpoint implements rawfloat, all
 native label and phone-map operations, model construction/IO/parameter access,
 observation and segmentation import with complete owned field access,
+isolated grouping,
 and complete JSON document owners used by
 the remaining workflows. CLI invocation, OS files and external Lua/SPTK
 processes remain native as specified by ADR 0007.
@@ -184,5 +185,34 @@ explicit forward-jump handling and fractional times. They check IEEE payloads,
 70 streams, large budgets with small inputs, invalid import shapes, all field
 edits, copied arrays, source release and atomic failed edits. Native
 `initialization` and `c_api_samples` integration suites provide related importer
-and model-initialization regression coverage. This does not complete dataset
-grouping, inference, training or final combined platform acceptance.
+and model-initialization regression coverage. Dataset loading, inference,
+training and final combined platform acceptance remain in progress.
+
+## Isolated grouping
+
+`IsolatedGroups.split(model, observation, states)` uses the native shared
+grouping operation for isolated alignment and training. It splits at a phone
+name change or a non-increasing local state index. Observation intervals are
+capped at the available frames; local times retain the native truncated boundary
+conversion. Transitions leaving a group are removed, while explicit ordinary
+forward entries and all retained jump attributes survive. Original state
+positions, original frame positions, all samples and full state metadata are
+retained in independent snapshots.
+
+`IsolatedGroup` exposes all four native fields: mutable `first_state` and
+`first_frame`, copied `observation()` and `states()`, and setters for those
+owners. Construction and editing permit arbitrary native group values, with
+validation left to operations that consume the data. `cloned()` retains every
+field. `IsolatedGroups` supports empty construction, length, copied get/push,
+indexed replacement, clear and cloning.
+
+`tests/wasm_isolation_node.cjs` and `wasm_isolation_browser.html` verify all five
+current families twice in opposite orders. The grouping checks use the original
+C isolated-alignment state fixture and acoustic input for three variants,
+covering six groups and 108 scalar samples. They compare complete local states,
+metadata, sample bits and original positions; exercise boundary capping,
+fractional times, self/backward jumps, out-of-group filtering and same-phone
+index reset; and check all field edits, collection operations, source release,
+maximum u32 positions and invalid inputs. Related native `c_api_isolation` and
+`rest_cli` suites check the shared operation and original trained model bytes.
+Remaining dataset workflows and final combined acceptance are still required.
