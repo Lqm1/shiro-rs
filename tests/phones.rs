@@ -9,6 +9,33 @@ use shiro_rs::{
     segmentation,
 };
 use std::{fs, process::Command};
+
+#[test]
+fn feature_frame_sizes_keep_native_dimension_and_platform_limits() {
+    assert_eq!(segmentation::feature_frame_count(0, 36).unwrap(), 0);
+    assert_eq!(segmentation::feature_frame_count(144 * 12, 36).unwrap(), 12);
+    for (bytes, dimensions) in [
+        (1, 36),
+        (143, 36),
+        (145, 36),
+        (0, 0),
+        (0, i32::MAX as usize + 1),
+    ] {
+        assert!(segmentation::feature_frame_count(bytes, dimensions).is_err());
+    }
+    assert_eq!(
+        segmentation::feature_frame_count(u32::MAX as u64 * 4, 1).unwrap(),
+        u32::MAX as usize
+    );
+    if usize::BITS == 32 {
+        assert!(segmentation::feature_frame_count((u32::MAX as u64 + 1) * 4, 1).is_err());
+    } else {
+        assert_eq!(
+            segmentation::feature_frame_count((u32::MAX as u64 + 1) * 4, 1).unwrap() as u64,
+            u32::MAX as u64 + 1
+        );
+    }
+}
 #[derive(Deserialize)]
 struct Oracle {
     topology: String,

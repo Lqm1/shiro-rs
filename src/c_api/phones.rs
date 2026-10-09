@@ -3,6 +3,23 @@ use super::{ShiroRsBytes, ShiroRsStates, buffers::release, range, result};
 use crate::{labels::PhoneMap, phonemap, segmentation};
 use std::io;
 
+/// Count rawfloat frames with the original mkseg dimensions and byte-size checks.
+/// # Safety
+/// Output is independent aligned writable storage. Failure retains its value.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn shiro_rs_feature_frame_count(
+    bytes: u64,
+    dimensions: usize,
+    output: *mut usize,
+) -> u32 {
+    // SAFETY: Independent writable output under the caller's contract.
+    unsafe {
+        result(output, || {
+            segmentation::feature_frame_count(bytes, dimensions)
+        })
+    }
+}
+
 /// Independent complete phone map, including flattened JSON attributes.
 pub struct ShiroRsPhoneMap {
     pub(super) value: PhoneMap,

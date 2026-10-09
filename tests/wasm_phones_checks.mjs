@@ -14,6 +14,13 @@ function compare(actual, expected, message) {
 function rejects(run, message) { let failed = false; try { run(); } catch { failed = true; } assert(failed, message); }
 
 export async function verifyPhones(api, load) {
+    assert(api.feature_frame_count(0n, 36) === 0, 'empty feature frame count');
+    assert(api.feature_frame_count(144n * 12n, 36) === 12, 'complete feature frame count');
+    assert(api.feature_frame_count(4n * 0xffffffffn, 1) === 0xffffffff, 'full wasm usize frame count');
+    for (const [bytes, dimensions] of [[1n, 36], [143n, 36], [145n, 36], [0n, 0], [0n, 0x80000000], [0x100000000n * 4n, 1]]) {
+        rejects(() => api.feature_frame_count(bytes, dimensions), 'invalid feature size/dimension/platform frame count');
+    }
+    rejects(() => api.feature_frame_count(144, 36), 'u64 byte count requires BigInt');
     const text = async name => new TextDecoder().decode(await load(name));
     const cases = JSON.parse(await text('phones-original.json')), input = await text('phones-input.txt');
     let statesChecked = 0, definitionsChecked = 0;
@@ -83,5 +90,29 @@ export async function verifyPhones(api, load) {
         bad.free();
     }
     map.free(); defaults.free(); options.free();
-    return {luaCases: cases.length, statesChecked, definitionsChecked, optionFields: 4};
+    // Compose indexed mkseg and seg2lab with two independent virtual files.
+    // Full states are compared with the retained unchanged-Lua fixture.
+    const virtualMap = new api.PhoneMap(JSON.stringify(cases[0].map));
+    const index = api.IndexEntries.read(new TextEncoder().encode('first,aa bb cc\nsecond,aa bb cc\n'), '/virtual', '["bb"]', '["aa"]');
+    const virtualFiles = new Map(), outputFiles = new Map(), files = [];
+    for (let i = 0; i < index.length; i++) {
+        const entry = index.get(i), filename = api.index_append_suffix(entry.stem, '.features.f');
+        virtualFiles.set(filename, new Uint8Array(41 * 36 * 4));
+        const frames = api.feature_frame_count(BigInt(virtualFiles.get(filename).byteLength), 36);
+        const states = virtualMap.initial(JSON.parse(entry.phonemes_json()), frames);
+        compare(JSON.parse(states.json()), cases[0].segmentation.file_list[0].states, 'indexed original Lua states ' + i);
+        files.push({filename, states: JSON.parse(states.json())});
+        const labels = api.Labels.from_states(states, .01, false), output = api.label_output_path(filename, '.lab');
+        outputFiles.set(output, labels.write());
+        const parsed = api.Labels.parse(new TextDecoder().decode(outputFiles.get(output)));
+        equal(parsed.length, 5, 'complete multi-file phone labels');
+        const last = parsed.get(parsed.length - 1); assert(Math.abs(last.end - .41) < 1e-14, 'indexed final frame boundary');
+        last.free(); parsed.free(); labels.free(); states.free(); entry.free();
+    }
+    const document = new api.SegmentationDocument(JSON.stringify({file_list: files})), copied = document.cloned();
+    document.free(); index.free(); virtualMap.free(); virtualFiles.clear();
+    equal(JSON.parse(copied.json()).file_list.length, 2, 'multi-file document survives inputs');
+    equal([...outputFiles.keys()].join(','), '/virtual/first.features.lab,/virtual/second.features.lab', 'distinct literal-suffix multi-file label outputs');
+    copied.free();
+    return {luaCases: cases.length, statesChecked, definitionsChecked, optionFields: 4, indexedFiles: 2, frameSizeCases: 10};
 }

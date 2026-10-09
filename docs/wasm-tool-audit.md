@@ -22,7 +22,7 @@ argument parsing retain native behavior. They are not browser operations.
 | shiro-lab2seg | Timed label parsing, hop and state expansion, input/output suffixes | Labels.parse/to_states, IndexEntries/index_append_suffix and full document replacement; wasm_interchange_checks/wasm_index_checks |
 | shiro-mkhsmm | Model definition and complete binary model output | ModelDefinition.build and Model.write; wasm_models_checks |
 | shiro-mkpm | State/stream counts, optional topology and weak skips | PhoneMap.create and PhoneMapOptions; wasm_phones_checks |
-| shiro-mkseg | Indexed/padded phone expansion, feature-size frame counting and suffix | IndexEntries, rawfloat_read, PhoneMap.initial and full document replacement; wasm_index_checks/wasm_phones_checks; frame counting and multi-file orchestration still need a combined test |
+| shiro-mkseg | Indexed/padded phone expansion, feature-size frame counting and suffix | IndexEntries, feature_frame_count, PhoneMap.initial and full document replacement; wasm_phones_checks includes indexed two-file generation and label output; full fourteen-tool workflow remains pending |
 | shiro-pm2md | Dimensions, hop and tied duration constraints | PhoneMap.to_definition and ModelDefinition; wasm_phones_checks |
 | shiro-rest | Iterations, both duration modes, radius/pruning/search, convergence, annealing, isolated groups, ordered workers and likelihood rows | Datasets.load_training_files, Model.train/train_with_progress, TrainingOptions and TrainingResult.write_likelihood_csv; wasm_training_checks |
 | shiro-seg2lab | Hop, state/phone labels and output suffix | Labels.from_states/write and label_output_path; wasm_interchange_checks |
@@ -64,8 +64,12 @@ Rust/C/Python tests cover complete fields, arbitrary IEEE values, nested empty a
 repeated inputs, invalid pointer/count failures, atomic updates and independent
 source/result/clone lifetimes. This closes the identified result-field gap on
 that target; it does not complete the remaining public-field or platform audit.
-Run a combined virtual-file workflow exercising all fourteen tool computations,
-including indexed frame-size validation and multi-file output generation. Audit
+The native mkseg CLI and C/WASM bindings share feature_frame_count, including
+positive i32 dimensions, complete-frame byte lengths and target usize limits.
+The WASM verifier composes padded index reading, literal suffixes, two virtual
+feature files, original Lua state comparison, complete segmentation documents
+and distinct label byte outputs. This is one part of the combined tool audit.
+Run a combined virtual-file workflow exercising all fourteen tool computations. Audit
 the remaining public-field coverage in all three packages, especially ciglet.
 Refresh native execution for Windows MSVC x86_64/i686, Windows GNU x86_64 and
 Linux GNU x86_64/i686 against the final commits. Preserve the existing original

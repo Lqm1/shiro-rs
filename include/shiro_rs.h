@@ -1181,6 +1181,13 @@ uint32_t shiro_rs_iteration_report_clone(const struct ShiroRsIterationReport *re
 uint32_t shiro_rs_iteration_report_release(struct ShiroRsIterationReport **slot);
 
 /**
+ * Count rawfloat frames with the original mkseg dimensions and byte-size checks.
+ * # Safety
+ * Output is independent aligned writable storage. Failure retains its value.
+ */
+uint32_t shiro_rs_feature_frame_count(uint64_t bytes, uintptr_t dimensions, uintptr_t *output);
+
+/**
  * Copy the native phone expansion defaults. Default topology is absent.
  * # Safety
  * Output is independent aligned exclusively writable descriptor storage.

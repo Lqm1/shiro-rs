@@ -55,6 +55,16 @@ static void equal_json(ShiroRsBytes *a, ShiroRsBytes *b) {
     assert(!*x && !*y && !quoted); free(left); free(right);
 }
 int main(void) {
+    size_t frames = 99;
+    assert(shiro_rs_feature_frame_count(144 * 12, 36, &frames) == 0 && frames == 12);
+    const uint64_t invalid_sizes[] = {1, 143, 145};
+    for (size_t i = 0; i < 3; ++i) assert(shiro_rs_feature_frame_count(invalid_sizes[i], 36, &frames) == 3 && frames == 12);
+    assert(shiro_rs_feature_frame_count(0, 0, &frames) == 3 && frames == 12);
+    assert(shiro_rs_feature_frame_count(0, (size_t)INT32_MAX + 1, &frames) == 3 && frames == 12);
+    assert(shiro_rs_feature_frame_count(0, 36, NULL) == 1);
+    assert(shiro_rs_feature_frame_count(0, 36, &frames) == 0 && frames == 0);
+    assert(shiro_rs_feature_frame_count(UINT64_C(0xffffffff) * 4, 1, &frames) == 0 && frames == UINT32_MAX);
+    assert(shiro_rs_feature_frame_count(UINT64_C(0x100000000) * 4, 1, &frames) == (sizeof(size_t) == 8 ? 0u : 3u));
     FILE *file = fopen("tests/fixtures/phones-input.txt", "rb"); assert(file);
     assert(fseek(file, 0, SEEK_END) == 0); long count = ftell(file); assert(count >= 0);
     assert(fseek(file, 0, SEEK_SET) == 0); char *text = malloc((size_t)count + 1); assert(text);
@@ -98,6 +108,6 @@ int main(void) {
     assert(shiro_rs_phone_options_default(NULL) == 1 && shiro_rs_phone_map_release(NULL) == 1);
     assert(shiro_rs_phone_map_clone(clone, NULL) == 1 && shiro_rs_phone_map_release(&clone) == 0 && shiro_rs_phone_map_release(&clone) == 0);
     assert(shiro_rs_phone_map_release(&map) == 0 && shiro_rs_bytes_release(&input) == 0 && shiro_rs_bytes_release(&names) == 0);
-    puts("SHIRO phones C: all8 exports, original Lua maps/definitions/states, ownership and failures passed");
+    puts("SHIRO phones C: all9 exports, frame-size checks, original Lua maps/definitions/states, ownership and failures passed");
     return 0;
 }

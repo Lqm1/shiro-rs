@@ -2,6 +2,12 @@ use super::{ModelDefinition, PhoneMap, States, error};
 use crate::{phonemap, segmentation};
 use wasm_bindgen::prelude::*;
 
+/// Count complete rawfloat feature frames; byte lengths use JavaScript BigInt.
+#[wasm_bindgen]
+pub fn feature_frame_count(bytes: u64, dimensions: usize) -> Result<usize, JsValue> {
+    segmentation::feature_frame_count(bytes, dimensions).map_err(error)
+}
+
 /// Complete editable native phone expansion options.
 #[wasm_bindgen(getter_with_clone)]
 #[derive(Clone)]

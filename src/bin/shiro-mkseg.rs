@@ -41,9 +41,7 @@ fn padding(text: Option<String>) -> Vec<String> {
         })
 }
 fn run(args: Arguments) -> Result<(), Box<dyn std::error::Error>> {
-    if args.dimensions == 0 || args.dimensions > i32::MAX as usize {
-        return Err("frame size must be positive and fit i32".into());
-    }
+    segmentation::feature_frame_count(0, args.dimensions)?;
     let map: PhoneMap = serde_json::from_reader(BufReader::new(File::open(args.phonemap)?))?;
     let entries = index::read(
         BufReader::new(File::open(args.index)?),
@@ -51,15 +49,12 @@ fn run(args: Arguments) -> Result<(), Box<dyn std::error::Error>> {
         &padding(args.left),
         &padding(args.right),
     )?;
-    let frame_bytes = (args.dimensions as u64) * 4;
     let mut files = Vec::new();
     for entry in entries {
         let path = index::append_suffix(&entry.stem, &args.extension);
         let bytes = File::open(&path)?.metadata()?.len();
-        if bytes % frame_bytes != 0 {
-            return Err(format!("size of {} does not match the frame size", path.display()).into());
-        }
-        let frames = usize::try_from(bytes / frame_bytes)?;
+        let frames = segmentation::feature_frame_count(bytes, args.dimensions)
+            .map_err(|error| format!("{}: {error}", path.display()))?;
         files.push(SegmentedFile {
             filename: path
                 .to_str()

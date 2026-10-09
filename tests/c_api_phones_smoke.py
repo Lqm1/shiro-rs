@@ -8,12 +8,12 @@ lib = c.CDLL(sys.argv[1])
 P, N, U, B = c.c_void_p, c.c_size_t, c.c_uint32, c.c_uint8
 symbols = {'phone_options_default', 'phone_map_create', 'phone_map_read_json',
            'phone_map_write_json', 'phone_map_clone', 'phone_map_release',
-           'phone_map_to_definition', 'segmentation_initial'}
+           'phone_map_to_definition', 'segmentation_initial', 'feature_frame_count'}
 if len(sys.argv) > 2:
     assert sys.argv[2] == '--no-c-api'
     for name in symbols:
         assert not hasattr(lib, 'shiro_rs_' + name), name
-    print('SHIRO phones ctypes: all8 symbols absent without c-api')
+    print('SHIRO phones ctypes: all9 symbols absent without c-api')
     sys.exit(0)
 
 class Options(c.Structure):
@@ -40,6 +40,15 @@ map_clone = function('phone_map_clone', [P, c.POINTER(P)])
 map_release = function('phone_map_release', [c.POINTER(P)])
 definition = function('phone_map_to_definition', [P, N, c.c_double, c.POINTER(P)])
 initial = function('segmentation_initial', [P, P, N, c.POINTER(P)])
+frame_count = function('feature_frame_count', [c.c_uint64, N, c.POINTER(N)])
+frames = N(99)
+assert frame_count(144 * 12, 36, c.byref(frames)) == 0 and frames.value == 12
+for size, dimensions in [(1, 36), (143, 36), (145, 36), (0, 0), (0, 0x80000000)]:
+    assert frame_count(size, dimensions, c.byref(frames)) == 3 and frames.value == 12
+assert frame_count(0, 36, None) == 1
+assert frame_count(0, 36, c.byref(frames)) == 0 and frames.value == 0
+assert frame_count(0xffffffff * 4, 1, c.byref(frames)) == 0 and frames.value == 0xffffffff
+assert frame_count(0x100000000 * 4, 1, c.byref(frames)) == (0 if c.sizeof(N) == 8 else 3)
 states_write = function('states_write_json', [P, c.POINTER(P)])
 states_release = function('states_release', [c.POINTER(P)])
 model_create = function('model_from_definition', [P, c.POINTER(P)])
@@ -124,4 +133,4 @@ assert defaults(None) == 1 and map_release(None) == 1 and map_clone(original, No
 assert map_release(c.byref(original)) == 0 and map_release(c.byref(original)) == 0
 assert release(c.byref(names)) == 0 and release(c.byref(text)) == 0
 assert symbols <= called
-print('SHIRO phones ctypes: all8 exports, original Lua maps/definitions/states, metadata, ownership and failures passed')
+print('SHIRO phones ctypes: all9 exports, frame-size checks, original Lua maps/definitions/states, metadata, ownership and failures passed')

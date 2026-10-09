@@ -3,6 +3,32 @@ use serde_json::{Value, json};
 use shiro_rs::{c_api::*, definition::ModelDefinition, labels::PhoneMap, phonemap, segmentation};
 use std::ptr::{null, null_mut};
 
+#[test]
+fn feature_frame_counts_preserve_failed_outputs() {
+    // SAFETY: Independent exclusively writable output storage for each call.
+    unsafe {
+        let mut count = 99;
+        assert_eq!(shiro_rs_feature_frame_count(144 * 12, 36, &mut count), 0);
+        assert_eq!(count, 12);
+        for (bytes, dimensions) in [
+            (1, 36),
+            (143, 36),
+            (145, 36),
+            (0, 0),
+            (0, i32::MAX as usize + 1),
+        ] {
+            assert_eq!(
+                shiro_rs_feature_frame_count(bytes, dimensions, &mut count),
+                3
+            );
+            assert_eq!(count, 12);
+        }
+        assert_eq!(shiro_rs_feature_frame_count(0, 36, null_mut()), 1);
+        assert_eq!(shiro_rs_feature_frame_count(0, 36, &mut count), 0);
+        assert_eq!(count, 0);
+    }
+}
+
 unsafe fn owned(values: &[u8]) -> *mut ShiroRsBytes {
     let mut output = null_mut();
     // SAFETY: Readable input and independent initialized output slot.

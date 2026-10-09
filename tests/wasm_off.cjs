@@ -4,6 +4,7 @@ const owners = ['Label', 'Labels', 'PhoneMap', 'States', 'ModelDefinition', 'Seg
 const functions = ['rawfloat_read', 'rawfloat_write', 'label_output_path'];
 functions.push('index_append_suffix');
 functions.push('batch_feature_options');
+functions.push('feature_frame_count');
 owners.push('AudioOptions', 'Audio', 'Wave', 'DitherSequence');
 owners.push('UtteranceOptions', 'UtteranceModelSource', 'SegmentedUtterances', 'SegmentedWave');
 owners.push('IndexEntry', 'IndexEntries');

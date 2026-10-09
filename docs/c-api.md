@@ -416,6 +416,15 @@ denied, generated-header verification and source-preservation checks pass. Stand
 label conversion, other remaining C operations and all WASM operations remain
 required.
 
+### Feature frame counts
+
+`shiro_rs_feature_frame_count` exposes the mkseg CLI's shared metadata check
+without opening a file. Its byte count is uint64_t and dimensions/result use
+target-width uintptr_t. Dimensions must be positive and fit i32; lengths must
+contain complete binary32 frames and the resulting count must fit target usize.
+Failure retains the output value. Zero bytes produce zero frames for valid
+dimensions. State expansion retains its separate i32 frame-count limit.
+
 ### Training interfaces
 
 The training interfaces provide complete ordered inputs, all thirteen native

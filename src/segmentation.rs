@@ -113,3 +113,16 @@ pub fn initial(phones: &[String], map: &PhoneMap, frames: usize) -> io::Result<V
     }
     Ok(states)
 }
+
+/// Count complete rawfloat feature frames using the original mkseg dimension
+/// limits. Byte length comes from native metadata or an in-memory file's length.
+pub fn feature_frame_count(bytes: u64, dimensions: usize) -> io::Result<usize> {
+    if dimensions == 0 || dimensions > i32::MAX as usize {
+        return Err(invalid("frame size must be positive and fit i32"));
+    }
+    let frame_bytes = (dimensions as u64) * 4;
+    if !bytes.is_multiple_of(frame_bytes) {
+        return Err(invalid("feature size does not match the frame size"));
+    }
+    usize::try_from(bytes / frame_bytes).map_err(|_| invalid("frame count exceeds usize"))
+}

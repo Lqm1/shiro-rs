@@ -578,3 +578,21 @@ callback order/errors/recovery, frame budgets, truncated WAVs, copied arrays,
 source release, empty signals and arbitrary IEEE audio values. Native `audio`
 and `c_api_audio` suites pass. Remaining batch/utterance/stream workflows and
 final combined platform acceptance remain open.
+## Feature frame counts and indexed composition
+
+`feature_frame_count(bytes, dimensions)` shares the native mkseg CLI's byte-size
+validation. Rust u64 byte lengths are JavaScript BigInt; dimensions and returned
+frame counts are Number values representing wasm32 usize. Dimensions must be
+positive and fit i32, byte lengths must be divisible by dimensions times four,
+and frame counts must fit target usize. State expansion separately requires an
+i32 frame count. This helper uses file lengths, without allocating or decoding
+feature arrays. Numeric ABI conversions follow the
+[official wasm-bindgen numeric rules](https://wasm-bindgen.github.io/wasm-bindgen/reference/types/numbers.html).
+
+The current actual Node/browser aggregate runs all fifteen families twice with
+reverse order on the second pass. The phone verifier additionally composes
+padded index reading, suffix handling, two virtual feature files, frame counts,
+original Lua state comparison, complete segmentation documents and two distinct
+label byte outputs. Invalid dimensions, partial frames, wasm32 overflow and a
+Number argument where BigInt is required are covered. This focused composition
+does not establish the full fourteen-tool or three-package acceptance gate.
