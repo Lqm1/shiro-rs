@@ -589,10 +589,27 @@ i32 frame count. This helper uses file lengths, without allocating or decoding
 feature arrays. Numeric ABI conversions follow the
 [official wasm-bindgen numeric rules](https://wasm-bindgen.github.io/wasm-bindgen/reference/types/numbers.html).
 
-The current actual Node/browser aggregate runs all fifteen families twice with
+The frame-count checkpoint's actual Node/browser aggregate ran fifteen families twice with
 reverse order on the second pass. The phone verifier additionally composes
 padded index reading, suffix handling, two virtual feature files, frame counts,
 original Lua state comparison, complete segmentation documents and two distinct
 label byte outputs. Invalid dimensions, partial frames, wasm32 overflow and a
 Number argument where BigInt is required are covered. This focused composition
-does not establish the full fourteen-tool or three-package acceptance gate.
+did not establish the full fourteen-tool or three-package acceptance gate.
+
+## Connected tool workflow
+
+The aggregate now includes tests/wasm_tool_workflow_checks.mjs alongside all
+fifteen individual families, with two passes in opposite orders in actual Node
+and browser execution. It connects the fourteen mapped tool computations using
+two feature files and twenty-two virtual input/output artifacts. WAV preparation
+and uninitialized model construction retain exact original C bytes; extracted
+features retain the established 2e-5 gate. Both HMM and HSMM train two iterations,
+save and reread models, reproduce inference after reload, write per-file CSV and
+labels, and untie distributions. The same waveform also feeds native-preset batch
+extraction and the decomposed/complete utterance pipelines. A partial-frame
+import failure retains the initialized model.
+
+See docs/wasm-tool-audit.md for the computation mapping, numerical evidence and
+limits. Tool mapping implementation does not establish final five-target native
+execution, all public-field coverage or combined three-package acceptance.
