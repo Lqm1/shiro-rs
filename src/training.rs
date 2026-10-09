@@ -4,6 +4,7 @@ use liblrhsmm_rs::{
     Dataset, GeometricOptions, HsmmOptions, Model, ModelError, ModelStatistics, Observation,
     Segmentation, UpdateOptions,
 };
+use std::io::{self, Write};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Options {
@@ -289,6 +290,56 @@ fn ordered_estimates(
         .collect()
 }
 
+fn merge(target: &mut ModelStatistics, source: ModelStatistics) {
+    for (target, source) in target.durations.iter_mut().zip(source.durations) {
+        target.value_sum += source.value_sum;
+        target.squared_sum += source.squared_sum;
+        target.occupancy += source.occupancy;
+    }
+    for (target, source) in target.streams.iter_mut().zip(source.streams) {
+        for (target, source) in target.mixtures.iter_mut().zip(source.mixtures) {
+            target.state_occupancy += source.state_occupancy;
+            for (target, source) in target.weighted_sums.iter_mut().zip(source.weighted_sums) {
+                *target += source;
+            }
+            for (target, source) in target
+                .weighted_squared_sums
+                .iter_mut()
+                .zip(source.weighted_squared_sums)
+            {
+                *target += source;
+            }
+            for (target, source) in target
+                .component_occupancies
+                .iter_mut()
+                .zip(source.component_occupancies)
+            {
+                *target += source;
+            }
+        }
+    }
+}
+
+impl TrainingResult {
+    /// Write the original CLI likelihood CSV, in iteration/file/group order.
+    /// Empty file rows produce a newline; empty report sets produce no bytes.
+    /// The writer is borrowed and is not flushed or closed.
+    pub fn write_likelihood_csv(&self, mut writer: impl Write) -> io::Result<()> {
+        for report in &self.iterations {
+            for row in &report.file_likelihoods {
+                for (index, value) in row.iter().enumerate() {
+                    if index > 0 {
+                        writer.write_all(b",")?;
+                    }
+                    write!(writer, "{value:.6}")?;
+                }
+                writer.write_all(b"\n")?;
+            }
+        }
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -358,32 +409,3 @@ mod tests {
 
 // Every accumulator is constructed from the same immutable model. The update
 // validates finite values after ordered reduction, including addition overflow.
-fn merge(target: &mut ModelStatistics, source: ModelStatistics) {
-    for (target, source) in target.durations.iter_mut().zip(source.durations) {
-        target.value_sum += source.value_sum;
-        target.squared_sum += source.squared_sum;
-        target.occupancy += source.occupancy;
-    }
-    for (target, source) in target.streams.iter_mut().zip(source.streams) {
-        for (target, source) in target.mixtures.iter_mut().zip(source.mixtures) {
-            target.state_occupancy += source.state_occupancy;
-            for (target, source) in target.weighted_sums.iter_mut().zip(source.weighted_sums) {
-                *target += source;
-            }
-            for (target, source) in target
-                .weighted_squared_sums
-                .iter_mut()
-                .zip(source.weighted_squared_sums)
-            {
-                *target += source;
-            }
-            for (target, source) in target
-                .component_occupancies
-                .iter_mut()
-                .zip(source.component_occupancies)
-            {
-                *target += source;
-            }
-        }
-    }
-}

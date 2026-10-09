@@ -197,6 +197,11 @@ impl TrainingResult {
             inner: self.inner.iterations.clone(),
         }
     }
+    pub fn write_likelihood_csv(&self) -> Result<Vec<u8>, JsValue> {
+        let mut bytes = Vec::new();
+        self.inner.write_likelihood_csv(&mut bytes).map_err(error)?;
+        Ok(bytes)
+    }
     pub fn set_iterations(&mut self, iterations: &IterationReports) {
         self.inner.iterations = iterations.inner.clone();
     }

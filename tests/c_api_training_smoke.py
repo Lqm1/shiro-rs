@@ -13,7 +13,7 @@ symbols = {
     'training_files_get_dataset', 'training_files_clone', 'training_files_release',
     'training_options_default', 'train', 'train_with_progress',
     'training_result_length', 'training_result_get_model', 'training_result_get_report',
-    'training_result_clone', 'training_result_release', 'iteration_report_info',
+    'training_result_clone', 'training_result_release', 'training_result_likelihood_csv_bytes', 'iteration_report_info',
     'iteration_report_file_count', 'iteration_report_get_file',
     'iteration_report_clone', 'iteration_report_release',
 }
@@ -21,7 +21,7 @@ if len(sys.argv) > 2:
     assert sys.argv[2] == '--no-c-api'
     for name in symbols:
         assert not hasattr(lib, 'shiro_rs_' + name), name
-    print('SHIRO training ctypes: all19 symbols absent without c-api')
+    print('SHIRO training ctypes: all20 symbols absent without c-api')
     sys.exit(0)
 
 class Options(c.Structure):
@@ -68,6 +68,7 @@ result_length = function('training_result_length', [P, c.POINTER(N)])
 result_model = function('training_result_get_model', [P, c.POINTER(P)])
 result_report = function('training_result_get_report', [P, N, c.POINTER(P)])
 result_clone = function('training_result_clone', [P, c.POINTER(P)])
+result_csv = function('training_result_likelihood_csv_bytes', [P, c.POINTER(P)])
 result_release = function('training_result_release', [c.POINTER(P)])
 report_info = function('iteration_report_info', [P, c.POINTER(Info)])
 report_count = function('iteration_report_file_count', [P, c.POINTER(N)])
@@ -183,6 +184,18 @@ with tempfile.TemporaryDirectory(prefix='shiro-c-api-training-') as directory:
         assert wire(trained) == expected_wire
         expected_rows = [[float(x) for x in line.split(',')]
                          for line in (root / ('rest-c-' + likelihood + '.likelihood')).read_text().splitlines()]
+        csv = P()
+        assert result_csv(cloned, c.byref(csv)) == 0
+        encoded_csv = copied(csv)
+        retained_csv = P(csv.value)
+        assert result_csv(None, c.byref(retained_csv)) == 1 and retained_csv.value == csv.value
+        assert encoded_csv.endswith(b'\n')
+        csv_rows = [[float(x) for x in line.split(',')] for line in encoded_csv.decode().splitlines()]
+        assert len(csv_rows) == len(expected_rows)
+        for actual_row, expected_row in zip(csv_rows, expected_rows):
+            assert len(actual_row) == len(expected_row)
+            assert all(abs(a - b) <= 1e-5 for a, b in zip(actual_row, expected_row))
+        assert release_bytes(c.byref(csv)) == 0
         for index, expected in enumerate(expected_rows):
             value = P()
             assert result_report(cloned, index, c.byref(value)) == 0
@@ -257,4 +270,4 @@ assert result_release(c.byref(result)) == 0 and result_release(c.byref(result)) 
 assert files_release(c.byref(empty)) == 0
 assert wire(model) == initial_wire and model_release(c.byref(model)) == 0
 assert symbols <= called
-print('SHIRO training ctypes: all19 exports, nine original C models/likelihoods, complete reports, callbacks, stopping and failures passed')
+print('SHIRO training ctypes: all20 exports, nine original C models/likelihoods/CSV, complete reports, callbacks, stopping and failures passed')

@@ -253,6 +253,15 @@ fn original_models_likelihoods_and_progress_reports_preserve_all_fields() {
             assert_eq!(shiro_rs_training_result_length(trained, &mut count), 0);
             assert_eq!(count, iterations);
             assert_eq!(callbacks.len(), count);
+            let mut csv = null_mut();
+            assert_eq!(
+                shiro_rs_training_result_likelihood_csv_bytes(trained, &mut csv),
+                0
+            );
+            let mut expected_csv = Vec::new();
+            native.write_likelihood_csv(&mut expected_csv).unwrap();
+            assert_eq!(copied(csv), expected_csv);
+            assert_eq!(shiro_rs_bytes_release(&mut csv), 0);
             let mut clone = null_mut();
             assert_eq!(shiro_rs_training_result_clone(trained, &mut clone), 0);
             assert_eq!(shiro_rs_training_result_release(&mut trained), 0);

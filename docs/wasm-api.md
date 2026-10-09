@@ -13,6 +13,23 @@ and complete JSON document owners used by
 the remaining workflows. CLI invocation, OS files and external Lua/SPTK
 processes remain native as specified by ADR 0007.
 
+## Likelihood CSV
+
+`TrainingResult.write_likelihood_csv()` returns the native CLI likelihood CSV
+as owned bytes. It preserves iteration/file/group order, six fractional digits,
+signed zero, nonfinite spelling and empty rows. Empty report sets return empty
+bytes. The CLI and WASM share the native `write_likelihood_csv` method; reports
+and model parameters are unchanged. This avoids relying on JavaScript number
+formatting to reproduce Rust's binary32 formatting.
+
+Training checks verify CSV from all nine original C training cases with the
+existing 1e-5 likelihood tolerance, empty reports and the exact arbitrary row
+`-0.000000,inf,NaN`. Native writer checks cover exact formatting, empty rows,
+partial writes, interrupted-write retry, failure propagation and no implicit
+flush. Actual C/Python callers validate nine training CSV outputs and unchanged
+owners on failed encoding. These checks do not close the final platform or
+combined-workflow acceptance gates.
+
 ## Batch extraction
 
 `batch_feature_options(preset)` returns all twelve native feature settings for

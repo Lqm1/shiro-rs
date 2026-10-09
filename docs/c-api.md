@@ -672,3 +672,15 @@ end-to-end acceptance remain required.
 - [Rust C representation and target layout](https://doc.rust-lang.org/reference/type-layout.html#the-c-representation)
 - [Rust lint attributes](https://doc.rust-lang.org/reference/attributes/diagnostics.html#lint-attributes)
 - [cbindgen 0.29.4 documentation](https://github.com/mozilla/cbindgen/blob/v0.29.4/docs.md)
+
+## Likelihood CSV bytes
+
+`shiro_rs_training_result_likelihood_csv_bytes` returns a new independently
+owned ShiroRsBytes object containing the same six-decimal likelihood CSV written
+by shiro-rest. File/group order and empty rows are preserved. A failed call
+retains the output slot; encoding does not modify the training result. The
+native method supports arbitrary Write implementations, with interruption,
+partial writes and failures covered by tests/likelihood_csv.rs. Direct C stream
+callback exposure for this new writer remains an audit item. Actual Windows
+x86_64 C/Python callers exercise the byte codec on all nine training cases;
+current-source execution on the other required platforms remains pending.

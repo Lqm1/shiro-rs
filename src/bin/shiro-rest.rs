@@ -137,17 +137,7 @@ fn run(args: Arguments) -> Result<(), Box<dyn std::error::Error>> {
     result.model.write_to(&mut model_bytes)?;
     if let Some(path) = args.likelihood {
         let mut csv = Vec::new();
-        for report in &result.iterations {
-            for row in &report.file_likelihoods {
-                for (index, value) in row.iter().enumerate() {
-                    if index > 0 {
-                        write!(csv, ",")?;
-                    }
-                    write!(csv, "{value:.6}")?;
-                }
-                writeln!(csv)?;
-            }
-        }
+        result.write_likelihood_csv(&mut csv)?;
         fs::write(path, csv)?;
     }
     let mut output = BufWriter::new(io::stdout().lock());

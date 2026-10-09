@@ -37,6 +37,25 @@ static void model_equal(ShiroRsModel *model, const char *path) {
     assert(shiro_rs_bytes_copy(wire, 0, actual, size) == 0 && memcmp(actual, expected, size) == 0);
     free(actual); free(expected); assert(shiro_rs_bytes_release(&wire) == 0);
 }
+static void likelihood_csv_equal(ShiroRsTrainingResult *result, const char *expected) {
+    ShiroRsBytes *bytes = NULL; size_t count = 0;
+    assert(shiro_rs_training_result_likelihood_csv_bytes(result, &bytes) == 0);
+    ShiroRsBytes *retained = bytes;
+    assert(shiro_rs_training_result_likelihood_csv_bytes(NULL, &retained) == 1 && retained == bytes);
+    assert(shiro_rs_bytes_length(bytes, &count) == 0 && count > 0);
+    char *text = malloc(count + 1); assert(text);
+    assert(shiro_rs_bytes_copy(bytes, 0, (uint8_t *)text, count) == 0); text[count] = 0;
+    assert(text[count - 1] == '\n'); const char *actual = text;
+    while (*expected) {
+        if (*expected == '\r') { ++expected; continue; }
+        if (*expected == ',' || *expected == '\n') { assert(*actual == *expected); ++actual; ++expected; continue; }
+        char *actual_end, *expected_end;
+        float a = strtof(actual, &actual_end), e = strtof(expected, &expected_end);
+        assert(actual_end != actual && expected_end != expected && fabsf(a - e) <= 1e-5f);
+        actual = actual_end; expected = expected_end;
+    }
+    assert(*actual == 0); free(text); assert(shiro_rs_bytes_release(&bytes) == 0);
+}
 static char *states_array(const char *document) {
     const char *start = strstr(document, "\"states\""); assert(start); start = strchr(start, '['); assert(start);
     int depth = 0, quoted = 0, escaped = 0; const char *end = start;
@@ -113,7 +132,7 @@ int main(void) {
         assert(shiro_rs_training_result_clone(trained, &copy) == 0 && shiro_rs_training_result_release(&trained) == 0);
         ShiroRsModel *result = NULL; assert(shiro_rs_training_result_get_model(copy, &result) == 0);
         char fixture[160]; snprintf(fixture, sizeof(fixture), "tests/fixtures/rest-c-%s.hsmm", test.model); model_equal(result, fixture);
-        snprintf(fixture, sizeof(fixture), "tests/fixtures/rest-c-%s.likelihood", test.likelihood); source = load(fixture, &size);
+        snprintf(fixture, sizeof(fixture), "tests/fixtures/rest-c-%s.likelihood", test.likelihood); source = load(fixture, &size); likelihood_csv_equal(copy, source);
         char *cursor = source;
         for (size_t i = 0; i < count; ++i) {
             ShiroRsIterationReport *report = NULL; assert(shiro_rs_training_result_get_report(copy, i, &report) == 0);
@@ -165,5 +184,5 @@ int main(void) {
     assert(shiro_rs_training_files_release(&files) == 0);
     model_equal(model, "tests/fixtures/init-c-aligned.hsmm"); assert(shiro_rs_model_release(&model) == 0);
     free(array); free(document); assert(remove(path) == 0);
-    puts("SHIRO training C: all19 exports, nine original C models/likelihoods, complete reports, callbacks, stopping and failures passed"); return 0;
+    puts("SHIRO training C: all20 exports, nine original C models/likelihoods/CSV, complete reports, callbacks, stopping and failures passed"); return 0;
 }

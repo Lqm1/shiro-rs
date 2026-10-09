@@ -951,6 +951,15 @@ uint32_t shiro_rs_initialize(const struct ShiroRsModel *model,
                              struct ShiroRsModel **output);
 
 /**
+ * Encode every file likelihood row in the original CLI CSV format.
+ * # Safety
+ * Owner is live readable storage. Output is independent aligned writable
+ * storage holding no live owner on success; failure retains its value.
+ */
+uint32_t shiro_rs_training_result_likelihood_csv_bytes(const struct ShiroRsTrainingResult *owner,
+                                                       struct ShiroRsBytes **output);
+
+/**
  * Clone complete paired datasets into independent file order. Repeated and empty
  * inputs are permitted; native training validates their applicability.
  * # Safety

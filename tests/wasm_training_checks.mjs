@@ -36,6 +36,10 @@ export async function verifyTraining(api, load) {
         const expectedWire = new Uint8Array(await load(name + '.hsmm')), trained = result.model(); array(trained.write(), expectedWire, 'original C complete trained model ' + name); wireBytes += expectedWire.length; trained.free();
         const expectedRows = new TextDecoder().decode(await load((likelihoodName || name) + '.likelihood')).trim().split(/\r?\n/).map(row => row.split(',').map(Number));
         const reports = result.iterations(); assert(reports.length === iterations && callbacks.length === iterations, 'complete progress/result iteration counts');
+        const csv = new TextDecoder().decode(result.write_likelihood_csv());
+        const csvRows = csv.trim().split('\n').map(row => row.split(',').map(Number));
+        assert(csv.endsWith('\n') && csvRows.length === expectedRows.length, 'complete native likelihood CSV rows');
+        csvRows.forEach((row, index) => { assert(row.length === expectedRows[index].length, 'CSV group ordering'); row.forEach((value, group) => assert(Math.abs(value - expectedRows[index][group]) <= 1e-5, 'CSV C likelihood tolerance')); });
         for (let index = 0; index < iterations; index++) {
             const report = reports.get(index), actual = reportSnapshot(report); assert(JSON.stringify(actual) === JSON.stringify(reportSnapshot(callbacks[index])), 'independent callback/result report fields');
             assert(actual.iteration === index && actual.rows.length === 1 && actual.rows[0].length === expectedRows[index].length, 'report shape and index');
@@ -69,9 +73,10 @@ export async function verifyTraining(api, load) {
     report.iteration = 2; report.temperature = 3; report.mean_log_likelihood = 4;
     const emptyRows = new api.LikelihoodRows(); report.set_file_likelihoods(emptyRows); emptyRows.free();
     assert(report.iteration === 2 && report.temperature === 3 && report.mean_log_likelihood === 4, 'all report scalar setters'); reports.replace(0, report); rejects(() => reports.replace(1, report), 'report collection index'); report.free(); reports.clear();
-    const arbitrary = new api.TrainingResult(model, reportsClone); arbitrary.set_iterations(reports); arbitrary.set_model(model); const copied = arbitrary.cloned(); arbitrary.free();
+    const arbitrary = new api.TrainingResult(model, reportsClone); assert(new TextDecoder().decode(arbitrary.write_likelihood_csv()) === '-0.000000,inf,NaN\n', 'arbitrary IEEE CSV and signed zero'); arbitrary.set_iterations(reports); arbitrary.set_model(model); const copied = arbitrary.cloned(); arbitrary.free();
+    assert(copied.write_likelihood_csv().length === 0, 'empty report CSV');
     const emptyReports = copied.iterations(); assert(emptyReports.length === 0, 'complete result field setters'); emptyReports.free(); copied.free();
     const rawRows = reportClone.file_likelihoods(), rawRow = rawRows.get(0); array(rawRow.values(), [-0, Infinity, NaN], 'all arbitrary likelihood values'); rawRow.free(); rawRows.free(); reportClone.free();
     for (const owner of [rows, reports, reportsClone, noFiles, document, features, embedded, isolated, options, model]) owner.free();
-    return {originalCModels: cases.length, wireBytes, reportCount, likelihoodCount, maximumLikelihoodError, optionFields: 13, reportFields: 4, resultFields: 2};
+    return {originalCModels: cases.length, csvCases: cases.length, wireBytes, reportCount, likelihoodCount, maximumLikelihoodError, optionFields: 13, reportFields: 4, resultFields: 2};
 }

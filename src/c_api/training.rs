@@ -20,6 +20,28 @@ pub struct ShiroRsTrainingFiles {
 pub struct ShiroRsTrainingResult {
     pub(super) value: TrainingResult,
 }
+
+/// Encode every file likelihood row in the original CLI CSV format.
+/// # Safety
+/// Owner is live readable storage. Output is independent aligned writable
+/// storage holding no live owner on success; failure retains its value.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn shiro_rs_training_result_likelihood_csv_bytes(
+    owner: *const ShiroRsTrainingResult,
+    output: *mut *mut ShiroRsBytes,
+) -> u32 {
+    if let Err(status) = range(owner, 1) {
+        return status;
+    }
+    // SAFETY: Live immutable owner and independent output storage.
+    unsafe {
+        result(output, || {
+            let mut values = Vec::new();
+            (*owner).value.write_likelihood_csv(&mut values)?;
+            Ok(Box::into_raw(Box::new(ShiroRsBytes { values })))
+        })
+    }
+}
 /// Complete report. Callback reports are borrowed only for the callback; clone
 /// before retaining one. Only constructor/getter/clone results may be released.
 pub struct ShiroRsIterationReport {
