@@ -1,0 +1,23 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>SHIRO WebAssembly interchange verification</title>
+<h1>SHIRO WebAssembly interchange verification</h1>
+<pre id="result">Running</pre>
+<script type="module">
+import init, * as api from '/bindings/shiro_rs.js';
+import {verifyInterchange} from './wasm_interchange_checks.mjs';
+try {
+    await init();
+    const load = async name => {
+        const response = await fetch('./fixtures/' + name);
+        if (!response.ok) throw new Error('Fixture fetch failed: ' + name);
+        return new Uint8Array(await response.arrayBuffer());
+    };
+    const result = await verifyInterchange(api, load);
+    const repeated = await verifyInterchange(api, load);
+    if (JSON.stringify(result) !== JSON.stringify(repeated)) throw new Error('Repeated interchange verification changed');
+    document.querySelector('#result').textContent = 'PASS ' + JSON.stringify({passes: 2, ...result});
+} catch (error) {
+    document.querySelector('#result').textContent = 'FAIL ' + (error.stack || error);
+}
+</script>

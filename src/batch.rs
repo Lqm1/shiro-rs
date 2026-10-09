@@ -311,8 +311,9 @@ fn lua(
         .arg(prefix)
         .stdin(Stdio::piped());
     let mut child = Running::start(&mut command)?;
-    let mut stdin = child.child.stdin.take().expect("Lua stdin piped");
-    stdin.write_all(LUA_BRIDGE.as_bytes())?;
-    drop(stdin);
+    {
+        let mut stdin = child.child.stdin.take().expect("Lua stdin piped");
+        stdin.write_all(LUA_BRIDGE.as_bytes())?;
+    }
     child.wait(interpreter)
 }

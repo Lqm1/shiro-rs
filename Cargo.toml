@@ -10,6 +10,7 @@ crate-type = ["rlib", "cdylib", "staticlib"]
 
 [features]
 c-api = []
+wasm = ["dep:wasm-bindgen"]
 
 [dependencies]
 ciglet-rs = { version = "0.1.0", path = "../ciglet-rs" }
@@ -18,3 +19,6 @@ liblrhsmm-rs = { version = "0.1.0", path = "../liblrhsmm-rs" }
 rand = { version = "0.10.3", default-features = false, features = ["std_rng"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"
+
+[target.wasm32-unknown-unknown.dependencies]
+wasm-bindgen = { version = "=0.2.129", optional = true }
