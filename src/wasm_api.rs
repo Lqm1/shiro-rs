@@ -10,6 +10,7 @@ mod loading;
 mod models;
 mod phones;
 mod rawfloat;
+mod training;
 pub use data::*;
 pub use documents::*;
 pub use initialization::*;
@@ -19,6 +20,7 @@ pub use loading::*;
 pub use models::*;
 pub use phones::*;
 pub use rawfloat::*;
+pub use training::*;
 
 use wasm_bindgen::prelude::*;
 

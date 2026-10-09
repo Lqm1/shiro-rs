@@ -6,7 +6,7 @@ acceptance are still in progress. This checkpoint implements rawfloat, all
 native label and phone-map operations, model construction/IO/parameter access,
 observation and segmentation import with complete owned field access,
 isolated grouping,
-dataset owners, document loading and model initialization,
+dataset owners, document loading, model initialization and training,
 and complete JSON document owners used by
 the remaining workflows. CLI invocation, OS files and external Lua/SPTK
 processes remain native as specified by ADR 0007.
@@ -186,7 +186,7 @@ explicit forward-jump handling and fractional times. They check IEEE payloads,
 70 streams, large budgets with small inputs, invalid import shapes, all field
 edits, copied arrays, source release and atomic failed edits. Native
 `initialization` and `c_api_samples` integration suites provide related importer
-and model-initialization regression coverage. Inference, training and final
+and model-initialization regression coverage. Inference and final
 combined platform acceptance remain in progress.
 
 ## Isolated grouping
@@ -216,7 +216,7 @@ fractional times, self/backward jumps, out-of-group filtering and same-phone
 index reset; and check all field edits, collection operations, source release,
 maximum u32 positions and invalid inputs. Related native `c_api_isolation` and
 `rest_cli` suites check the shared operation and original trained model bytes.
-Training workflows and final combined acceptance are still required.
+Final combined acceptance is still required.
 
 ## Dataset ownership and initialization
 
@@ -245,7 +245,7 @@ only the documented fallback-duration correction. Tests exercise both complete
 dataset arrays, cloning, growth/shrinkage, independent child owners, all option
 fields, invalid settings, unpaired samples and invalid intervals. The related
 native `initialization` and `c_api_initialization` suites pass as regression
-coverage. Full training, inference and final combined acceptance remain open.
+coverage. Inference and final combined acceptance remain open.
 
 ## Document feature-file loading
 
@@ -274,4 +274,57 @@ budgets, empty documents and source release. A document-loading-to-initializatio
 path produces the exact original C aligned model. Native initialization and
 training suites cover the shared OS-backed assembly, including original model
 bytes and likelihood reports. These bindings expose data loading without OS
-file APIs; training and final combined acceptance remain in progress.
+file APIs; final combined acceptance remains in progress.
+
+## Training and progress
+
+`Model.train(files, options)` returns an independent `TrainingResult` containing
+the complete model and every ordered iteration report. `train_with_progress`
+also calls a synchronous JavaScript function with an independently owned
+`IterationReport` after each completed model update. The callback may retain,
+edit or free that report; it must free retained owners when finished. Callback
+exceptions stop before the next iteration and propagate the original JavaScript
+value unchanged. Input owners remain borrowed for the call and must not be
+mutated or freed during a callback. A callback return value is ignored.
+
+`TrainingOptions` exposes all 13 native fields with setters, defaults and clone:
+`iterations`, `duration_mode`, `hsmm_temperature`, `duration_weight`,
+`state_radius`, `duration_extra`, `duration_extra_factor`,
+`geometric_temperature`, `pruning_slope`, `termination_threshold`,
+`deterministic_annealing`, `mean_frame_likelihood` and `workers`. Duration mode
+0 selects HSMM and 1 selects geometric HMM; other values fail. As in native
+training, the per-iteration annealing schedule replaces both supplied inference
+temperatures. The standard browser target has no OS threads. For workers above
+one, it executes per-file estimates sequentially while preserving the native
+worker path's independent statistics and ordered reduction. Native builds
+continue to use OS workers. This changes scheduling, not the reduction order.
+
+| Owner | Complete native fields and access |
+| --- | --- |
+| `FileLikelihoods` | Typed copied values, full replacement and clone |
+| `LikelihoodRows` | Ordered rows with all copied collection operations |
+| `IterationReport` | Mutable iteration, temperature and mean log likelihood; copied rows and replacement; arbitrary constructor and clone |
+| `IterationReports` | Ordered reports with all copied collection operations |
+| `TrainingResult` | Copied model and iterations, replacement of each field, arbitrary constructor and clone |
+
+The callback uses `js-sys` 0.3.106, added as an optional target dependency with
+Cargo and activated by the `wasm` feature. Exception handling follows the
+official [Function API](https://wasm-bindgen.github.io/wasm-bindgen/api/js_sys/struct.Function.html)
+and [Result boundary](https://wasm-bindgen.github.io/wasm-bindgen/reference/types/result.html).
+Inference, remaining SHIRO operations and final cross-platform acceptance are
+still required before claiming completion.
+
+`tests/wasm_training_node.cjs` and `wasm_training_browser.html` run all eight
+current families twice in opposite orders. Nine C reference cases cover embedded
+and isolated HMM/HSMM, annealing and frame-mean likelihood reporting. All 2,592
+model bytes match exactly; 18 reports and 27 likelihood values satisfy the
+existing 1e-5 absolute tolerance. Tests retain callback owners after the call,
+compare every report field against returned results, verify temperature and
+aggregate arithmetic, convergence stopping and zero iterations, callback
+exception identity and immediate stopping, subsequent recovery, arbitrary
+report/result editing, copied collection ownership and repeated worker-path
+results. Native unit tests compare the browser's ordered estimates against
+actual OS workers for both duration modes and verify fallible progress stopping.
+The existing native `training`, `c_api_training` and `rest_cli` suites continue
+to pass. This checkpoint does not refresh the full platform matrix or establish
+final cross-crate acceptance.

@@ -74,6 +74,12 @@ impl Dataset {
 
 collection!(Datasets, Dataset, NativeDataset);
 
+impl Datasets {
+    pub(super) fn native(&self) -> &[NativeDataset] {
+        &self.inner
+    }
+}
+
 #[wasm_bindgen]
 impl Datasets {
     pub fn load_training_files(

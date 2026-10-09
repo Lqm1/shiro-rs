@@ -61,6 +61,18 @@ pub fn train_with_progress(
     options: Options,
     mut progress: impl FnMut(&IterationReport),
 ) -> Result<TrainingResult, ModelError> {
+    train_observed(model, files, options, |report| {
+        progress(report);
+        Ok(())
+    })
+}
+
+pub(crate) fn train_observed(
+    model: &Model,
+    files: &[Dataset],
+    options: Options,
+    mut progress: impl FnMut(&IterationReport) -> Result<(), ModelError>,
+) -> Result<TrainingResult, ModelError> {
     model.validate()?;
     if options.iterations > i32::MAX as usize
         || options.workers == 0
@@ -131,7 +143,7 @@ pub fn train_with_progress(
             mean_log_likelihood: mean,
             file_likelihoods: rows,
         };
-        progress(&report);
+        progress(&report)?;
         result.iterations.push(report);
         if iteration > 0
             && options.termination_threshold > 0.0
@@ -209,6 +221,7 @@ fn estimate_file(
 }
 
 type FileEstimate = (ModelStatistics, Vec<f32>);
+#[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 fn parallel_estimates(
     model: &Model,
     files: &[PreparedFile<'_>],
@@ -253,6 +266,94 @@ fn parallel_estimates(
             None => Ok(estimates),
         }
     })
+}
+
+// The browser target has no OS threads. Keep per-file statistics and ordered
+// reduction identical to the native worker path, executing files sequentially.
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+use ordered_estimates as parallel_estimates;
+
+#[cfg(any(test, all(target_arch = "wasm32", target_os = "unknown")))]
+fn ordered_estimates(
+    model: &Model,
+    files: &[PreparedFile<'_>],
+    options: Options,
+) -> Result<Vec<FileEstimate>, ModelError> {
+    files
+        .iter()
+        .map(|file| {
+            let mut statistics = ModelStatistics::from_model(model)?;
+            let row = estimate_file(&mut statistics, model, file, options)?;
+            Ok((statistics, row))
+        })
+        .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn inputs() -> (Model, Vec<Dataset>) {
+        let model =
+            Model::read_from(include_bytes!("../tests/fixtures/init-c-aligned.hsmm").as_slice())
+                .unwrap();
+        let document: crate::labels::SegmentationDocument =
+            serde_json::from_slice(include_bytes!("../tests/fixtures/align-c-isolated.json"))
+                .unwrap();
+        let observation = crate::dataset::read_observation(
+            include_bytes!("../tests/fixtures/init-input.bin").as_slice(),
+            &[2, 1],
+            12,
+        )
+        .unwrap();
+        let segmentation =
+            crate::dataset::read_segmentation(&document.files[0].states, &model).unwrap();
+        let file = Dataset {
+            observations: vec![observation],
+            segmentations: vec![segmentation],
+        };
+        (model, vec![file; 4])
+    }
+
+    #[test]
+    fn ordered_browser_estimates_match_native_workers_exactly() {
+        let (model, files) = inputs();
+        let files = prepare_files(&files).unwrap();
+        for duration_mode in [DurationMode::Normal, DurationMode::Geometric] {
+            let options = Options {
+                workers: 3,
+                duration_mode,
+                ..Options::default()
+            };
+            assert_eq!(
+                parallel_estimates(&model, &files, options).unwrap(),
+                ordered_estimates(&model, &files, options).unwrap()
+            );
+        }
+    }
+
+    #[test]
+    fn fallible_progress_stops_before_the_next_iteration() {
+        let (model, files) = inputs();
+        let source = model.clone();
+        let mut calls = 0;
+        let result = train_observed(
+            &model,
+            &files,
+            Options {
+                iterations: 3,
+                termination_threshold: 0.0,
+                ..Options::default()
+            },
+            |_| {
+                calls += 1;
+                Err(ModelError("callback stopped"))
+            },
+        );
+        assert_eq!(calls, 1);
+        assert_eq!(result.unwrap_err().to_string(), "callback stopped");
+        assert_eq!(model, source);
+    }
 }
 
 // Every accumulator is constructed from the same immutable model. The update
