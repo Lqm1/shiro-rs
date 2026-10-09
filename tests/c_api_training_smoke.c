@@ -120,10 +120,83 @@ static void reports_equal(const ShiroRsIterationReport *a, const ShiroRsIteratio
     ShiroRsArrayF32 *invalid = NULL; assert(shiro_rs_iteration_report_get_file(a, count, &invalid) == 2 && !invalid);
 }
 typedef struct Case { const char *model, *likelihood; size_t iterations; uint32_t mode, anneal, mean, isolated; } Case;
+static void arbitrary_fields(ShiroRsModel *model) {
+    const uint32_t bits[] = {0x80000000u, 0x7f800000u, 0xff800000u, 0x7fc01234u, 1u};
+    float values[5]; memcpy(values, bits, sizeof(values));
+    ShiroRsArrayF32 *row = NULL, *empty = NULL;
+    assert(shiro_rs_array_f32_create(values, 5, &row) == 0);
+    assert(shiro_rs_array_f32_create(NULL, 0, &empty) == 0);
+    const ShiroRsArrayF32 *rows[] = {row, empty, row};
+    ShiroRsIterationInfo info = {SIZE_MAX, -0.0f, INFINITY}, replacement = {7, 2.0f, 3.0f};
+    ShiroRsIterationReport *report = NULL;
+    assert(shiro_rs_iteration_report_create(&info, rows, 3, &report) == 0);
+    const ShiroRsIterationReport *reports[] = {report, report}, *invalid[] = {report, NULL};
+    ShiroRsTrainingResult *result = NULL, *clone = NULL;
+    assert(shiro_rs_training_result_create(model, reports, 2, &result) == 0);
+    assert(shiro_rs_training_result_clone(result, &clone) == 0);
+    ShiroRsTrainingResult *retained = result;
+    assert(shiro_rs_training_result_create(model, invalid, 2, &retained) == 1 && retained == result);
+    assert(shiro_rs_training_result_create(model, NULL, 0, NULL) == 1);
+    assert(shiro_rs_training_result_replace(result, model, invalid, 2) == 1);
+    assert(shiro_rs_training_result_replace(result, model, NULL, SIZE_MAX) == 2);
+    const ShiroRsArrayF32 *invalid_rows[] = {row, NULL};
+    assert(shiro_rs_iteration_report_replace(report, &replacement, invalid_rows, 2) == 1);
+    ShiroRsIterationInfo observed;
+    assert(shiro_rs_iteration_report_info(report, &observed) == 0 && observed.iteration == SIZE_MAX);
+    assert(shiro_rs_iteration_report_replace(report, &replacement, NULL, SIZE_MAX) == 2);
+    assert(shiro_rs_iteration_report_replace(report, &replacement, NULL, 0) == 0);
+    assert(shiro_rs_training_result_replace(result, model, reports, 1) == 0);
+    ShiroRsIterationReport *snapshot = NULL;
+    assert(shiro_rs_training_result_get_report(result, 0, &snapshot) == 0);
+    assert(shiro_rs_iteration_report_info(snapshot, &observed) == 0);
+    assert(observed.iteration == 7 && observed.temperature == 2.0f && observed.mean_log_likelihood == 3.0f);
+    size_t count = 99;
+    assert(shiro_rs_iteration_report_file_count(snapshot, &count) == 0 && count == 0);
+    assert(shiro_rs_iteration_report_release(&snapshot) == 0);
+    /* Replace the model as well, and release its input before reading the result. */
+    size_t size; char *source = load("tests/fixtures/rest-c-hsmm-one.hsmm", &size);
+    ShiroRsBytes *bytes = owned(source, size); free(source);
+    ShiroRsModel *replacement_model = NULL;
+    assert(shiro_rs_model_read_bytes(bytes, 16 * 1024 * 1024, &replacement_model) == 0);
+    assert(shiro_rs_bytes_release(&bytes) == 0);
+    assert(shiro_rs_training_result_replace(result, replacement_model, NULL, 0) == 0);
+    assert(shiro_rs_model_release(&replacement_model) == 0);
+    assert(shiro_rs_training_result_length(result, &count) == 0 && count == 0);
+    ShiroRsModel *saved = NULL;
+    assert(shiro_rs_training_result_get_model(result, &saved) == 0);
+    model_equal(saved, "tests/fixtures/rest-c-hsmm-one.hsmm");
+    assert(shiro_rs_model_release(&saved) == 0 && shiro_rs_training_result_release(&result) == 0);
+    assert(shiro_rs_iteration_report_release(&report) == 0);
+    assert(shiro_rs_array_f32_release(&row) == 0 && shiro_rs_array_f32_release(&empty) == 0);
+    assert(shiro_rs_training_result_length(clone, &count) == 0 && count == 2);
+    for (size_t index = 0; index < 2; ++index) {
+        assert(shiro_rs_training_result_get_report(clone, index, &snapshot) == 0);
+        assert(shiro_rs_iteration_report_info(snapshot, &observed) == 0);
+        assert(observed.iteration == SIZE_MAX && signbit(observed.temperature) && observed.temperature == 0.0f && observed.mean_log_likelihood == INFINITY);
+        assert(shiro_rs_iteration_report_file_count(snapshot, &count) == 0 && count == 3);
+        for (size_t file = 0; file < 3; ++file) {
+            ShiroRsArrayF32 *copied = NULL;
+            assert(shiro_rs_iteration_report_get_file(snapshot, file, &copied) == 0);
+            assert(shiro_rs_array_f32_length(copied, &count) == 0 && count == (file == 1 ? 0u : 5u));
+            float actual[5];
+            assert(shiro_rs_array_f32_copy(copied, 0, actual, count) == 0);
+            if (count) assert(memcmp(actual, bits, sizeof(bits)) == 0);
+            assert(shiro_rs_array_f32_release(&copied) == 0);
+        }
+        assert(shiro_rs_iteration_report_release(&snapshot) == 0);
+    }
+    assert(shiro_rs_training_result_get_model(clone, &saved) == 0);
+    model_equal(saved, "tests/fixtures/init-c-aligned.hsmm");
+    assert(shiro_rs_model_release(&saved) == 0 && shiro_rs_training_result_release(&clone) == 0);
+    assert(shiro_rs_training_result_create(NULL, NULL, 0, &result) == 1);
+    assert(shiro_rs_training_result_replace(NULL, model, NULL, 0) == 1);
+    assert(shiro_rs_iteration_report_replace(NULL, &info, NULL, 0) == 1);
+}
 int main(void) {
     size_t size; char *source = load("tests/fixtures/init-c-aligned.hsmm", &size);
     ShiroRsBytes *bytes = owned(source, size); free(source); ShiroRsModel *model = NULL;
     assert(shiro_rs_model_read_bytes(bytes, 16 * 1024 * 1024, &model) == 0 && shiro_rs_bytes_release(&bytes) == 0);
+    arbitrary_fields(model);
     source = load("tests/fixtures/init-input.bin", &size);
     char path[128]; snprintf(path, sizeof(path), ".shiro-c-api-training-%s-%ld.f", TASK_OS, (long)TASK_PID());
     FILE *file = fopen(path, "wb"); assert(file && fwrite(source, 1, size, file) == size && fclose(file) == 0); free(source);
@@ -216,5 +289,5 @@ int main(void) {
     assert(shiro_rs_training_files_release(&files) == 0);
     model_equal(model, "tests/fixtures/init-c-aligned.hsmm"); assert(shiro_rs_model_release(&model) == 0);
     free(array); free(document); assert(remove(path) == 0);
-    puts("SHIRO training C: all21 exports, nine original C models/likelihoods/CSV, direct partial CSV streams, complete reports, callbacks, stopping and failures passed"); return 0;
+    puts("SHIRO training C: all25 exports, nine original C models/likelihoods/CSV, direct partial CSV streams, arbitrary result/report fields, atomic replacement, independent ownership, callbacks and failures passed"); return 0;
 }

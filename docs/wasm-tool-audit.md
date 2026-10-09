@@ -57,10 +57,13 @@ This inspection does not replace a full public-field audit or runtime tests.
 
 ## Remaining acceptance work
 
-The C TrainingResult owner exposes both fields through getters and clone, but
-source inspection finds no arbitrary construction or complete field replacement.
-Add those operations and verify ownership and arbitrary report contents before
-claiming full public-field coverage. This is a separate gap from CSV transport.
+The C TrainingResult owner now supports arbitrary construction and full model
+and report replacement. Owned iteration reports also support complete replacement
+using the existing arbitrary report constructor's row contract. Windows x86_64
+Rust/C/Python tests cover complete fields, arbitrary IEEE values, nested empty and
+repeated inputs, invalid pointer/count failures, atomic updates and independent
+source/result/clone lifetimes. This closes the identified result-field gap on
+that target; it does not complete the remaining public-field or platform audit.
 Run a combined virtual-file workflow exercising all fourteen tool computations,
 including indexed frame-size validation and multi-file output generation. Audit
 the remaining public-field coverage in all three packages, especially ciglet.

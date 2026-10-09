@@ -1,6 +1,6 @@
 //! Complete ordered training inputs, results and synchronous progress reports.
 use super::{
-    ShiroRsArrayF32, ShiroRsBytes, ShiroRsDataset, ShiroRsModel,
+    ShiroRsArrayF32, ShiroRsBytes, ShiroRsDataset, ShiroRsModel, boundary,
     buffers::{input, release},
     range, result,
 };
@@ -75,6 +75,148 @@ pub struct ShiroRsIterationInfo {
     pub iteration: usize,
     pub temperature: f32,
     pub mean_log_likelihood: f32,
+}
+
+// Check both the pointer table and every borrowed owner before any copy/update.
+unsafe fn owners<T>(values: *const *const T, count: usize) -> Result<(), u32> {
+    range(values, count)?;
+    // SAFETY: Caller supplies the readable table validated above.
+    for &value in unsafe { input(values, count) } {
+        range(value, 1)?;
+    }
+    Ok(())
+}
+
+unsafe fn copy_report(
+    info: *const ShiroRsIterationInfo,
+    files: *const *const ShiroRsArrayF32,
+    count: usize,
+) -> io::Result<IterationReport> {
+    let mut file_likelihoods = Vec::new();
+    file_likelihoods
+        .try_reserve_exact(count)
+        .map_err(io::Error::other)?;
+    // SAFETY: Public entry point checked the descriptor, table and live owners.
+    let info = unsafe { info.read() };
+    // SAFETY: Every table entry points to a live immutable array owner.
+    for &file in unsafe { input(files, count) } {
+        file_likelihoods.push(unsafe { &(*file).values }.clone());
+    }
+    Ok(IterationReport {
+        iteration: info.iteration,
+        temperature: info.temperature,
+        mean_log_likelihood: info.mean_log_likelihood,
+        file_likelihoods,
+    })
+}
+
+unsafe fn copy_training_result(
+    model: *const ShiroRsModel,
+    reports: *const *const ShiroRsIterationReport,
+    count: usize,
+) -> io::Result<TrainingResult> {
+    let mut iterations = Vec::new();
+    iterations
+        .try_reserve_exact(count)
+        .map_err(io::Error::other)?;
+    // SAFETY: Public entry point checked the table and every live report owner.
+    for &report in unsafe { input(reports, count) } {
+        iterations.push(unsafe { &(*report).value }.clone());
+    }
+    Ok(TrainingResult {
+        // SAFETY: Validated live immutable model owner.
+        model: unsafe { &(*model).value }.clone(),
+        iterations,
+    })
+}
+
+/// Replace every report field after copying all inputs. Failure retains the owner.
+/// # Safety
+/// Owner is live exclusively writable owned storage, never a callback-borrowed
+/// report. Info/table/array owners obey create's readable contract and do not
+/// overlap the destination. Inputs remain unchanged and are not retained.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn shiro_rs_iteration_report_replace(
+    owner: *mut ShiroRsIterationReport,
+    info: *const ShiroRsIterationInfo,
+    files: *const *const ShiroRsArrayF32,
+    count: usize,
+) -> u32 {
+    // SAFETY: Caller supplies readable table storage when its range is valid.
+    for status in [range(owner, 1), range(info, 1), unsafe {
+        owners(files, count)
+    }] {
+        if let Err(status) = status {
+            return status;
+        }
+    }
+    boundary(|| {
+        // SAFETY: Checked immutable sources and exclusive destination.
+        let value = unsafe { copy_report(info, files, count) }?;
+        unsafe {
+            (*owner).value = value;
+        }
+        Ok(())
+    })
+    .map_or_else(|status| status, |()| 0)
+}
+
+/// Copy the complete model and arbitrary ordered reports without training.
+/// # Safety
+/// Model, report table and every report are live aligned readable storage; null
+/// table is allowed only for zero count. Output is independent writable storage
+/// holding no live owner on success; failed output and inputs remain unchanged.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn shiro_rs_training_result_create(
+    model: *const ShiroRsModel,
+    reports: *const *const ShiroRsIterationReport,
+    count: usize,
+    output: *mut *mut ShiroRsTrainingResult,
+) -> u32 {
+    // SAFETY: Caller supplies readable table storage when its range is valid.
+    for status in [range(model, 1), unsafe { owners(reports, count) }] {
+        if let Err(status) = status {
+            return status;
+        }
+    }
+    // SAFETY: Checked immutable sources and independent writable output.
+    unsafe {
+        result(output, || {
+            let value = copy_training_result(model, reports, count)?;
+            Ok(Box::into_raw(Box::new(ShiroRsTrainingResult { value })))
+        })
+    }
+}
+
+/// Replace both native result fields only after copying the complete inputs.
+/// # Safety
+/// Owner is live exclusively writable storage. Model/table/report owners obey
+/// create's readable contract and do not overlap the destination. Inputs are
+/// copied, not retained; failure leaves every existing result field unchanged.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn shiro_rs_training_result_replace(
+    owner: *mut ShiroRsTrainingResult,
+    model: *const ShiroRsModel,
+    reports: *const *const ShiroRsIterationReport,
+    count: usize,
+) -> u32 {
+    // SAFETY: Caller supplies readable table storage when its range is valid.
+    for status in [range(owner, 1), range(model, 1), unsafe {
+        owners(reports, count)
+    }] {
+        if let Err(status) = status {
+            return status;
+        }
+    }
+    boundary(|| {
+        // SAFETY: Checked immutable sources and exclusive destination.
+        let value = unsafe { copy_training_result(model, reports, count) }?;
+        unsafe {
+            (*owner).value = value;
+        }
+        Ok(())
+    })
+    .map_or_else(|status| status, |()| 0)
 }
 /// Synchronous progress callback. Report is read-only and live only for this call.
 /// It may be queried or cloned, but must not be released or retained un-cloned.
@@ -569,7 +711,7 @@ pub unsafe extern "C" fn shiro_rs_iteration_report_clone(
 /// Release a unique owned report and clear its slot; never release a callback's
 /// borrowed report. Empty slot succeeds.
 /// # Safety
-/// Slot holds a unique owned report from a getter/clone or null; aligned independent
+/// Slot holds a unique owned report from a constructor/getter/clone or null; aligned independent
 /// writable storage and exclusive access are required. Callback reports are excluded.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn shiro_rs_iteration_report_release(

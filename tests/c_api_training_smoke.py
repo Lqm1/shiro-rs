@@ -15,13 +15,14 @@ symbols = {
     'training_result_length', 'training_result_get_model', 'training_result_get_report',
     'training_result_clone', 'training_result_release', 'training_result_likelihood_csv_bytes', 'training_result_write_likelihood_csv_stream', 'iteration_report_info',
     'iteration_report_file_count', 'iteration_report_get_file',
-    'iteration_report_clone', 'iteration_report_release',
+    'iteration_report_clone', 'iteration_report_release', 'iteration_report_create',
+    'iteration_report_replace', 'training_result_create', 'training_result_replace',
 }
 if len(sys.argv) > 2:
     assert sys.argv[2] == '--no-c-api'
     for name in symbols:
         assert not hasattr(lib, 'shiro_rs_' + name), name
-    print('SHIRO training ctypes: all21 symbols absent without c-api')
+    print('SHIRO training ctypes: all25 symbols absent without c-api')
     sys.exit(0)
 
 class Options(c.Structure):
@@ -94,6 +95,10 @@ result_clone = function('training_result_clone', [P, c.POINTER(P)])
 result_csv = function('training_result_likelihood_csv_bytes', [P, c.POINTER(P)])
 result_csv_stream = function('training_result_write_likelihood_csv_stream', [P, c.POINTER(Writer)])
 result_release = function('training_result_release', [c.POINTER(P)])
+result_create = function('training_result_create', [P, c.POINTER(P), N, c.POINTER(P)])
+result_replace = function('training_result_replace', [P, P, c.POINTER(P), N])
+report_create = function('iteration_report_create', [c.POINTER(Info), c.POINTER(P), N, c.POINTER(P)])
+report_replace = function('iteration_report_replace', [P, c.POINTER(Info), c.POINTER(P), N])
 report_info = function('iteration_report_info', [P, c.POINTER(Info)])
 report_count = function('iteration_report_file_count', [P, c.POINTER(N)])
 report_file = function('iteration_report_get_file', [P, N, c.POINTER(P)])
@@ -102,6 +107,7 @@ report_release = function('iteration_report_release', [c.POINTER(P)])
 array_length = function('array_f32_length', [P, c.POINTER(N)])
 array_copy = function('array_f32_copy', [P, N, c.POINTER(F), N])
 array_release = function('array_f32_release', [c.POINTER(P)])
+array_create = function('array_f32_create', [c.POINTER(F), N, c.POINTER(P)])
 
 def owned(data):
     output = P()
@@ -315,6 +321,69 @@ assert result_report(result, 0, c.byref(snapshot)) == 2 and snapshot.value is No
 assert defaults(None) == 1 and files_release(None) == 1 and result_release(None) == 1 and report_release(None) == 1
 assert result_release(c.byref(result)) == 0 and result_release(c.byref(result)) == 0
 assert files_release(c.byref(empty)) == 0
+bits = (U * 5)(0x80000000, 0x7f800000, 0xff800000, 0x7fc01234, 1)
+row, empty_row, arbitrary, assembled, clone = P(), P(), P(), P(), P()
+assert array_create(c.cast(bits, c.POINTER(F)), 5, c.byref(row)) == 0
+assert array_create(None, 0, c.byref(empty_row)) == 0
+rows = (P * 3)(row, empty_row, row)
+info = Info(N(-1).value, -0.0, float('inf'))
+assert report_create(c.byref(info), rows, 3, c.byref(arbitrary)) == 0
+reports = (P * 2)(arbitrary, arbitrary)
+assert result_create(model, reports, 2, c.byref(assembled)) == 0
+assert result_clone(assembled, c.byref(clone)) == 0
+invalid = (P * 2)(arbitrary, None)
+retained = P(assembled.value)
+assert result_create(model, invalid, 2, c.byref(retained)) == 1 and retained.value == assembled.value
+assert result_create(model, None, 0, None) == 1
+assert result_replace(assembled, model, invalid, 2) == 1
+assert result_replace(assembled, model, None, N(-1).value) == 2
+replacement = Info(7, 2.0, 3.0)
+invalid_rows = (P * 2)(row, None)
+assert report_replace(arbitrary, c.byref(replacement), invalid_rows, 2) == 1
+assert report(arbitrary)[0] == info.iteration
+assert report_replace(arbitrary, c.byref(replacement), None, N(-1).value) == 2
+assert report_replace(arbitrary, c.byref(replacement), None, 0) == 0
+assert report(arbitrary) == (7, 2.0, 3.0, [])
+assert result_replace(assembled, model, reports, 1) == 0
+snapshot = P()
+assert result_report(assembled, 0, c.byref(snapshot)) == 0
+assert report(snapshot) == (7, 2.0, 3.0, [])
+assert report_release(c.byref(snapshot)) == 0
+replacement_wire = (root / 'rest-c-hsmm-one.hsmm').read_bytes()
+encoded, replacement_model = owned(replacement_wire), P()
+assert model_read(encoded, 16 * 1024 * 1024, c.byref(replacement_model)) == 0
+assert release_bytes(c.byref(encoded)) == 0
+assert result_replace(assembled, replacement_model, None, 0) == 0
+assert model_release(c.byref(replacement_model)) == 0
+assert result_model(assembled, c.byref(snapshot)) == 0 and wire(snapshot) == replacement_wire
+assert model_release(c.byref(snapshot)) == 0
+assert result_length(assembled, c.byref(count)) == 0 and count.value == 0
+assert result_release(c.byref(assembled)) == 0
+assert report_release(c.byref(arbitrary)) == 0
+assert array_release(c.byref(row)) == 0 and array_release(c.byref(empty_row)) == 0
+assert result_length(clone, c.byref(count)) == 0 and count.value == 2
+for index in range(2):
+    assert result_report(clone, index, c.byref(snapshot)) == 0
+    observed = Info()
+    assert report_info(snapshot, c.byref(observed)) == 0
+    assert bytes(observed) == bytes(info)
+    assert report_count(snapshot, c.byref(count)) == 0 and count.value == 3
+    for file_index in range(3):
+        copied_row = P()
+        assert report_file(snapshot, file_index, c.byref(copied_row)) == 0
+        size = N()
+        assert array_length(copied_row, c.byref(size)) == 0
+        expected = b'' if file_index == 1 else bytes(bits)
+        actual = (F * size.value)()
+        assert array_copy(copied_row, 0, actual, size.value) == 0
+        assert bytes(actual) == expected
+        assert array_release(c.byref(copied_row)) == 0
+    assert report_release(c.byref(snapshot)) == 0
+assert result_model(clone, c.byref(snapshot)) == 0 and wire(snapshot) == initial_wire
+assert model_release(c.byref(snapshot)) == 0
 assert wire(model) == initial_wire and model_release(c.byref(model)) == 0
+assert result_report(clone, 0, c.byref(snapshot)) == 0
+assert report(snapshot)[0] == info.iteration
+assert report_release(c.byref(snapshot)) == 0 and result_release(c.byref(clone)) == 0
 assert symbols <= called
-print('SHIRO training ctypes: all21 exports, nine original C models/likelihoods/CSV, direct partial CSV streams, complete reports, callbacks, stopping and failures passed')
+print('SHIRO training ctypes: all25 exports, nine original C models/likelihoods/CSV, direct partial CSV streams, arbitrary result/report fields, atomic replacement, independent ownership, callbacks and failures passed')

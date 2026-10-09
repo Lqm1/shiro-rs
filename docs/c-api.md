@@ -418,12 +418,30 @@ required.
 
 ### Training interfaces
 
-Nineteen exports provide complete ordered training inputs, all thirteen native
+The training interfaces provide complete ordered inputs, all thirteen native
 settings, training with or without synchronous progress, complete model/report
 results, independent snapshots, deep clones and releases. Each input dataset
 represents one original file and retains every embedded or isolated group.
 The host loader delegates to `dataset::load_training_files`. Results retain
 every iteration, temperature, mean likelihood and nested file/group likelihood.
+
+`shiro_rs_training_result_create` copies a complete model and a table of report
+owners without executing training. Repeated report pointers, empty report tables,
+empty file rows and arbitrary binary32 report values are retained independently.
+`shiro_rs_training_result_replace` replaces both public native fields only after
+copying every input. `shiro_rs_iteration_report_replace` similarly replaces all
+scalar fields and nested rows of an owned report. Existing report construction
+remains available through `shiro_rs_iteration_report_create`. Replacement must
+not target a callback-borrowed report or overlap its input storage. Null tables
+are permitted only for zero counts. Invalid ranges/owners retain all destination
+fields; constructor failures retain the output slot. Inputs are never retained.
+
+Current Windows x86_64 Rust, optimized assert-enabled C and Python tests cover
+arbitrary iteration indices, signed zero, infinity, NaN payloads, subnormals,
+empty/repeated rows, ordered repeated reports, invalid nested pointers, oversized
+counts, full field replacement, replacement with a different model, source
+release and clone independence. Native Rust additionally checks NaN scalar bits.
+These current-source operations still require the final five-target refresh.
 
 Mode and boolean flags accept integer codes 0 and 1. Other settings retain native
 validation. Both inference temperatures are replaced by the native per-iteration

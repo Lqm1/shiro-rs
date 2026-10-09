@@ -192,6 +192,15 @@ typedef struct ShiroRsInitializationOptions {
 } ShiroRsInitializationOptions;
 
 /**
+ * Exact native scalar report fields; nested file rows are retrieved separately.
+ */
+typedef struct ShiroRsIterationInfo {
+  uintptr_t iteration;
+  float temperature;
+  float mean_log_likelihood;
+} ShiroRsIterationInfo;
+
+/**
  * All native training options. Flags/mode must be0/1; native numeric validation
  * and per-iteration annealing temperature replacement remain unchanged.
  */
@@ -221,15 +230,6 @@ typedef struct ShiroRsTrainingOptions {
  * participating training input owners must not be mutated or released.
  */
 typedef void (*ShiroRsProgressCallback)(void*, const struct ShiroRsIterationReport*);
-
-/**
- * Exact native scalar report fields; nested file rows are retrieved separately.
- */
-typedef struct ShiroRsIterationInfo {
-  uintptr_t iteration;
-  float temperature;
-  float mean_log_likelihood;
-} ShiroRsIterationInfo;
 
 /**
  * Native phone expansion counts and flag. Topology is a separate optional UTF-8
@@ -960,6 +960,42 @@ uint32_t shiro_rs_training_result_likelihood_csv_bytes(const struct ShiroRsTrain
                                                        struct ShiroRsBytes **output);
 
 /**
+ * Replace every report field after copying all inputs. Failure retains the owner.
+ * # Safety
+ * Owner is live exclusively writable owned storage, never a callback-borrowed
+ * report. Info/table/array owners obey create's readable contract and do not
+ * overlap the destination. Inputs remain unchanged and are not retained.
+ */
+uint32_t shiro_rs_iteration_report_replace(struct ShiroRsIterationReport *owner,
+                                           const struct ShiroRsIterationInfo *info,
+                                           const struct ShiroRsArrayF32 *const *files,
+                                           uintptr_t count);
+
+/**
+ * Copy the complete model and arbitrary ordered reports without training.
+ * # Safety
+ * Model, report table and every report are live aligned readable storage; null
+ * table is allowed only for zero count. Output is independent writable storage
+ * holding no live owner on success; failed output and inputs remain unchanged.
+ */
+uint32_t shiro_rs_training_result_create(const struct ShiroRsModel *model,
+                                         const struct ShiroRsIterationReport *const *reports,
+                                         uintptr_t count,
+                                         struct ShiroRsTrainingResult **output);
+
+/**
+ * Replace both native result fields only after copying the complete inputs.
+ * # Safety
+ * Owner is live exclusively writable storage. Model/table/report owners obey
+ * create's readable contract and do not overlap the destination. Inputs are
+ * copied, not retained; failure leaves every existing result field unchanged.
+ */
+uint32_t shiro_rs_training_result_replace(struct ShiroRsTrainingResult *owner,
+                                          const struct ShiroRsModel *model,
+                                          const struct ShiroRsIterationReport *const *reports,
+                                          uintptr_t count);
+
+/**
  * Clone complete paired datasets into independent file order. Repeated and empty
  * inputs are permitted; native training validates their applicability.
  * # Safety
@@ -1139,7 +1175,7 @@ uint32_t shiro_rs_iteration_report_clone(const struct ShiroRsIterationReport *re
  * Release a unique owned report and clear its slot; never release a callback's
  * borrowed report. Empty slot succeeds.
  * # Safety
- * Slot holds a unique owned report from a getter/clone or null; aligned independent
+ * Slot holds a unique owned report from a constructor/getter/clone or null; aligned independent
  * writable storage and exclusive access are required. Callback reports are excluded.
  */
 uint32_t shiro_rs_iteration_report_release(struct ShiroRsIterationReport **slot);

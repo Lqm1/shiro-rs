@@ -49,6 +49,153 @@ unsafe fn model() -> *mut ShiroRsModel {
 fn native_model() -> Model {
     Model::read_from(include_bytes!("fixtures/init-c-aligned.hsmm").as_slice()).unwrap()
 }
+
+#[test]
+fn arbitrary_result_fields_are_copied_and_replacements_are_atomic() {
+    // SAFETY: All input owners remain live and immutable during calls; outputs
+    // and replacement destinations are independent and exclusively writable.
+    unsafe {
+        let mut source = model();
+        let wire = model_wire(source);
+        let bits = [0x8000_0000, 0x7f80_0000, 0xff80_0000, 0x7fc0_1234, 1];
+        let values = bits.map(f32::from_bits);
+        let mut row = null_mut();
+        assert_eq!(
+            shiro_rs_array_f32_create(values.as_ptr(), values.len(), &mut row),
+            0
+        );
+        let mut empty = null_mut();
+        assert_eq!(shiro_rs_array_f32_create(null(), 0, &mut empty), 0);
+        let rows = [row.cast_const(), empty.cast_const(), row.cast_const()];
+        let info = ShiroRsIterationInfo {
+            iteration: usize::MAX,
+            temperature: f32::from_bits(0x7fc0_5678),
+            mean_log_likelihood: -0.0,
+        };
+        let mut original = null_mut();
+        assert_eq!(
+            shiro_rs_iteration_report_create(&info, rows.as_ptr(), rows.len(), &mut original),
+            0
+        );
+        let reports = [original.cast_const(), original.cast_const()];
+        let mut result = null_mut();
+        assert_eq!(
+            shiro_rs_training_result_create(source, reports.as_ptr(), reports.len(), &mut result),
+            0
+        );
+        let mut clone = null_mut();
+        assert_eq!(shiro_rs_training_result_clone(result, &mut clone), 0);
+        let invalid_reports = [original.cast_const(), null()];
+        let retained = result;
+        assert_eq!(
+            shiro_rs_training_result_create(source, invalid_reports.as_ptr(), 2, &mut result),
+            1
+        );
+        assert_eq!(result, retained);
+        assert_eq!(
+            shiro_rs_training_result_replace(result, source, invalid_reports.as_ptr(), 2),
+            1
+        );
+        assert_eq!(
+            shiro_rs_training_result_replace(result, source, null(), usize::MAX),
+            2
+        );
+        let replacement = ShiroRsIterationInfo {
+            iteration: 7,
+            temperature: 2.0,
+            mean_log_likelihood: 3.0,
+        };
+        let invalid_rows = [row.cast_const(), null()];
+        assert_eq!(
+            shiro_rs_iteration_report_replace(original, &replacement, invalid_rows.as_ptr(), 2),
+            1
+        );
+        assert_eq!(report(original).iteration, usize::MAX);
+        assert_eq!(
+            shiro_rs_iteration_report_replace(original, &replacement, null(), usize::MAX),
+            2
+        );
+        assert_eq!(
+            shiro_rs_iteration_report_replace(original, &replacement, null(), 0),
+            0
+        );
+        assert_eq!(report(original).iteration, 7);
+        assert!(report(original).file_likelihoods.is_empty());
+        assert_eq!(
+            shiro_rs_training_result_replace(result, source, reports.as_ptr(), 1),
+            0
+        );
+        let mut fetched = null_mut();
+        assert_eq!(
+            shiro_rs_training_result_get_report(result, 0, &mut fetched),
+            0
+        );
+        assert_eq!(report(fetched).iteration, 7);
+        assert_eq!(shiro_rs_iteration_report_release(&mut fetched), 0);
+        assert_eq!(
+            shiro_rs_training_result_replace(result, source, null(), 0),
+            0
+        );
+        let mut count = 99;
+        assert_eq!(shiro_rs_training_result_length(result, &mut count), 0);
+        assert_eq!(count, 0);
+        assert_eq!(shiro_rs_training_result_release(&mut result), 0);
+        assert_eq!(shiro_rs_iteration_report_release(&mut original), 0);
+        assert_eq!(shiro_rs_array_f32_release(&mut row), 0);
+        assert_eq!(shiro_rs_array_f32_release(&mut empty), 0);
+        assert_eq!(shiro_rs_model_release(&mut source), 0);
+        assert_eq!(shiro_rs_training_result_length(clone, &mut count), 0);
+        assert_eq!(count, 2);
+        for index in 0..2 {
+            assert_eq!(
+                shiro_rs_training_result_get_report(clone, index, &mut fetched),
+                0
+            );
+            let value = report(fetched);
+            assert_eq!(value.iteration, usize::MAX);
+            assert_eq!(value.temperature.to_bits(), info.temperature.to_bits());
+            assert_eq!(
+                value.mean_log_likelihood.to_bits(),
+                info.mean_log_likelihood.to_bits()
+            );
+            assert_eq!(value.file_likelihoods.len(), 3);
+            assert!(value.file_likelihoods[1].is_empty());
+            for row in [&value.file_likelihoods[0], &value.file_likelihoods[2]] {
+                assert_eq!(
+                    row.iter().map(|value| value.to_bits()).collect::<Vec<_>>(),
+                    bits
+                );
+            }
+            assert_eq!(shiro_rs_iteration_report_release(&mut fetched), 0);
+        }
+        let mut retained_model = null_mut();
+        assert_eq!(
+            shiro_rs_training_result_get_model(clone, &mut retained_model),
+            0
+        );
+        assert_eq!(model_wire(retained_model), wire);
+        assert_eq!(shiro_rs_model_release(&mut retained_model), 0);
+        assert_eq!(shiro_rs_training_result_release(&mut clone), 0);
+        assert_eq!(
+            shiro_rs_training_result_create(null(), null(), 0, &mut result),
+            1
+        );
+        assert_eq!(
+            shiro_rs_training_result_replace(null_mut(), null(), null(), 0),
+            1
+        );
+        assert_eq!(
+            shiro_rs_iteration_report_replace(null_mut(), &info, null(), 0),
+            1
+        );
+        let mut source = model();
+        assert_eq!(
+            shiro_rs_training_result_create(source, null(), 0, null_mut()),
+            1
+        );
+        assert_eq!(shiro_rs_model_release(&mut source), 0);
+    }
+}
 fn document() -> SegmentationDocument {
     serde_json::from_slice(include_bytes!("fixtures/align-c-isolated.json")).unwrap()
 }
