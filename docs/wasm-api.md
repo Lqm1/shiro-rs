@@ -2,8 +2,8 @@
 
 The optional `wasm` feature exposes native computations through independent
 owners and copied byte/typed arrays. Full SHIRO bindings and final combined
-acceptance are still in progress. This checkpoint implements rawfloat and all
-native label operations, together with complete JSON document owners used by
+acceptance are still in progress. This checkpoint implements rawfloat, all
+native label and phone-map operations, together with complete JSON document owners used by
 the remaining workflows. CLI invocation, OS files and external Lua/SPTK
 processes remain native as specified by ADR 0007.
 
@@ -28,7 +28,15 @@ use the same verifier twice on one initialized module. The verified result is
 rows and four complete document kinds. The Lua numerical comparison retains
 the native verifier's absolute tolerance of 1e-14. State fields and rawfloat
 bits are exact. The feature-disabled build exposes none of these six owners
-or three standalone functions.
+or three standalone functions at that initial checkpoint. The expanded
+feature-disabled verifier covers seven owners, including `PhoneMapOptions`.
+
+`tests/wasm_phones_node.cjs` and `wasm_phones_browser.html` run the original
+interchange checks together with all seven unchanged Lua phone cases. They check
+115 complete states, five model definitions and all four option fields twice
+on the same module. The same native absolute tolerance of 1e-14 applies to the
+Lua numerical references. This includes all native topology alternatives and
+short-phone cases, shared duration constraints and every output stream count.
 
 ## Rawfloat and labels
 
@@ -68,6 +76,24 @@ Errors become JavaScript exceptions. Array mutation does not alter Rust owners.
 Ordinary inputs are borrowed for a synchronous call; `.free()` releases an
 owner when no longer needed. WebAssembly panic/allocation-abort recovery is
 not promised.
+
+## Phone expansion and initial segmentation
+
+`PhoneMapOptions` provides the native defaults and mutable `states_per_phone`,
+`streams`, optional `topology` and `weak_skips`. `cloned` copies all four fields.
+An absent topology uses `undefined`; a present empty string remains present.
+Invalid editable values are rejected by calculations through native validation.
+
+`PhoneMap.create(text, options)` expands phone-set text into disjoint ordered
+duration/emission IDs. The returned map copies option strings and does not
+borrow its source options. `map.to_definition(dimensions, hop)` returns a
+complete `ModelDefinition`, preserving per-stream state counts and intersecting
+shared duration constraints. `map.initial(phones, frames)` accepts an ordered
+JavaScript string array and returns `States`. It retains native flat boundary
+rounding, all topology and weak-skip edges, probabilities, duration/output IDs
+and phoneme/local-index metadata. None of these calculations mutate the map.
+Model construction from the returned definition remains a subsequent binding
+task, as do the remaining inference, training and audio workflows.
 
 The implementation follows the official wasm-bindgen documentation for
 [exported Rust types](https://wasm-bindgen.github.io/wasm-bindgen/reference/types/exported-rust-types.html)

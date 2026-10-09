@@ -1,0 +1,24 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>SHIRO WebAssembly phone verification</title>
+<h1>SHIRO WebAssembly phone verification</h1>
+<pre id="result">Running</pre>
+<script type="module">
+import init, * as api from '/bindings/shiro_rs.js';
+import {verifyPhones} from './wasm_phones_checks.mjs';
+import {verifyInterchange} from './wasm_interchange_checks.mjs';
+try {
+    await init();
+    const load = async name => {
+        const response = await fetch('./fixtures/' + name);
+        if (!response.ok) throw new Error('Fixture fetch failed: ' + name);
+        return new Uint8Array(await response.arrayBuffer());
+    };
+    const phones = await verifyPhones(api, load), interchange = await verifyInterchange(api, load);
+    if (JSON.stringify(await verifyPhones(api, load)) !== JSON.stringify(phones)) throw new Error('Repeated phones verification changed');
+    if (JSON.stringify(await verifyInterchange(api, load)) !== JSON.stringify(interchange)) throw new Error('Repeated interchange verification changed');
+    document.querySelector('#result').textContent = 'PASS ' + JSON.stringify({passes: 2, phones, interchange});
+} catch (error) {
+    document.querySelector('#result').textContent = 'FAIL ' + (error.stack || error);
+}
+</script>
