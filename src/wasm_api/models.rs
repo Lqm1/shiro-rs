@@ -45,6 +45,7 @@ macro_rules! collection {
         }
     };
 }
+pub(super) use collection;
 
 #[wasm_bindgen]
 #[derive(Clone, Default)]

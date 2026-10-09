@@ -4,6 +4,7 @@ The optional `wasm` feature exposes native computations through independent
 owners and copied byte/typed arrays. Full SHIRO bindings and final combined
 acceptance are still in progress. This checkpoint implements rawfloat, all
 native label and phone-map operations, model construction/IO/parameter access,
+observation and segmentation import with complete owned field access,
 and complete JSON document owners used by
 the remaining workflows. CLI invocation, OS files and external Lua/SPTK
 processes remain native as specified by ADR 0007.
@@ -148,3 +149,40 @@ does not establish full inference/training or combined final acceptance.
 The implementation follows the official wasm-bindgen documentation for
 [exported Rust types](https://wasm-bindgen.github.io/wasm-bindgen/reference/types/exported-rust-types.html)
 and [copied numeric vectors](https://wasm-bindgen.github.io/wasm-bindgen/reference/types/boxed-slices.html).
+
+## Observation and segmentation import
+
+`Observation.read_rawfloat(bytes, dimensions, maximum_frames)` invokes the
+native SHIRO importer. `from_model_rawfloat` obtains the ordered stream
+dimensions from a model before importing. The budget limits complete frames;
+partial scalars or frames fail. Stream samples are deinterleaved without
+changing binary32 values. `Observation` exposes frame/stream counts, copied
+frames and stream owners, checked child replacement, complete shape replacement,
+validation, cloning and native serialization through `write`.
+
+`ObservationStream` exposes dimensions, copied values, complete replacement and
+cloning. `ObservationStreams` provides length, copied get/push, indexed
+replacement, clear and cloning. Whole observation edits validate the resulting
+shape before mutation. Empty observations with positive dimensions are supported.
+
+`Segmentation.from_states(states, model)` invokes the native SHIRO importer,
+including time truncation and binary32 residual transition arithmetic. Explicit
+delta-1 entries are excluded before appending the ordinary forward transition.
+The owner exposes every native field: boundaries, duration states, per-stream
+output states and outgoing jump groups. State-array setters check lengths;
+outgoing replacement validates structural transition constraints atomically.
+`JumpGroup` exposes copied signed deltas and binary32 probabilities, length and
+cloning. Complete segmentation replacement, validation, cloning and native
+serialization are available. These setters retain native structural semantics;
+numeric validity is checked by the operation that uses the data.
+
+`tests/wasm_data_node.cjs` and `wasm_data_browser.html` run all four current
+families twice on the same initialized module in opposite orders. Data checks
+compare all 12 fixture frames by raw bits against the interleaved source,
+original C boundaries and three jump probabilities, plus self/backward jumps,
+explicit forward-jump handling and fractional times. They check IEEE payloads,
+70 streams, large budgets with small inputs, invalid import shapes, all field
+edits, copied arrays, source release and atomic failed edits. Native
+`initialization` and `c_api_samples` integration suites provide related importer
+and model-initialization regression coverage. This does not complete dataset
+grouping, inference, training or final combined platform acceptance.
