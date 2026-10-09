@@ -11,7 +11,7 @@ targets are recorded in the SHIRO package's `docs/requirements-verification.md`.
 Historical checkpoints below retain their original scope.
 
 
-Build the optional interface with `cargo build -p shiro-rs-capi `. The package
+Build the interface with `cargo build --locked -p shiro-rs-capi`. The package
 produces Rust, shared C and static C libraries from the same library target.
 The generated declarations are in `crates/shiro-rs-capi/include/shiro_rs.h`; ABI version is 1.
 The current header declares 229 exports, twenty-nine opaque owner types, twenty-seven
@@ -19,7 +19,7 @@ settings, report and IO descriptors, and progress and uniform callback types.
 
 Current function and tool inventories map all native public computations to
 C and portable WASM interfaces. Host operations retain native/C behavior under
-ADR 0007. Final latest-source platform acceptance remains in progress. The
+ADR 0007. The split verification scope is recorded in `workspace-split-verification.md`. The
 sections below retain historical checkpoints; old pending statements refer to
 those checkpoints. See `cross-crate-verification.md` for composed runtime checks.
 

@@ -14,13 +14,12 @@ Historical checkpoints below retain their original scope.
 Current binding inventories cover every portable public computation. OS
 process operations retain their native implementation under ADR 0007. The
 following sections include historical checkpoints; their older pending
-statements are not the current implementation status. Final latest-source
-platform and composed acceptance remains in progress.
+statements are not the current implementation status. The split verification scope
+is recorded in `workspace-split-verification.md`.
 
 
-The optional `wasm` feature exposes native computations through independent
-owners and copied byte/typed arrays. All SHIRO computational bindings are implemented; final latest-source
-acceptance remains in progress. The interface implements rawfloat, all
+The `shiro-rs-wasm` package exposes native computations through independent
+owners and copied byte/typed arrays. All SHIRO computational bindings are implemented. The interface implements rawfloat, all
 native label and phone-map operations, model construction/IO/parameter access,
 observation and segmentation import with complete owned field access,
 isolated grouping,
@@ -124,9 +123,9 @@ The `wasm` feature activates that dependency on the WASM target.
 
 ```text
 cargo build -p shiro-rs-wasm --target wasm32-unknown-unknown  --lib
-wasm-bindgen target/wasm32-unknown-unknown/debug/shiro_rs.wasm --target nodejs --out-dir bindings-node
+wasm-bindgen target/wasm32-unknown-unknown/debug/shiro_rs_wasm.wasm --target nodejs --out-dir bindings-node --out-name shiro_rs
 node tests/wasm_interchange_node.cjs bindings-node
-wasm-bindgen target/wasm32-unknown-unknown/debug/shiro_rs.wasm --target web --out-dir bindings-web
+wasm-bindgen target/wasm32-unknown-unknown/debug/shiro_rs_wasm.wasm --target web --out-dir bindings-web --out-name shiro_rs
 ```
 
 Serve the project and web bindings over HTTP, mounting web bindings at

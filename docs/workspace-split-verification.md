@@ -64,7 +64,7 @@ Other deferred Tier 1 targets retain the existing acceptance reports' limits.
 
 ## Public dependency validation
 
-The public dependency repositories use main:
+SHIRO pins these immutable public dependency revisions:
 
 - https://github.com/Lqm1/ciglet-rs at `34208b5fb1757355c638a1c588ec8a7fa49fddc3`.
 - https://github.com/Lqm1/liblrhsmm-rs at `d1b32853ccc2381d04af1a1cbd0587a455e992f3`.
@@ -82,8 +82,20 @@ there are no cross-repository path dependencies. Adapter-to-native dependencies
 remain local within their own workspace. This tests the edited native package
 and its adapters together. No crates.io publication is required.
 
-A fresh clone of the public SHIRO repository is the final publication gate;
-its result is recorded after the repository is published.
+A fresh public clone of `https://github.com/Lqm1/shiro-rs.git` at
+`29596dd3ce431818951e22f901942f91319403ba` passed `cargo test --locked --workspace -- --include-ignored`
+on Windows MSVC64: 130 passed, zero failed and zero ignored. Its target directory
+was initially empty; no sibling ciglet/liblrhsmm checkout or local dependency
+override existed. Cargo metadata confirmed exactly three members, fourteen
+SHIRO binaries and both Git dependencies at the revisions above. This includes
+the bootstrap/real-speech save/reload and inference tests as part of the full suite.
+
+After this tested commit, publication documentation was corrected to use the
+new WASM artifact names and `--out-name`. These later commits change documentation
+only; native/binding source, fixtures, manifests and lockfiles retain the tested
+contents. Companion main branches also received documentation-only corrections;
+SHIRO intentionally retains the immutable tested dependency revisions above.
+All three repositories are public, with main as their default branch.
 
 See the official [Cargo Git dependency documentation](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html)
 and [workspace documentation](https://doc.rust-lang.org/cargo/reference/workspaces.html)
