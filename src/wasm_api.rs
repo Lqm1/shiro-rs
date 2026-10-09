@@ -4,6 +4,7 @@
 mod alignment;
 mod data;
 mod documents;
+mod features;
 mod initialization;
 mod isolation;
 mod labels;
@@ -16,6 +17,7 @@ mod untying;
 pub use alignment::*;
 pub use data::*;
 pub use documents::*;
+pub use features::*;
 pub use initialization::*;
 pub use isolation::*;
 pub use labels::*;

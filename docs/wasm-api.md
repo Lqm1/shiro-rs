@@ -390,3 +390,24 @@ empty documents, cloning and source release. The weighted result reproduces the
 C model after changing only its two corrected weights back to C's values. Native
 `untying` and `c_api_untying` suites provide related regression coverage. Remaining
 feature/audio/utterance operations and final platform acceptance remain open.
+
+## Feature extraction
+
+`Features.extract(signal, options)` invokes the native extractor.
+`FeatureOptions` exposes all 12 native editable fields and cloning: kind,
+order, channels, frame length, fractional hop, sample rate, minimum bandwidth,
+warp, DC inclusion, energy mode, delta and acceleration. Kind 0/1/2 selects
+MFCC/MFBE/PLPCC; energy 0/1/2 selects none/RMS/decibels. Other codes fail.
+Defaults match native options. `Features` retains all three public fields:
+mutable frames and columns, copied values and complete value replacement.
+Arbitrary shapes are representable as in the native struct; extraction validates
+its own inputs. Construction and cloning retain binary32 storage independently.
+
+`wasm_features_node.cjs` and `wasm_features_browser.html` run all eleven current
+families twice in opposite orders. Feature checks consume all 72 original C
+records and 6,399 values, including 42 matching nonfinite results, using the
+existing 2e-5 normalized-error threshold. They also verify defaults, option
+cloning, empty signals, invalid codes/settings/nonfinite input, independent
+arrays, arbitrary shapes, all result fields and IEEE payloads. Related native
+`features` and `c_api_features` suites pass. Audio and utterance workflows and
+final combined platform acceptance remain open.
