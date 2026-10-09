@@ -2,9 +2,9 @@
 
 This checkpoint records executable evidence for the five agreed x86 targets.
 It supplements the original native gate, which passed before bindings, and
-the separate per-function, field, configuration and numerical audits. Full
-task acceptance requires the final requirement audit; counts alone do not
-establish it.
+the separate per-function, field, configuration and numerical audits. The final
+requirement audit is recorded in `requirements-verification.md`; counts alone
+do not establish it.
 
 ## Source and invocation
 
@@ -103,4 +103,7 @@ in actual Node.js and browser runs.
 
 Deferred Tier 1 ARM64 execution remains unverified. This does not remove those
 targets from the intended platform scope. The final full-task requirement audit
-remains open at this checkpoint.
+passes within the agreed execution scope. The subsequent sequential
+initialization/HMM-bootstrap/HSMM-refinement regression also passes on all
+five targets; see `training-compatibility.md`. This adds one native integration
+test to the recorded 62-test SHIRO checkpoint without changing production code.

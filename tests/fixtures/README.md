@@ -1,5 +1,13 @@
 # Model creation fixture
 
+`rest-c-hmm-bootstrap-hsmm.hsmm` and its likelihood rows extend the corrected-C
+training corpus with two HSMM updates starting from the two-iteration C HMM
+bootstrap model. Reproduce them with `tests/generate_training_reference.py`
+using the same pinned source and disclosed inference corrections as the other
+rest fixtures. `tests/bootstrap_training.rs` checks the complete sequential
+initialization/bootstrap/refinement/save/reload/inference workflow. See
+`docs/training-compatibility.md` for exact scope and numerical bounds.
+
 The `init-*` fixtures compare shiro-init to original C across aligned,
 flat, tied and combined modes. The ten-frame fixture checks C float-duration
 rounding, and the two-file fixture exposes the original fallback-duration

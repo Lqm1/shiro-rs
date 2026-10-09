@@ -1,6 +1,6 @@
 # Acceptance plan
 
-Status: accepted; implementation in progress. Partial execution evidence is recorded in progress reports; the full acceptance gates are not satisfied.
+Status: accepted; native and binding gates verified. The requirement-by-requirement decision and authorized deferred execution scope are recorded in `../../requirements-verification.md`.
 
 ## Baseline and traceability
 

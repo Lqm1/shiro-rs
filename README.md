@@ -2,7 +2,7 @@
 
 An idiomatic Rust reimplementation of the complete SHIRO toolkit, including its original C and Lua workflows. Upstream: https://github.com/Sleepwalking/SHIRO.
 
-The native Rust phase passes the agreed five-target acceptance gate. C ABI and browser/Node.js WebAssembly bindings are implemented. See [C API](docs/c-api.md), [WASM API](docs/wasm-api.md) and [cross-crate speech verification](docs/cross-crate-verification.md) for invocation and coverage. Final latest-source platform acceptance remains in progress.
+The native Rust phase passes the agreed five-target acceptance gate. C ABI and browser/Node.js WebAssembly bindings are implemented. See [C API](docs/c-api.md), [WASM API](docs/wasm-api.md) and [cross-crate speech verification](docs/cross-crate-verification.md) for invocation and coverage. The complete accepted native and binding gates pass. See [requirements verification](docs/requirements-verification.md) and [latest execution checkpoint](docs/latest-execution-checkpoint.md) for exact evidence and deferred targets.
 
 The package links the local `ciglet-rs` and `liblrhsmm-rs` Rust packages.
 

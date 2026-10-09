@@ -50,10 +50,14 @@ def main():
             ("isolated-hmm", ["-n", "2", "-i", "-g", "-P", "0.8", "-t", "0"]),
             ("isolated-daem", ["-n", "3", "-i", "-D", "-t", "0"]),
         ]
+        cases.append(("hmm-bootstrap-hsmm", ["-n", "2", "-t", "0"]))
         for name, flags in cases:
+            input_model = "hmm-bootstrap.hsmm" if name == "hmm-bootstrap-hsmm" else "model.hsmm"
             output = subprocess.run([
-                str(executable), "-m", "model.hsmm", "-s", "seg.json", "-l", "likelihood", *flags,
+                str(executable), "-m", input_model, "-s", "seg.json", "-l", "likelihood", *flags,
             ], cwd=root, capture_output=True, check=True)
+            if name == "hmm":
+                (root / "hmm-bootstrap.hsmm").write_bytes(output.stdout)
             model_name = "hsmm-one" if name == "mean" else name
             references = {
                 f"rest-c-{model_name}.hsmm": output.stdout,

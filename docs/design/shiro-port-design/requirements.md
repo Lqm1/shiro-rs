@@ -1,6 +1,6 @@
 # SHIRO Rust reimplementation
 
-Status: design accepted; implementation in progress. The user authorized project generation and implementation. This document does not claim the full port or acceptance gate is complete.
+Status: design accepted; implementation and the agreed native/binding gates verified. The user authorized project generation and implementation. The final decision and deferred execution scope are recorded in ../../requirements-verification.md. Historical environment observations below retain their original scope.
 
 ## Established requirements
 

@@ -148,6 +148,31 @@ All nine CLI command cases reproduce corrected-C model and CSV outputs;
 the source generator reproduces those fixtures and both stopping checks.
 Formatting, Clippy with warnings denied and whitespace checks pass.
 
-Complete SHIRO workflows, remaining dependency functions, public precision
-and build coverage, real-audio/native acceptance and all bindings remain
-in scope and unfinished.
+The preceding paragraphs record historical implementation checkpoints.
+Current complete native/binding execution is recorded in
+`latest-execution-checkpoint.md` and `requirements-verification.md`.
+
+## Sequential HMM bootstrap and HSMM refinement
+
+`tests/bootstrap_training.rs` builds the original synthetic definition,
+initializes its twelve-frame/two-stream corpus, saves/reloads the complete
+initial model, runs two geometric-duration HMM iterations, saves/reloads that
+bootstrap model, and passes it directly to two explicit-duration HSMM updates.
+It saves/reloads the refined model and checks complete state JSON for both
+inference modes before and after reload.
+
+Every saved stage compares byte-for-byte to independent original or
+corrected-C model output. The HMM stage uses existing `rest-c-hmm.hsmm` and
+likelihood references. The sequential stage adds
+`rest-c-hmm-bootstrap-hsmm.hsmm` and `.likelihood`. Its C likelihoods are
+`-52.215351` and `-38.406895`, compared at the unchanged absolute `1e-5` bound.
+`tests/generate_training_reference.py` now feeds the freshly generated C HMM
+model into the C HSMM run. It retains the same two disclosed inference fixes,
+`gcc -O2 -DFP_TYPE=float`, input data and model schema. Running with `--check`
+reproduces every existing fixture, both stopping cases and the new references.
+
+The complete sequential regression passes on Windows MSVC x86_64/i686,
+Windows GNU x86_64 and Linux GNU x86_64/i686. These are executable tests,
+not cross-compilation claims. Original C compilation warnings about unchecked
+fread remain reference-source diagnostics; the Rust quality checks remain
+warning-denied. No production algorithm or previously accepted bound changed.

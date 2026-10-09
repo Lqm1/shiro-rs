@@ -118,5 +118,5 @@ Both yield mean log likelihoods
 The portable Python runner was rerun successfully against MSVC x86_64.
 Actual Linux GNU x86_64 Python composition also passes with the same metrics
 and likelihoods. All five latest-source native and external C caller target
-gates pass; the complete requirement audit remains in progress at this
-checkpoint. Python 32-bit execution is not claimed.
+gates pass. The completed full requirement decision is recorded in
+`requirements-verification.md`. Python 32-bit execution is not claimed.

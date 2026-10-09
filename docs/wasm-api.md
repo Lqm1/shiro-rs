@@ -1,5 +1,11 @@
 # Browser and Node.js WebAssembly API
 
+The accepted native and binding gates are verified within the agreed execution
+scope. The final requirement decision, exact evidence and authorized deferred
+targets are recorded in the SHIRO package's `docs/requirements-verification.md`.
+Historical checkpoints below retain their original scope.
+
+
 Current binding inventories cover every portable public computation. OS
 process operations retain their native implementation under ADR 0007. The
 following sections include historical checkpoints; their older pending

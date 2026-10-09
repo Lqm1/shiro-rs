@@ -1,5 +1,11 @@
 # C interface
 
+The accepted native and binding gates are verified within the agreed execution
+scope. The final requirement decision, exact evidence and authorized deferred
+targets are recorded in the SHIRO package's `docs/requirements-verification.md`.
+Historical checkpoints below retain their original scope.
+
+
 Build the optional interface with `cargo build --features c-api`. The package
 produces Rust, shared C and static C libraries from the same library target.
 The generated declarations are in `include/shiro_rs.h`; ABI version is 1.
