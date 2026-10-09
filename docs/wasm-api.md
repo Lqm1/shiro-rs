@@ -7,10 +7,36 @@ native label and phone-map operations, model construction/IO/parameter access,
 observation and segmentation import with complete owned field access,
 isolated grouping,
 dataset owners, document loading, model initialization, training, alignment, untying,
-feature extraction, audio conversion and utterance segmentation,
+feature extraction, audio conversion, utterance segmentation and index parsing,
 and complete JSON document owners used by
 the remaining workflows. CLI invocation, OS files and external Lua/SPTK
 processes remain native as specified by ADR 0007.
+
+## Index parsing
+
+`IndexEntries.read(bytes, directory, left_json, right_json)` invokes the native
+index parser over an in-memory byte buffer. Padding is supplied as JSON string
+arrays, retaining empty and arbitrary strings. Parsing preserves literal-space
+tokenization, empty phoneme fields, skipped blank rows, CRLF handling and physical
+line numbers in format errors. Invalid UTF-8 and malformed rows fail without
+publishing a partial result. Paths use the WebAssembly target's native path
+joining rules; strings represent virtual UTF-8 paths, with OS filesystem access
+remaining native under ADR 0007.
+
+`IndexEntry` retains both fields: mutable stem and complete atomic replacement
+of the phoneme JSON string array. Construction and cloning retain arbitrary
+values. `IndexEntries` supports length, copied indexed get/push/replacement,
+clear and independent cloning. `index_append_suffix` appends the suffix literally
+through the native helper, including empty strings, Unicode and embedded NULs;
+it does not replace an existing extension or normalize the resulting path.
+
+`wasm_index_node.cjs` and `wasm_index_browser.html` run all fourteen current
+families twice in opposite orders. Index checks compare three complete original
+Lua rows and five additional padding/token/path cases, physical error lines,
+invalid UTF-8 and padding, five literal suffix cases, both editable entry fields,
+atomic replacement errors, copied collections and source release. Native `index`
+and `c_api_index` suites pass. Remaining batch/stream workflows and final combined
+platform acceptance remain open.
 
 ## Build and verification
 
