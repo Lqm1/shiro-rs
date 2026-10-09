@@ -680,7 +680,12 @@ owned ShiroRsBytes object containing the same six-decimal likelihood CSV written
 by shiro-rest. File/group order and empty rows are preserved. A failed call
 retains the output slot; encoding does not modify the training result. The
 native method supports arbitrary Write implementations, with interruption,
-partial writes and failures covered by tests/likelihood_csv.rs. Direct C stream
-callback exposure for this new writer remains an audit item. Actual Windows
-x86_64 C/Python callers exercise the byte codec on all nine training cases;
+partial writes and failures covered by tests/likelihood_csv.rs.
+`shiro_rs_training_result_write_likelihood_csv_stream` exposes the same writer
+through the existing synchronous ShiroRsWriteStream descriptor. It retries
+interrupted writes, retains emitted bytes on failure, rejects excessive callback
+counts and missing writers, and neither flushes nor retains the callback/context.
+An empty report set performs no callback. Actual Windows x86_64 C/Python callers
+exercise both codecs on all nine training cases, with 1/13/16384-byte chunks,
+injected failure after seven bytes, zero-byte writers and invalid descriptors;
 current-source execution on the other required platforms remains pending.

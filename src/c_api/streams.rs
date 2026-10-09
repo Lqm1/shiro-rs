@@ -1,7 +1,8 @@
 //! Direct synchronous native IO; callbacks and contexts are never retained.
 use super::{
     ShiroRsArrayF32, ShiroRsIndexEntries, ShiroRsLabels, ShiroRsObservation, ShiroRsPath,
-    ShiroRsStrings, ShiroRsUntiedModel, boundary, buffers::input, range, result,
+    ShiroRsStrings, ShiroRsTrainingResult, ShiroRsUntiedModel, boundary, buffers::input, range,
+    result,
 };
 use std::{
     ffi::c_void,
@@ -289,6 +290,32 @@ pub unsafe extern "C" fn shiro_rs_untied_model_write_summary_stream(
         }
         // SAFETY: Live readable owner during native writing.
         unsafe { &(*model).value }.write_summary(Writer(stream))
+    })
+    .map_or_else(|status| status, |()| 0)
+}
+
+/// Direct native likelihood CSV output with partial writes and interruption retry.
+/// # Safety
+/// Owner is live immutable storage; stream satisfies WriteStream's contract.
+/// Partial emitted bytes remain on failure. No implicit flush, close or retention.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn shiro_rs_training_result_write_likelihood_csv_stream(
+    owner: *const ShiroRsTrainingResult,
+    stream: *const ShiroRsWriteStream,
+) -> u32 {
+    for status in [range(owner, 1), range(stream, 1)] {
+        if let Err(status) = status {
+            return status;
+        }
+    }
+    // SAFETY: Live initialized descriptor.
+    let stream = unsafe { stream.read() };
+    boundary(|| {
+        if stream.write.is_none() {
+            return Err(io::Error::other("missing write callback"));
+        }
+        // SAFETY: Live readable owner for the synchronous native write.
+        unsafe { &(*owner).value }.write_likelihood_csv(Writer(stream))
     })
     .map_or_else(|status| status, |()| 0)
 }

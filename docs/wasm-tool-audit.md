@@ -35,7 +35,10 @@ The audit found that full report fields did not by themselves provide the CLI's
 likelihood CSV formatting. The native writer is now shared by the CLI, WASM and
 C byte codec. Its six-decimal binary32 output is checked independently, including
 signed zero, nonfinite values, empty file rows, partial/interrupted IO and errors.
-This closes the byte-codec gap, not the remaining direct C stream callback task.
+The byte codec and direct C stream callback now invoke the same native writer.
+Windows x86_64 C/Python callers check all nine training cases, partial writes,
+interruption, late failure, invalid callback counts, missing writers and empty
+reports without implicit flush. Other targets still require current-source runs.
 
 ## Generic IO and host behavior
 
@@ -45,7 +48,7 @@ src/c_api/streams.rs. Their partial reads/writes, interruption, consumed input,
 explicit flush and non-retained context contracts remain native capabilities.
 WASM bytes replace the host transport under the agreed contract; they do not
 provide OS streams or imply that arbitrary host callbacks run in the browser.
-The new likelihood CSV writer still requires a direct C stream adapter.
+The likelihood CSV writer also has a direct C stream adapter in that module.
 
 All JSON document owners retain native fields, unknown attributes and optional
 metadata through complete JSON replacement. Computational owners retain their
@@ -54,7 +57,10 @@ This inspection does not replace a full public-field audit or runtime tests.
 
 ## Remaining acceptance work
 
-Complete the direct likelihood CSV C stream adapter and foreign-caller tests.
+The C TrainingResult owner exposes both fields through getters and clone, but
+source inspection finds no arbitrary construction or complete field replacement.
+Add those operations and verify ownership and arbitrary report contents before
+claiming full public-field coverage. This is a separate gap from CSV transport.
 Run a combined virtual-file workflow exercising all fourteen tool computations,
 including indexed frame-size validation and multi-file output generation. Audit
 the remaining public-field coverage in all three packages, especially ciglet.

@@ -13,7 +13,7 @@ symbols = {
     'training_files_get_dataset', 'training_files_clone', 'training_files_release',
     'training_options_default', 'train', 'train_with_progress',
     'training_result_length', 'training_result_get_model', 'training_result_get_report',
-    'training_result_clone', 'training_result_release', 'training_result_likelihood_csv_bytes', 'iteration_report_info',
+    'training_result_clone', 'training_result_release', 'training_result_likelihood_csv_bytes', 'training_result_write_likelihood_csv_stream', 'iteration_report_info',
     'iteration_report_file_count', 'iteration_report_get_file',
     'iteration_report_clone', 'iteration_report_release',
 }
@@ -21,7 +21,7 @@ if len(sys.argv) > 2:
     assert sys.argv[2] == '--no-c-api'
     for name in symbols:
         assert not hasattr(lib, 'shiro_rs_' + name), name
-    print('SHIRO training ctypes: all20 symbols absent without c-api')
+    print('SHIRO training ctypes: all21 symbols absent without c-api')
     sys.exit(0)
 
 class Options(c.Structure):
@@ -37,6 +37,29 @@ class Info(c.Structure):
     _fields_ = [('iteration', N), ('temperature', F), ('mean_log_likelihood', F)]
 
 Callback = c.CFUNCTYPE(None, P, P)
+Write = c.CFUNCTYPE(U, P, c.POINTER(B), N, c.POINTER(N))
+Flush = c.CFUNCTYPE(U, P)
+class Writer(c.Structure):
+    _fields_ = [('context', P), ('write', Write), ('flush', Flush)]
+
+class CsvChannel:
+    def __init__(self, chunk, fail=None):
+        self.chunk, self.fail = chunk, fail
+        self.output, self.calls, self.flushes = bytearray(), 0, 0
+        self.stream = Writer(None, Write(self.write), Flush(self.flush))
+    def write(self, context, buffer, capacity, count):
+        self.calls += 1
+        if self.calls == 1:
+            return 1
+        if self.fail is not None and len(self.output) >= self.fail:
+            return 2
+        size = min(capacity, self.chunk)
+        self.output.extend(c.string_at(buffer, size))
+        count[0] = size
+        return 0
+    def flush(self, context):
+        self.flushes += 1
+        return 0
 called = set()
 def function(name, args):
     fn = getattr(lib, 'shiro_rs_' + name)
@@ -69,6 +92,7 @@ result_model = function('training_result_get_model', [P, c.POINTER(P)])
 result_report = function('training_result_get_report', [P, N, c.POINTER(P)])
 result_clone = function('training_result_clone', [P, c.POINTER(P)])
 result_csv = function('training_result_likelihood_csv_bytes', [P, c.POINTER(P)])
+result_csv_stream = function('training_result_write_likelihood_csv_stream', [P, c.POINTER(Writer)])
 result_release = function('training_result_release', [c.POINTER(P)])
 report_info = function('iteration_report_info', [P, c.POINTER(Info)])
 report_count = function('iteration_report_file_count', [P, c.POINTER(N)])
@@ -187,6 +211,26 @@ with tempfile.TemporaryDirectory(prefix='shiro-c-api-training-') as directory:
         csv = P()
         assert result_csv(cloned, c.byref(csv)) == 0
         encoded_csv = copied(csv)
+        for chunk in [1, 13, 16384]:
+            channel = CsvChannel(chunk)
+            assert result_csv_stream(cloned, c.byref(channel.stream)) == 0
+            assert bytes(channel.output) == encoded_csv and channel.flushes == 0
+        channel = CsvChannel(1, fail=7)
+        assert result_csv_stream(cloned, c.byref(channel.stream)) == 3
+        assert bytes(channel.output) == encoded_csv[:7] and channel.flushes == 0
+        channel = CsvChannel(0)
+        assert result_csv_stream(cloned, c.byref(channel.stream)) == 3 and not channel.output and channel.flushes == 0
+        channel = CsvChannel(1)
+        assert result_csv_stream(None, c.byref(channel.stream)) == 1 and channel.calls == 0
+        assert result_csv_stream(cloned, None) == 1
+        missing = Writer(None, Write(), Flush())
+        assert result_csv_stream(cloned, c.byref(missing)) == 3
+        @Write
+        def excessive(context, buffer, capacity, count):
+            count[0] = capacity + 1
+            return 0
+        invalid = Writer(None, excessive, Flush())
+        assert result_csv_stream(cloned, c.byref(invalid)) == 3
         retained_csv = P(csv.value)
         assert result_csv(None, c.byref(retained_csv)) == 1 and retained_csv.value == csv.value
         assert encoded_csv.endswith(b'\n')
@@ -258,6 +302,9 @@ assert defaults(c.byref(config)) == 0
 config.iterations = 0
 assert train(model, empty, c.byref(config), c.byref(result)) == 0
 assert result_length(result, c.byref(count)) == 0 and count.value == 0
+channel = CsvChannel(1)
+assert result_csv_stream(result, c.byref(channel.stream)) == 0
+assert not channel.output and channel.calls == 0 and channel.flushes == 0
 retained = P(result.value)
 config.duration_mode = 2
 assert train(model, empty, c.byref(config), c.byref(retained)) == 2 and retained.value == result.value
@@ -270,4 +317,4 @@ assert result_release(c.byref(result)) == 0 and result_release(c.byref(result)) 
 assert files_release(c.byref(empty)) == 0
 assert wire(model) == initial_wire and model_release(c.byref(model)) == 0
 assert symbols <= called
-print('SHIRO training ctypes: all20 exports, nine original C models/likelihoods/CSV, complete reports, callbacks, stopping and failures passed')
+print('SHIRO training ctypes: all21 exports, nine original C models/likelihoods/CSV, direct partial CSV streams, complete reports, callbacks, stopping and failures passed')

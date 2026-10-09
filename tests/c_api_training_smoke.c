@@ -37,6 +37,19 @@ static void model_equal(ShiroRsModel *model, const char *path) {
     assert(shiro_rs_bytes_copy(wire, 0, actual, size) == 0 && memcmp(actual, expected, size) == 0);
     free(actual); free(expected); assert(shiro_rs_bytes_release(&wire) == 0);
 }
+typedef struct CsvChannel { unsigned char *bytes; size_t length, calls, flushes, chunk, fail; } CsvChannel;
+static uint32_t csv_write(void *context, const uint8_t *bytes, size_t capacity, size_t *count) {
+    CsvChannel *value = context;
+    if (++value->calls == 1) return SHIRO_RS_IO_INTERRUPTED;
+    if (value->length >= value->fail) return SHIRO_RS_IO_ERROR;
+    size_t n = capacity < value->chunk ? capacity : value->chunk;
+    if (n) { unsigned char *next = realloc(value->bytes, value->length + n); assert(next); value->bytes = next; memcpy(next + value->length, bytes, n); }
+    value->length += n; *count = n; return SHIRO_RS_IO_SUCCESS;
+}
+static uint32_t csv_flush(void *context) { ++((CsvChannel *)context)->flushes; return 0; }
+static uint32_t csv_excessive(void *context, const uint8_t *bytes, size_t capacity, size_t *count) {
+    (void)context; (void)bytes; *count = capacity + 1; return 0;
+}
 static void likelihood_csv_equal(ShiroRsTrainingResult *result, const char *expected) {
     ShiroRsBytes *bytes = NULL; size_t count = 0;
     assert(shiro_rs_training_result_likelihood_csv_bytes(result, &bytes) == 0);
@@ -45,6 +58,22 @@ static void likelihood_csv_equal(ShiroRsTrainingResult *result, const char *expe
     assert(shiro_rs_bytes_length(bytes, &count) == 0 && count > 0);
     char *text = malloc(count + 1); assert(text);
     assert(shiro_rs_bytes_copy(bytes, 0, (uint8_t *)text, count) == 0); text[count] = 0;
+    const size_t chunks[] = {1, 13, 16384};
+    for (size_t i = 0; i < 3; ++i) {
+        CsvChannel channel = {0}; channel.chunk = chunks[i]; channel.fail = SIZE_MAX;
+        ShiroRsWriteStream stream = {&channel, csv_write, csv_flush};
+        assert(shiro_rs_training_result_write_likelihood_csv_stream(result, &stream) == 0);
+        assert(channel.length == count && memcmp(channel.bytes, text, count) == 0 && channel.flushes == 0); free(channel.bytes);
+    }
+    CsvChannel channel = {0}; channel.chunk = 1; channel.fail = 7;
+    ShiroRsWriteStream stream = {&channel, csv_write, csv_flush};
+    assert(shiro_rs_training_result_write_likelihood_csv_stream(result, &stream) == 3);
+    assert(channel.length == 7 && memcmp(channel.bytes, text, 7) == 0 && channel.flushes == 0); free(channel.bytes);
+    memset(&channel, 0, sizeof(channel)); channel.fail = SIZE_MAX;
+    assert(shiro_rs_training_result_write_likelihood_csv_stream(result, &stream) == 3 && channel.length == 0 && channel.flushes == 0);
+    assert(shiro_rs_training_result_write_likelihood_csv_stream(NULL, &stream) == 1 && shiro_rs_training_result_write_likelihood_csv_stream(result, NULL) == 1);
+    stream.write = NULL; assert(shiro_rs_training_result_write_likelihood_csv_stream(result, &stream) == 3);
+    stream.write = csv_excessive; assert(shiro_rs_training_result_write_likelihood_csv_stream(result, &stream) == 3);
     assert(text[count - 1] == '\n'); const char *actual = text;
     while (*expected) {
         if (*expected == '\r') { ++expected; continue; }
@@ -172,6 +201,9 @@ int main(void) {
     assert(shiro_rs_training_files_create(NULL, 0, &files) == 0 && shiro_rs_training_options_default(&config) == 0);
     config.iterations = 0; ShiroRsTrainingResult *trained = NULL;
     assert(shiro_rs_train(model, files, &config, &trained) == 0);
+    CsvChannel empty_csv = {0}; empty_csv.chunk = 1; empty_csv.fail = SIZE_MAX;
+    ShiroRsWriteStream empty_stream = {&empty_csv, csv_write, csv_flush};
+    assert(shiro_rs_training_result_write_likelihood_csv_stream(trained, &empty_stream) == 0 && empty_csv.calls == 0 && empty_csv.flushes == 0 && empty_csv.length == 0);
     ShiroRsTrainingResult *retained = trained; config.duration_mode = 2;
     assert(shiro_rs_train(model, files, &config, &retained) == 2 && retained == trained);
     config.duration_mode = 0; config.iterations = 1;
@@ -184,5 +216,5 @@ int main(void) {
     assert(shiro_rs_training_files_release(&files) == 0);
     model_equal(model, "tests/fixtures/init-c-aligned.hsmm"); assert(shiro_rs_model_release(&model) == 0);
     free(array); free(document); assert(remove(path) == 0);
-    puts("SHIRO training C: all20 exports, nine original C models/likelihoods/CSV, complete reports, callbacks, stopping and failures passed"); return 0;
+    puts("SHIRO training C: all21 exports, nine original C models/likelihoods/CSV, direct partial CSV streams, complete reports, callbacks, stopping and failures passed"); return 0;
 }

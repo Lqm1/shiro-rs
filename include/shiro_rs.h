@@ -1950,6 +1950,15 @@ uint32_t shiro_rs_untied_model_write_summary_stream(const struct ShiroRsUntiedMo
                                                     const struct ShiroRsWriteStream *stream);
 
 /**
+ * Direct native likelihood CSV output with partial writes and interruption retry.
+ * # Safety
+ * Owner is live immutable storage; stream satisfies WriteStream's contract.
+ * Partial emitted bytes remain on failure. No implicit flush, close or retention.
+ */
+uint32_t shiro_rs_training_result_write_likelihood_csv_stream(const struct ShiroRsTrainingResult *owner,
+                                                              const struct ShiroRsWriteStream *stream);
+
+/**
  * Direct native buffered index reader without additional read-ahead or buffering.
  * # Safety
  * Stream satisfies BufferedReadStream's borrowed-buffer contract; all input
