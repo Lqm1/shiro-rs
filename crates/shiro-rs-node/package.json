@@ -1,0 +1,36 @@
+{
+  "name": "shiro-rs",
+  "version": "0.1.0",
+  "description": "Native Node.js bindings for shiro-rs",
+  "license": "GPL-3.0-or-later",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "*.node",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "napi build --platform --manifest-path Cargo.toml --package shiro-rs-node",
+    "build:release": "napi build --platform --manifest-path Cargo.toml --package shiro-rs-node --release",
+    "test": "node --test tests/*.cjs",
+    "test:types": "tsc --noEmit --strict --target ES2022 --moduleResolution node tests/consumer.ts"
+  },
+  "engines": {
+    "node": "^20.17.0 || ^22.13.0 || >=23.5.0"
+  },
+  "napi": {
+    "binaryName": "shiro_rs"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "3.5.1",
+    "typescript": "^5.9.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Lqm1/shiro-rs.git",
+    "directory": "crates/shiro-rs-node"
+  }
+}

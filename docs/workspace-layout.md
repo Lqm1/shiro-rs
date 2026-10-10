@@ -1,17 +1,19 @@
 # Workspace layout
 
-This repository contains three packages in a flat Cargo workspace:
+This repository contains five packages in a flat Cargo workspace:
 
 | Package | Directory | Responsibility |
 | --- | --- | --- |
 | `shiro-rs` | `crates/shiro-rs` | Native Rust API and computations and the 14 SHIRO binaries |
 | `shiro-rs-capi` | `crates/shiro-rs-capi` | C ABI, ownership boundary and checked-in headers |
-| `shiro-rs-wasm` | `crates/shiro-rs-wasm` | Browser and Node.js bindings |
+| `shiro-rs-wasm` | `crates/shiro-rs-wasm` | Browser and Node.js WebAssembly bindings |
+| `shiro-rs-node` | `crates/shiro-rs-node` | Native Node.js addon with napi-rs |
+| `shiro-rs-python` | `crates/shiro-rs-python` | Native Python extension with PyO3 and maturin |
 
 The workspace defaults to the native package. `cargo test` and existing SHIRO
 binary names continue to select native workflows. Use explicit package selection
 for adapters. The native package forbids unsafe code and has no C/WASM binding
-features or wasm-bindgen dependency. Both adapters depend directly on the native
+features or wasm-bindgen dependency. All adapters depend directly on the native
 package; the WASM adapter does not call the C ABI.
 
 ```text
@@ -33,7 +35,7 @@ module retains `shiro_rs.js` through `--out-name`; exported JS names are unchang
 Rust integration tests live in their owning package. Independent C/Python/JS
 callers, reference generators and shared fixtures remain in the root `tests/`
 directory. This keeps one authoritative copy of each original reference dataset.
-The root `docs/` and license/attribution files apply to all three packages.
+The root `docs/` and license/attribution files apply to all five packages.
 
 Historical acceptance reports retain their original commit and execution scope.
 Their feature-based commands do not define the new workspace interface.
@@ -45,3 +47,6 @@ that a source edit is tested by its adapters before committing. Cross-repository
 dependencies use public GitHub URLs and immutable commit revisions; they do not
 require sibling checkout directories. Cargo resolves the native package inside
 the dependency repository workspace. No registry publication is required.
+
+Native Node.js and Python setup, public API typing, ownership and local packaging
+are documented in their package READMEs and [verification](native-bindings.md).

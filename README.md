@@ -1,6 +1,8 @@
 # shiro-rs
 
-This repository is a Cargo workspace containing `shiro-rs`, `shiro-rs-capi` and `shiro-rs-wasm` under `crates/`. See [workspace layout](docs/workspace-layout.md) for package selection, artifact names and binding commands. See [workspace split verification](docs/workspace-split-verification.md) for migration checks and their scope.
+This repository is a Cargo workspace containing `shiro-rs`, `shiro-rs-capi`, `shiro-rs-wasm`, `shiro-rs-node` and `shiro-rs-python` under `crates/`. See [workspace layout](docs/workspace-layout.md) for package selection, artifact names and binding commands. See [workspace split verification](docs/workspace-split-verification.md) for migration checks and their scope.
+
+Native Node.js and Python packages are implemented with napi-rs and PyO3. See [Node.js](crates/shiro-rs-node/README.md), [Python](crates/shiro-rs-python/README.md) and [native binding verification](docs/native-bindings.md). Builds and tests do not publish packages.
 
 An idiomatic Rust reimplementation of the complete SHIRO toolkit, including its original C and Lua workflows. Upstream: https://github.com/Sleepwalking/SHIRO.
 

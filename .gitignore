@@ -1,2 +1,7 @@
 /target
 **/__pycache__/
+**/node_modules/
+*.node
+*.whl
+.napi-rs-filesystem-transaction*
+.*.prepared.tmp
