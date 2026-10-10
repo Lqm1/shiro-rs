@@ -3,7 +3,6 @@ name: Release metadata and regression checks
   push:
     branches:
     - main
-    - release/**
   pull_request: {}
 permissions:
   contents: read

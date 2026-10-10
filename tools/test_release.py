@@ -34,9 +34,14 @@ class PublicationTests(unittest.TestCase):
 
     def test_alpha_and_formal_phases_are_distinct(self):
         with patch.object(r, "check"), patch.object(r, "version", return_value="0.1.0-alpha.1"):
-            with patch.dict(os.environ, {"RELEASE_SHA": "a" * 40, "RELEASE_PHASE": "npm-stage"}):
+            with patch.dict(os.environ, {"RELEASE_SHA": "a" * 40, "RELEASE_PHASE": "npm-stage"}, clear=True):
                 with self.assertRaisesRegex(ValueError, "bootstrap"):
                     workflow.preflight()
+
+    def test_workflow_and_source_commits_must_match(self):
+        with patch.dict(os.environ, {"RELEASE_SHA": "a" * 40, "GITHUB_SHA": "b" * 40}, clear=True):
+            with self.assertRaisesRegex(ValueError, "OIDC provenance"):
+                workflow.preflight()
 
     def test_changed_napi_loader_is_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:
