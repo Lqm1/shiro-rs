@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+import zipfile
 from unittest.mock import patch
 
 import release as r
@@ -10,6 +11,20 @@ import release_workflow as workflow
 
 
 class PublicationTests(unittest.TestCase):
+    def test_dependency_sources_with_epoch_timestamps_are_preserved(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "source"
+            source.mkdir()
+            dependency = source / "dependency.rs"
+            dependency.write_bytes(b"pub fn example() {}\n")
+            os.utime(dependency, (300000000, 300000000))
+            destination = root / "sources.zip"
+            workflow.archive_sources(source, destination)
+            with zipfile.ZipFile(destination) as archive:
+                self.assertEqual(archive.read("dependency.rs"), dependency.read_bytes())
+                self.assertEqual(archive.getinfo("dependency.rs").date_time[:3], (1980, 1, 1))
+
     def test_no_token_is_rejected_without_disclosing_values(self):
         with patch.dict(os.environ, {}, clear=True):
             with self.assertRaisesRegex(ValueError, "must configure"):

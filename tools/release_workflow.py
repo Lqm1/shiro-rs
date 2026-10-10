@@ -148,10 +148,15 @@ def bundle_sources() -> None:
     r.write_json(output / "THIRD-PARTY-NOTICES.json", notices)
     r.write_json(output / "release-source.json", r.source_record())
     path = r.DIST / f"{r.PROJECT}-{r.version()}-sources.zip"
-    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as archive:
-        for item in sorted(output.rglob("*")):
+    archive_sources(output, path)
+
+
+def archive_sources(source: Path, destination: Path) -> None:
+    """Preserve dependency contents even when timestamps precede the ZIP epoch."""
+    with zipfile.ZipFile(destination, "w", zipfile.ZIP_DEFLATED, strict_timestamps=False) as archive:
+        for item in sorted(source.rglob("*")):
             if item.is_file():
-                archive.write(item, item.relative_to(output).as_posix())
+                archive.write(item, item.relative_to(source).as_posix())
 
 
 def test_python(platform: str, directory: Path | None, registry: bool = False) -> None:
