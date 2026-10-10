@@ -584,7 +584,7 @@ dependencies = [
 
 [[package]]
 name = "shiro-rs"
-version = "0.1.0"
+version = "0.1.0-alpha.1"
 dependencies = [
  "ciglet-rs",
  "clap",
@@ -596,7 +596,7 @@ dependencies = [
 
 [[package]]
 name = "shiro-rs-capi"
-version = "0.1.0"
+version = "0.1.0-alpha.1"
 dependencies = [
  "serde_json",
  "shiro-rs",
@@ -604,7 +604,7 @@ dependencies = [
 
 [[package]]
 name = "shiro-rs-node"
-version = "0.1.0"
+version = "0.1.0-alpha.1"
 dependencies = [
  "napi",
  "napi-build",
@@ -616,7 +616,7 @@ dependencies = [
 
 [[package]]
 name = "shiro-rs-python"
-version = "0.1.0"
+version = "0.1.0-alpha.1"
 dependencies = [
  "pyo3",
  "rand",
@@ -626,7 +626,7 @@ dependencies = [
 
 [[package]]
 name = "shiro-rs-wasm"
-version = "0.1.0"
+version = "0.1.0-alpha.1"
 dependencies = [
  "js-sys",
  "serde_json",

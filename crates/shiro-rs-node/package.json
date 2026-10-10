@@ -1,6 +1,6 @@
 {
   "name": "@shiro-rs/node",
-  "version": "0.1.0",
+  "version": "0.1.0-alpha.1",
   "description": "Native Node.js bindings for shiro-rs",
   "license": "GPL-3.0-or-later",
   "main": "index.js",
