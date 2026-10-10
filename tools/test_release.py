@@ -11,6 +11,23 @@ import release_workflow as workflow
 
 
 class PublicationTests(unittest.TestCase):
+    def test_core_registry_origins_preserve_shorthand_and_table_requirements(self):
+        reader = r.read_toml
+        manifest = r.ROOT / "crates" / r.PROJECT / "Cargo.toml"
+        for table in (False, True):
+            with self.subTest(table=table):
+                dependencies = {name: {"version": "0.1.0"} if table else "0.1.0"
+                                for name in r.CONFIG["core_dependencies"]}
+                with patch.object(r, "read_toml", side_effect=lambda path:
+                                  {"dependencies": dependencies} if path == manifest else reader(path)):
+                    origins = r.core_dependencies()
+                self.assertEqual(set(origins), {"ciglet-rs", "liblrhsmm-rs"})
+                for origin in origins.values():
+                    self.assertEqual(origin["requirement"], "0.1.0")
+                    self.assertEqual(origin["version"], "0.1.0")
+                    self.assertEqual(origin["source"], "registry+https://github.com/rust-lang/crates.io-index")
+                    self.assertRegex(origin["checksum"], r"^[0-9a-f]{64}$")
+
     def test_dependency_sources_with_epoch_timestamps_are_preserved(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

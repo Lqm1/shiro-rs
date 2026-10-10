@@ -299,7 +299,9 @@ def manifest(artifact_root: Path) -> None:
 
 def core_dependencies() -> dict:
     dependencies = read_toml(ROOT / "crates" / PROJECT / "Cargo.toml")["dependencies"]
-    return {name: {"requirement": dependencies[name]["version"], **locked_dependency(name)} for name in CONFIG["core_dependencies"]}
+    return {name: {"requirement": dependencies[name] if isinstance(dependencies[name], str)
+                  else dependencies[name]["version"], **locked_dependency(name)}
+            for name in CONFIG["core_dependencies"]}
 
 
 def locked_dependency(name: str) -> dict:
