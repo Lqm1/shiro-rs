@@ -2,7 +2,7 @@
 
 `crates/shiro-rs-node` and `crates/shiro-rs-python` are separate Cargo packages
 in this repository. They call the native Rust core directly. They do not load
-WebAssembly or the C ABI. The public npm and Python distribution names are
+WebAssembly or the C ABI. The npm distribution is `@shiro-rs/node`; the Python distribution is
 `shiro-rs`; the Python import is `shiro_rs`.
 
 The adapters expose the existing portable computation, model, container,

@@ -1,0 +1,229 @@
+name: Publish reviewed release artifacts
+'on':
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: Reviewed full commit SHA (never a moving branch)
+        required: true
+        type: string
+      phase:
+        description: Explicit publication checkpoint
+        required: true
+        type: choice
+        options:
+        - build
+        - bootstrap-crate
+        - crate
+        - npm-stage
+        - pypi
+        - finalize
+      npm_stage_run_id:
+        description: Prior staging run ID to resume identical tarballs
+        required: false
+        type: string
+      build_run_id:
+        description: Successful build-phase run ID for artifact publication
+        required: false
+        type: string
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+concurrency:
+  group: release-publication
+  cancel-in-progress: false
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+        ref: ${{ inputs.source_ref }}
+    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+      with:
+        python-version: '3.13'
+    - name: Install the pinned Rust toolchain
+      run: 'rustup toolchain install 1.94.0 --profile minimal --component rustfmt,clippy
+
+        rustup default 1.94.0'
+    - env:
+        RELEASE_SHA: ${{ inputs.source_ref }}
+        RELEASE_PHASE: ${{ inputs.phase }}
+        GH_TOKEN: ${{ github.token }}
+      run: python tools/release_workflow.py preflight
+  build:
+    if: inputs.phase == 'build'
+    needs: preflight
+    uses: ./.github/workflows/build-release.yml
+    with:
+      source_ref: ${{ inputs.source_ref }}
+  bootstrap-crate:
+    if: inputs.phase == 'bootstrap-crate'
+    needs: preflight
+    runs-on: ubuntu-24.04
+    environment: release
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+        ref: ${{ inputs.source_ref }}
+    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+      with:
+        python-version: '3.13'
+    - name: Install the pinned Rust toolchain
+      run: 'rustup toolchain install 1.94.0 --profile minimal --component rustfmt,clippy
+
+        rustup default 1.94.0'
+    - env:
+        CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_BOOTSTRAP_TOKEN }}
+      run: 'python tools/release_workflow.py require-token
+
+        cargo publish --locked -p shiro-rs'
+  crate:
+    if: inputs.phase == 'crate'
+    needs: preflight
+    runs-on: ubuntu-24.04
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+        ref: ${{ inputs.source_ref }}
+    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+      with:
+        python-version: '3.13'
+    - name: Install the pinned Rust toolchain
+      run: 'rustup toolchain install 1.94.0 --profile minimal --component rustfmt,clippy
+
+        rustup default 1.94.0'
+    - env:
+        GH_TOKEN: ${{ github.token }}
+        BUILD_RUN_ID: ${{ inputs.build_run_id }}
+      run: python tools/release_workflow.py download
+    - uses: rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18
+      id: auth
+    - env:
+        CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+      run: cargo publish --locked -p shiro-rs
+  npm-stage:
+    if: inputs.phase == 'npm-stage'
+    needs: preflight
+    runs-on: ubuntu-24.04
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+        ref: ${{ inputs.source_ref }}
+    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+      with:
+        python-version: '3.13'
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+      with:
+        node-version: '24'
+    - name: Install the pinned Rust toolchain
+      run: 'rustup toolchain install 1.94.0 --profile minimal --component rustfmt,clippy
+
+        rustup default 1.94.0'
+    - run: npm install --global npm@11.21.0
+    - env:
+        GH_TOKEN: ${{ github.token }}
+        BUILD_RUN_ID: ${{ inputs.build_run_id }}
+      run: python tools/release_workflow.py download
+    - env:
+        GH_TOKEN: ${{ github.token }}
+        NPM_STAGE_RUN_ID: ${{ inputs.npm_stage_run_id }}
+      run: python tools/release_workflow.py stage-npm
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: npm-stages
+        path: target/distribution/release/npm-stages.json
+        if-no-files-found: error
+        retention-days: 30
+      if: always()
+  pypi:
+    if: inputs.phase == 'pypi'
+    needs: preflight
+    runs-on: ubuntu-24.04
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+        ref: ${{ inputs.source_ref }}
+    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+      with:
+        python-version: '3.13'
+    - name: Install the pinned Rust toolchain
+      run: 'rustup toolchain install 1.94.0 --profile minimal --component rustfmt,clippy
+
+        rustup default 1.94.0'
+    - env:
+        GH_TOKEN: ${{ github.token }}
+        BUILD_RUN_ID: ${{ inputs.build_run_id }}
+      run: python tools/release_workflow.py download
+    - id: upload-plan
+      run: python tools/release_workflow.py prepare-pypi
+    - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33
+      with:
+        packages-dir: target/pypi-upload
+        attestations: true
+      if: steps.upload-plan.outputs.pending == 'true'
+  finalize:
+    if: inputs.phase == 'finalize'
+    needs: preflight
+    runs-on: ubuntu-24.04
+    environment: release
+    permissions:
+      contents: write
+      actions: read
+      id-token: write
+      attestations: write
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+        ref: ${{ inputs.source_ref }}
+    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+      with:
+        python-version: '3.13'
+    - name: Install the pinned Rust toolchain
+      run: 'rustup toolchain install 1.94.0 --profile minimal --component rustfmt,clippy
+
+        rustup default 1.94.0'
+    - env:
+        GH_TOKEN: ${{ github.token }}
+        BUILD_RUN_ID: ${{ inputs.build_run_id }}
+      run: python tools/release_workflow.py download
+    - run: python tools/release.py registry-verify target/distribution/release
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+      with:
+        node-version: '24'
+    - run: 'npm install --global npm@11.21.0
+
+        python -m pip install pypi-attestations==0.0.30'
+    - working-directory: crates/shiro-rs-node
+      run: npm ci
+    - env:
+        GH_TOKEN: ${{ github.token }}
+      run: python tools/release_workflow.py finalize

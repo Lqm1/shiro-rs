@@ -1,0 +1,39 @@
+# Release orchestration; keep shared helper changes consistent across repositories.
+name: Prepare a release PR
+'on':
+  workflow_dispatch: {}
+permissions:
+  contents: write
+  pull-requests: write
+defaults:
+  run:
+    shell: bash
+concurrency:
+  group: release-pr
+  cancel-in-progress: false
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        fetch-depth: 0
+        persist-credentials: true
+    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+      with:
+        python-version: '3.13'
+    - name: Install the pinned Rust toolchain
+      run: 'rustup toolchain install 1.94.0 --profile minimal --component rustfmt,clippy
+
+        rustup default 1.94.0'
+    - uses: release-plz/action@18641b6c63063cc5ff8786ebf69cd57e8541bae1
+      with:
+        command: release-pr
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      id: release
+    - if: steps.release.outputs.pr != '' && steps.release.outputs.pr != 'null'
+      env:
+        GH_TOKEN: ${{ github.token }}
+        PR: ${{ steps.release.outputs.pr }}
+      run: python tools/release_workflow.py sync-pr

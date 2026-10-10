@@ -1,0 +1,451 @@
+name: Build frozen release distributions
+'on':
+  workflow_call:
+    inputs:
+      source_ref:
+        required: true
+        type: string
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+env:
+  CARGO_INCREMENTAL: '0'
+  MACOSX_DEPLOYMENT_TARGET: '11.0'
+  RUSTUP_TOOLCHAIN: 1.94.0
+jobs:
+  metadata:
+    runs-on: ubuntu-24.04
+    outputs:
+      sha: ${{ steps.identity.outputs.sha }}
+      version: ${{ steps.identity.outputs.version }}
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+        ref: ${{ inputs.source_ref }}
+    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+      with:
+        python-version: '3.13'
+    - name: Install the pinned Rust toolchain
+      run: 'rustup toolchain install 1.94.0 --profile minimal --component rustfmt,clippy
+
+        rustup default 1.94.0'
+    - run: python tools/release.py check --registry --frozen
+    - id: identity
+      run: python tools/release_workflow.py metadata
+  native:
+    needs: metadata
+    strategy:
+      fail-fast: false
+      matrix:
+        include: &id001
+        - &id003
+          target: aarch64-apple-darwin
+          suffix: darwin-arm64
+          runner: macos-latest
+        - &id004
+          target: aarch64-pc-windows-msvc
+          suffix: win32-arm64-msvc
+          runner: windows-latest
+        - &id005
+          target: aarch64-unknown-linux-gnu
+          suffix: linux-arm64-gnu
+          runner: ubuntu-24.04-arm
+        - target: i686-pc-windows-msvc
+          suffix: win32-ia32-msvc
+          runner: windows-latest
+        - target: i686-unknown-linux-gnu
+          suffix: linux-ia32-gnu
+          runner: ubuntu-24.04
+        - target: x86_64-pc-windows-gnu
+          suffix: win32-x64-gnu
+          runner: windows-latest
+        - &id006
+          target: x86_64-pc-windows-msvc
+          suffix: win32-x64-msvc
+          runner: windows-latest
+        - &id007
+          target: x86_64-unknown-linux-gnu
+          suffix: linux-x64-gnu
+          runner: ubuntu-24.04
+    runs-on: ${{ matrix.runner }}
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+        ref: ${{ needs.metadata.outputs.sha }}
+    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+      with:
+        python-version: '3.13'
+    - name: Install the pinned Rust toolchain
+      run: 'rustup toolchain install 1.94.0 --profile minimal --component rustfmt,clippy
+
+        rustup default 1.94.0
+
+        rustup target add ${{ matrix.target }}'
+    - uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29
+      with:
+        version: 0.15.2
+      if: contains(matrix.target, 'linux')
+    - if: contains(matrix.target, 'linux')
+      run: cargo install --locked cargo-zigbuild --version 0.23.4
+    - uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e
+      with:
+        msystem: MINGW64
+        path-type: inherit
+        install: mingw-w64-x86_64-gcc
+      if: matrix.target == 'x86_64-pc-windows-gnu'
+    - if: matrix.target != 'x86_64-pc-windows-gnu'
+      run: python tools/build-native.py "${{ matrix.target }}"
+    - if: matrix.target == 'x86_64-pc-windows-gnu'
+      shell: msys2 {0}
+      run: python tools/build-native.py "${{ matrix.target }}"
+    - uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756
+      if: endsWith(matrix.target, 'windows-msvc')
+      with:
+        arch: ${{ startsWith(matrix.target, 'i686') && 'amd64_x86' || startsWith(matrix.target, 'aarch64') && 'amd64_arm64'
+          || 'amd64' }}
+    - if: endsWith(matrix.target, 'windows-msvc')
+      run: python tools/test-capi.py "${{ matrix.target }}"
+      shell: pwsh
+    - if: '!contains(matrix.target, ''windows'')'
+      run: python tools/test-capi.py "${{ matrix.target }}"
+      shell: bash
+    - if: matrix.target == 'x86_64-pc-windows-gnu'
+      run: python tools/test-capi.py "${{ matrix.target }}"
+      shell: msys2 {0}
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: native-${{ matrix.target }}
+        path: 'target/distribution/release/addons/*
+
+          target/distribution/release/shiro-rs-*.zip'
+        if-no-files-found: error
+        retention-days: 30
+  python:
+    needs: metadata
+    strategy:
+      fail-fast: false
+      matrix:
+        target: *id001
+        python:
+        - '3.11'
+        - '3.12'
+        - '3.13'
+        - '3.14'
+        - '3.15'
+    runs-on: ${{ matrix.target.runner }}
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+        ref: ${{ needs.metadata.outputs.sha }}
+    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+      with:
+        python-version: ${{ matrix.python }}
+      id: interpreter
+    - uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e
+      with:
+        msystem: MINGW64
+        path-type: inherit
+        install: mingw-w64-x86_64-gcc
+      if: matrix.target.target == 'x86_64-pc-windows-gnu'
+    - uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756
+      if: endsWith(matrix.target.target, 'windows-msvc')
+      with:
+        arch: ${{ startsWith(matrix.target.target, 'i686') && 'amd64_x86' || startsWith(matrix.target.target, 'aarch64') &&
+          'amd64_arm64' || 'amd64' }}
+    - if: matrix.target.target == 'x86_64-pc-windows-gnu'
+      shell: msys2 {0}
+      run: cygpath -w "$MINGW_PREFIX/bin" >> "$GITHUB_PATH"
+    - uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b
+      with:
+        maturin-version: v1.15.0
+        rust-toolchain: 1.94.0
+        target: ${{ matrix.target.target }}
+        manylinux: '2014'
+        working-directory: crates/shiro-rs-python
+        args: --release --locked --features cross-windows --interpreter "${{ (contains(matrix.target.target, 'linux') || matrix.target.target
+          == 'i686-pc-windows-msvc' || matrix.target.target == 'aarch64-pc-windows-msvc') && format('python{0}', matrix.python)
+          || steps.interpreter.outputs.python-path }}" --out ../../target/python-${{ matrix.target.target }}-${{ matrix.python
+          }}
+    - run: python tools/release_workflow.py wheel-inventory "${{ matrix.target.target }}" "${{ matrix.python }}"
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: python-${{ matrix.target.target }}-${{ matrix.python }}
+        path: target/python-${{ matrix.target.target }}-${{ matrix.python }}/*
+        if-no-files-found: error
+        retention-days: 30
+  sdist:
+    needs: metadata
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+        ref: ${{ needs.metadata.outputs.sha }}
+    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+      with:
+        python-version: '3.13'
+    - name: Install the pinned Rust toolchain
+      run: 'rustup toolchain install 1.94.0 --profile minimal --component rustfmt,clippy
+
+        rustup default 1.94.0'
+    - uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b
+      with:
+        maturin-version: v1.15.0
+        working-directory: crates/shiro-rs-python
+        command: sdist
+        args: --out ../../target/sdist-release
+    - run: python -m pip wheel --no-deps --wheel-dir target/sdist-rebuilt target/sdist-release/*.tar.gz
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: sdist
+        path: target/sdist-release/*.tar.gz
+        if-no-files-found: error
+        retention-days: 30
+  wasm:
+    needs: metadata
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+        ref: ${{ needs.metadata.outputs.sha }}
+    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+      with:
+        python-version: '3.13'
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+      with:
+        node-version: '24'
+    - name: Install the pinned Rust toolchain
+      run: 'rustup toolchain install 1.94.0 --profile minimal --component rustfmt,clippy
+
+        rustup default 1.94.0
+
+        rustup target add wasm32-unknown-unknown'
+    - &id002
+      working-directory: crates/shiro-rs-node
+      run: npm ci
+    - run: cargo install --locked wasm-bindgen-cli --version 0.2.129
+    - run: python tools/release.py build-wasm
+    - working-directory: crates/shiro-rs-node
+      run: 'npx --no-install webpack --config ../../tools/webpack.config.cjs
+
+        npx --no-install playwright install --with-deps'
+    - run: node tools/browser-test.mjs
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: wasm
+        path: 'target/distribution/release/*.tgz
+
+          target/distribution/release/browser-tests.json'
+        if-no-files-found: error
+        retention-days: 30
+  assemble:
+    needs:
+    - metadata
+    - native
+    - python
+    - sdist
+    - wasm
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+        ref: ${{ needs.metadata.outputs.sha }}
+    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+      with:
+        python-version: '3.13'
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+      with:
+        node-version: '24'
+    - name: Install the pinned Rust toolchain
+      run: 'rustup toolchain install 1.94.0 --profile minimal --component rustfmt,clippy
+
+        rustup default 1.94.0'
+    - *id002
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+      with:
+        path: target/release-inputs
+    - working-directory: crates/shiro-rs-node
+      run: npx --no-install napi build --platform --package shiro-rs-node --release --output-dir ../../target/release-node-generated
+    - run: python tools/release_workflow.py assemble target/release-inputs
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: release-distributions
+        path: target/distribution/release
+        if-no-files-found: error
+        retention-days: 30
+  node-tests:
+    needs:
+    - metadata
+    - assemble
+    strategy:
+      fail-fast: false
+      matrix:
+        node:
+        - '22'
+        - '24'
+        - '26'
+        include_target:
+        - *id003
+        - *id004
+        - *id005
+        - *id006
+        - *id007
+    runs-on: ${{ matrix.include_target.target == 'aarch64-pc-windows-msvc' && 'windows-11-arm' || matrix.include_target.runner
+      }}
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+        ref: ${{ needs.metadata.outputs.sha }}
+    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+      with:
+        python-version: '3.13'
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+      with:
+        node-version: ${{ matrix.node }}
+    - *id002
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+      with:
+        name: release-distributions
+        path: target/distribution/release
+    - run: python tools/release_workflow.py test-node "${{ matrix.include_target.target }}"
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: node-test-${{ matrix.include_target.target }}-${{ matrix.node }}
+        path: target/runtime-tests/*.json
+        if-no-files-found: error
+        retention-days: 30
+  python-tests:
+    needs:
+    - metadata
+    - assemble
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - runner: windows-latest
+          target: x86_64-pc-windows-msvc
+          platform: win_amd64
+          python: '3.11'
+        - runner: windows-latest
+          target: x86_64-pc-windows-msvc
+          platform: win_amd64
+          python: '3.12'
+        - runner: windows-latest
+          target: x86_64-pc-windows-msvc
+          platform: win_amd64
+          python: '3.13'
+        - runner: windows-latest
+          target: x86_64-pc-windows-msvc
+          platform: win_amd64
+          python: '3.14'
+        - runner: windows-latest
+          target: x86_64-pc-windows-msvc
+          platform: win_amd64
+          python: '3.15'
+        - runner: ubuntu-24.04
+          target: x86_64-unknown-linux-gnu
+          platform: manylinux2014_x86_64
+          python: '3.11'
+        - runner: ubuntu-24.04
+          target: x86_64-unknown-linux-gnu
+          platform: manylinux2014_x86_64
+          python: '3.12'
+        - runner: ubuntu-24.04
+          target: x86_64-unknown-linux-gnu
+          platform: manylinux2014_x86_64
+          python: '3.13'
+        - runner: ubuntu-24.04
+          target: x86_64-unknown-linux-gnu
+          platform: manylinux2014_x86_64
+          python: '3.14'
+        - runner: ubuntu-24.04
+          target: x86_64-unknown-linux-gnu
+          platform: manylinux2014_x86_64
+          python: '3.15'
+        - runner: macos-latest
+          target: aarch64-apple-darwin
+          platform: macosx_11_0_arm64
+          python: '3.13'
+        - runner: windows-11-arm
+          target: aarch64-pc-windows-msvc
+          platform: win_arm64
+          python: '3.13'
+        - runner: ubuntu-24.04-arm
+          target: aarch64-unknown-linux-gnu
+          platform: manylinux2014_aarch64
+          python: '3.13'
+    runs-on: ${{ matrix.runner }}
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+        ref: ${{ needs.metadata.outputs.sha }}
+    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+      with:
+        python-version: ${{ matrix.python }}
+      id: interpreter
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+      with:
+        name: release-distributions
+        path: target/distribution/release
+    - run: python tools/release_workflow.py test-python "${{ matrix.platform }}"
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: python-test-${{ matrix.target }}-${{ matrix.python }}
+        path: target/runtime-tests/*.json
+        if-no-files-found: error
+        retention-days: 30
+  verified:
+    needs:
+    - metadata
+    - assemble
+    - node-tests
+    - python-tests
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+        ref: ${{ needs.metadata.outputs.sha }}
+    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+      with:
+        python-version: '3.13'
+    - name: Install the pinned Rust toolchain
+      run: 'rustup toolchain install 1.94.0 --profile minimal --component rustfmt,clippy
+
+        rustup default 1.94.0'
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+      with:
+        name: release-distributions
+        path: target/distribution/release
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+      with:
+        pattern: '*-test-*'
+        path: target/distribution/release/runtime-tests
+        merge-multiple: true
+    - run: 'python tools/release.py manifest target/distribution/release
+
+        python tools/release.py verify-manifest target/distribution/release'
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      with:
+        name: verified-release
+        path: target/distribution/release
+        if-no-files-found: error
+        retention-days: 30

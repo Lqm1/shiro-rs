@@ -1,4 +1,5 @@
 """Native Python workflows checked against original SHIRO C artifacts."""
+from importlib.metadata import version
 from pathlib import Path
 
 import pytest
@@ -95,7 +96,7 @@ def test_explicit_close_is_checked():
 
 
 def test_version_and_module_metadata():
-    assert api.__version__ == "0.1.0"
+    assert api.__version__.replace("-alpha.", "a") == version("shiro-rs")
     assert api.Model.__module__ == "shiro_rs"
 
 

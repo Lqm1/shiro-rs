@@ -33,7 +33,7 @@ test('native file extraction and saved model loading', async () => {
     model.write_file(destination, 0);
     const restored = api.Model.read_file(destination);
     assert.deepEqual(restored.write(), model.write());
-    assert.equal(api.version(), '0.1.0');
+    assert.equal(api.version(), require('../package.json').version);
   } finally {
     await fs.rm(directory, { recursive: true, force: true });
   }

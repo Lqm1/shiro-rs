@@ -1,0 +1,42 @@
+{
+  "name": "@shiro-rs/wasm",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Browser WebAssembly bindings for shiro-rs",
+  "license": "GPL-3.0-or-later",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "web",
+    "bundler",
+    "shared",
+    "LICENSE",
+    "README.md",
+    "release-source.json"
+  ],
+  "main": "./web/index.js",
+  "types": "./web/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./web/index.d.ts",
+      "import": "./web/index.js"
+    },
+    "./web": {
+      "types": "./web/index.d.ts",
+      "import": "./web/index.js"
+    },
+    "./bundler": {
+      "types": "./bundler/index.d.ts",
+      "import": "./bundler/index.js"
+    },
+    "./web/*": "./web/*",
+    "./bundler/*": "./bundler/*",
+    "./shared/*": "./shared/*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Lqm1/shiro-rs.git",
+    "directory": "crates/shiro-rs-wasm"
+  }
+}

@@ -347,16 +347,12 @@ mod tests {
     use super::*;
 
     fn inputs() -> (Model, Vec<Dataset>) {
-        let model = Model::read_from(
-            include_bytes!("../../../tests/fixtures/init-c-aligned.hsmm").as_slice(),
-        )
-        .unwrap();
-        let document: crate::labels::SegmentationDocument = serde_json::from_slice(include_bytes!(
-            "../../../tests/fixtures/align-c-isolated.json"
-        ))
-        .unwrap();
+        let model =
+            Model::read_from(include_bytes!("test_data/init-c-aligned.hsmm").as_slice()).unwrap();
+        let document: crate::labels::SegmentationDocument =
+            serde_json::from_slice(include_bytes!("test_data/align-c-isolated.json")).unwrap();
         let observation = crate::dataset::read_observation(
-            include_bytes!("../../../tests/fixtures/init-input.bin").as_slice(),
+            include_bytes!("test_data/init-input.bin").as_slice(),
             &[2, 1],
             12,
         )

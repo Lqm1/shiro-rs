@@ -5,3 +5,5 @@
 *.whl
 .napi-rs-filesystem-transaction*
 .*.prepared.tmp
+/crates/*-node/npm/
+/crates/*-wasm/pkg/
