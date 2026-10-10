@@ -1,4 +1,5 @@
 [package]
+publish = false
 name = "shiro-rs-python"
 version.workspace = true
 edition.workspace = true
@@ -16,3 +17,6 @@ rand = { version = "0.10.3", default-features = false }
 shiro-rs = { path = "../shiro-rs", version = "0.1.0" }
 pyo3 = { version = "0.29.3", features = ["multiple-pymethods"] }
 serde_json = "1.0.151"
+
+[features]
+cross-windows = ["pyo3/generate-import-lib"]

@@ -1,0 +1,29 @@
+[workspace]
+git_release_enable = false
+git_tag_enable = false
+publish = false
+dependencies_update = false
+features_always_increment_minor = true
+pr_branch_prefix = "release/"
+
+[[package]]
+name = "shiro-rs"
+changelog_path = "CHANGELOG.md"
+changelog_include = ["shiro-rs-capi", "shiro-rs-wasm", "shiro-rs-node", "shiro-rs-python"]
+semver_check = true
+
+[[package]]
+name = "shiro-rs-capi"
+release = false
+
+[[package]]
+name = "shiro-rs-wasm"
+release = false
+
+[[package]]
+name = "shiro-rs-node"
+release = false
+
+[[package]]
+name = "shiro-rs-python"
+release = false

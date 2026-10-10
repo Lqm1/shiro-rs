@@ -1,5 +1,5 @@
 {
-  "name": "shiro-rs",
+  "name": "@shiro-rs/node",
   "version": "0.1.0",
   "description": "Native Node.js bindings for shiro-rs",
   "license": "GPL-3.0-or-later",
@@ -13,24 +13,41 @@
     "README.md"
   ],
   "scripts": {
-    "build": "napi build --platform --manifest-path Cargo.toml --package shiro-rs-node",
-    "build:release": "napi build --platform --manifest-path Cargo.toml --package shiro-rs-node --release",
+    "build": "napi build --platform --manifest-path Cargo.toml --package shiro-rs-node && python ../../tools/release.py patch-loader",
+    "build:release": "napi build --platform --manifest-path Cargo.toml --package shiro-rs-node --release && python ../../tools/release.py patch-loader",
     "test": "node --test tests/*.cjs",
     "test:types": "tsc --noEmit --strict --target ES2022 --moduleResolution node tests/consumer.ts"
   },
   "engines": {
-    "node": "^20.17.0 || ^22.13.0 || >=23.5.0"
+    "node": "^22.13.0 || ^24.0.0 || ^26.0.0"
   },
   "napi": {
-    "binaryName": "shiro_rs"
+    "binaryName": "shiro_rs",
+    "packageName": "@shiro-rs/node",
+    "targets": [
+      "aarch64-apple-darwin",
+      "aarch64-pc-windows-msvc",
+      "aarch64-unknown-linux-gnu",
+      "i686-pc-windows-msvc",
+      "i686-unknown-linux-gnu",
+      "x86_64-pc-windows-gnu",
+      "x86_64-pc-windows-msvc",
+      "x86_64-unknown-linux-gnu"
+    ]
   },
   "devDependencies": {
     "@napi-rs/cli": "3.5.1",
-    "typescript": "^5.9.3"
+    "playwright": "1.64.0",
+    "typescript": "^5.9.3",
+    "webpack": "5.111.1",
+    "webpack-cli": "7.2.3"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/Lqm1/shiro-rs.git",
     "directory": "crates/shiro-rs-node"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

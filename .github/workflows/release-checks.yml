@@ -1,0 +1,52 @@
+name: Release metadata and regression checks
+'on':
+  push:
+    branches:
+    - main
+    - release/**
+  pull_request: {}
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+jobs:
+  check:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+    - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+      with:
+        python-version: '3.13'
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+      with:
+        node-version: '24'
+    - name: Install the pinned Rust toolchain
+      run: 'rustup toolchain install 1.94.0 --profile minimal --component rustfmt,clippy
+
+        rustup default 1.94.0'
+    - working-directory: crates/shiro-rs-node
+      run: npm ci
+    - run: 'python tools/release.py check
+
+        python tools/test_release.py
+
+        cargo fmt --all --check
+
+        cargo test --locked --workspace'
+    - working-directory: crates/shiro-rs-node
+      run: 'npm run build
+
+        npm test
+
+        npm run test:types
+
+        node ../../tools/test-loader.cjs'
+    - run: 'python -m pip install "maturin==1.15.0" pytest
+
+        python -m maturin build --release --locked --manifest-path crates/shiro-rs-python/Cargo.toml --out target/ci-wheels
+
+        python tools/release_workflow.py test-python win_amd64 --directory target/ci-wheels'

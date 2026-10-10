@@ -75,8 +75,8 @@ function requireNative() {
         loadErrors.push(e)
       }
       try {
-        const binding = require('shiro-rs-android-arm64')
-        const bindingPackageVersion = require('shiro-rs-android-arm64/package.json').version
+        const binding = require('@shiro-rs/node-android-arm64')
+        const bindingPackageVersion = require('@shiro-rs/node-android-arm64/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -91,8 +91,8 @@ function requireNative() {
         loadErrors.push(e)
       }
       try {
-        const binding = require('shiro-rs-android-arm-eabi')
-        const bindingPackageVersion = require('shiro-rs-android-arm-eabi/package.json').version
+        const binding = require('@shiro-rs/node-android-arm-eabi')
+        const bindingPackageVersion = require('@shiro-rs/node-android-arm-eabi/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -112,8 +112,8 @@ function requireNative() {
         loadErrors.push(e)
       }
       try {
-        const binding = require('shiro-rs-win32-x64-gnu')
-        const bindingPackageVersion = require('shiro-rs-win32-x64-gnu/package.json').version
+        const binding = require('@shiro-rs/node-win32-x64-gnu')
+        const bindingPackageVersion = require('@shiro-rs/node-win32-x64-gnu/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -128,8 +128,8 @@ function requireNative() {
         loadErrors.push(e)
       }
       try {
-        const binding = require('shiro-rs-win32-x64-msvc')
-        const bindingPackageVersion = require('shiro-rs-win32-x64-msvc/package.json').version
+        const binding = require('@shiro-rs/node-win32-x64-msvc')
+        const bindingPackageVersion = require('@shiro-rs/node-win32-x64-msvc/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -145,8 +145,8 @@ function requireNative() {
         loadErrors.push(e)
       }
       try {
-        const binding = require('shiro-rs-win32-ia32-msvc')
-        const bindingPackageVersion = require('shiro-rs-win32-ia32-msvc/package.json').version
+        const binding = require('@shiro-rs/node-win32-ia32-msvc')
+        const bindingPackageVersion = require('@shiro-rs/node-win32-ia32-msvc/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -161,8 +161,8 @@ function requireNative() {
         loadErrors.push(e)
       }
       try {
-        const binding = require('shiro-rs-win32-arm64-msvc')
-        const bindingPackageVersion = require('shiro-rs-win32-arm64-msvc/package.json').version
+        const binding = require('@shiro-rs/node-win32-arm64-msvc')
+        const bindingPackageVersion = require('@shiro-rs/node-win32-arm64-msvc/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -180,8 +180,8 @@ function requireNative() {
       loadErrors.push(e)
     }
     try {
-      const binding = require('shiro-rs-darwin-universal')
-      const bindingPackageVersion = require('shiro-rs-darwin-universal/package.json').version
+      const binding = require('@shiro-rs/node-darwin-universal')
+      const bindingPackageVersion = require('@shiro-rs/node-darwin-universal/package.json').version
       if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
         throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
       }
@@ -196,8 +196,8 @@ function requireNative() {
         loadErrors.push(e)
       }
       try {
-        const binding = require('shiro-rs-darwin-x64')
-        const bindingPackageVersion = require('shiro-rs-darwin-x64/package.json').version
+        const binding = require('@shiro-rs/node-darwin-x64')
+        const bindingPackageVersion = require('@shiro-rs/node-darwin-x64/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -212,8 +212,8 @@ function requireNative() {
         loadErrors.push(e)
       }
       try {
-        const binding = require('shiro-rs-darwin-arm64')
-        const bindingPackageVersion = require('shiro-rs-darwin-arm64/package.json').version
+        const binding = require('@shiro-rs/node-darwin-arm64')
+        const bindingPackageVersion = require('@shiro-rs/node-darwin-arm64/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -232,8 +232,8 @@ function requireNative() {
         loadErrors.push(e)
       }
       try {
-        const binding = require('shiro-rs-freebsd-x64')
-        const bindingPackageVersion = require('shiro-rs-freebsd-x64/package.json').version
+        const binding = require('@shiro-rs/node-freebsd-x64')
+        const bindingPackageVersion = require('@shiro-rs/node-freebsd-x64/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -248,8 +248,8 @@ function requireNative() {
         loadErrors.push(e)
       }
       try {
-        const binding = require('shiro-rs-freebsd-arm64')
-        const bindingPackageVersion = require('shiro-rs-freebsd-arm64/package.json').version
+        const binding = require('@shiro-rs/node-freebsd-arm64')
+        const bindingPackageVersion = require('@shiro-rs/node-freebsd-arm64/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -261,6 +261,19 @@ function requireNative() {
       loadErrors.push(new Error(`Unsupported architecture on FreeBSD: ${process.arch}`))
     }
   } else if (process.platform === 'linux') {
+    if (process.arch === 'ia32') {
+      try {
+        return require('./shiro_rs.linux-ia32-gnu.node')
+      } catch (error) {
+        loadErrors.push(error)
+      }
+      try {
+        return require('@shiro-rs/node-linux-ia32-gnu')
+      } catch (error) {
+        loadErrors.push(error)
+      }
+      return null
+    }
     if (process.arch === 'x64') {
       if (isMusl()) {
         try {
@@ -269,8 +282,8 @@ function requireNative() {
           loadErrors.push(e)
         }
         try {
-          const binding = require('shiro-rs-linux-x64-musl')
-          const bindingPackageVersion = require('shiro-rs-linux-x64-musl/package.json').version
+          const binding = require('@shiro-rs/node-linux-x64-musl')
+          const bindingPackageVersion = require('@shiro-rs/node-linux-x64-musl/package.json').version
           if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -285,8 +298,8 @@ function requireNative() {
           loadErrors.push(e)
         }
         try {
-          const binding = require('shiro-rs-linux-x64-gnu')
-          const bindingPackageVersion = require('shiro-rs-linux-x64-gnu/package.json').version
+          const binding = require('@shiro-rs/node-linux-x64-gnu')
+          const bindingPackageVersion = require('@shiro-rs/node-linux-x64-gnu/package.json').version
           if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -303,8 +316,8 @@ function requireNative() {
           loadErrors.push(e)
         }
         try {
-          const binding = require('shiro-rs-linux-arm64-musl')
-          const bindingPackageVersion = require('shiro-rs-linux-arm64-musl/package.json').version
+          const binding = require('@shiro-rs/node-linux-arm64-musl')
+          const bindingPackageVersion = require('@shiro-rs/node-linux-arm64-musl/package.json').version
           if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -319,8 +332,8 @@ function requireNative() {
           loadErrors.push(e)
         }
         try {
-          const binding = require('shiro-rs-linux-arm64-gnu')
-          const bindingPackageVersion = require('shiro-rs-linux-arm64-gnu/package.json').version
+          const binding = require('@shiro-rs/node-linux-arm64-gnu')
+          const bindingPackageVersion = require('@shiro-rs/node-linux-arm64-gnu/package.json').version
           if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -337,8 +350,8 @@ function requireNative() {
           loadErrors.push(e)
         }
         try {
-          const binding = require('shiro-rs-linux-arm-musleabihf')
-          const bindingPackageVersion = require('shiro-rs-linux-arm-musleabihf/package.json').version
+          const binding = require('@shiro-rs/node-linux-arm-musleabihf')
+          const bindingPackageVersion = require('@shiro-rs/node-linux-arm-musleabihf/package.json').version
           if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -353,8 +366,8 @@ function requireNative() {
           loadErrors.push(e)
         }
         try {
-          const binding = require('shiro-rs-linux-arm-gnueabihf')
-          const bindingPackageVersion = require('shiro-rs-linux-arm-gnueabihf/package.json').version
+          const binding = require('@shiro-rs/node-linux-arm-gnueabihf')
+          const bindingPackageVersion = require('@shiro-rs/node-linux-arm-gnueabihf/package.json').version
           if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -371,8 +384,8 @@ function requireNative() {
           loadErrors.push(e)
         }
         try {
-          const binding = require('shiro-rs-linux-loong64-musl')
-          const bindingPackageVersion = require('shiro-rs-linux-loong64-musl/package.json').version
+          const binding = require('@shiro-rs/node-linux-loong64-musl')
+          const bindingPackageVersion = require('@shiro-rs/node-linux-loong64-musl/package.json').version
           if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -387,8 +400,8 @@ function requireNative() {
           loadErrors.push(e)
         }
         try {
-          const binding = require('shiro-rs-linux-loong64-gnu')
-          const bindingPackageVersion = require('shiro-rs-linux-loong64-gnu/package.json').version
+          const binding = require('@shiro-rs/node-linux-loong64-gnu')
+          const bindingPackageVersion = require('@shiro-rs/node-linux-loong64-gnu/package.json').version
           if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -405,8 +418,8 @@ function requireNative() {
           loadErrors.push(e)
         }
         try {
-          const binding = require('shiro-rs-linux-riscv64-musl')
-          const bindingPackageVersion = require('shiro-rs-linux-riscv64-musl/package.json').version
+          const binding = require('@shiro-rs/node-linux-riscv64-musl')
+          const bindingPackageVersion = require('@shiro-rs/node-linux-riscv64-musl/package.json').version
           if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -421,8 +434,8 @@ function requireNative() {
           loadErrors.push(e)
         }
         try {
-          const binding = require('shiro-rs-linux-riscv64-gnu')
-          const bindingPackageVersion = require('shiro-rs-linux-riscv64-gnu/package.json').version
+          const binding = require('@shiro-rs/node-linux-riscv64-gnu')
+          const bindingPackageVersion = require('@shiro-rs/node-linux-riscv64-gnu/package.json').version
           if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -438,8 +451,8 @@ function requireNative() {
         loadErrors.push(e)
       }
       try {
-        const binding = require('shiro-rs-linux-ppc64-gnu')
-        const bindingPackageVersion = require('shiro-rs-linux-ppc64-gnu/package.json').version
+        const binding = require('@shiro-rs/node-linux-ppc64-gnu')
+        const bindingPackageVersion = require('@shiro-rs/node-linux-ppc64-gnu/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -454,8 +467,8 @@ function requireNative() {
         loadErrors.push(e)
       }
       try {
-        const binding = require('shiro-rs-linux-s390x-gnu')
-        const bindingPackageVersion = require('shiro-rs-linux-s390x-gnu/package.json').version
+        const binding = require('@shiro-rs/node-linux-s390x-gnu')
+        const bindingPackageVersion = require('@shiro-rs/node-linux-s390x-gnu/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -474,8 +487,8 @@ function requireNative() {
         loadErrors.push(e)
       }
       try {
-        const binding = require('shiro-rs-openharmony-arm64')
-        const bindingPackageVersion = require('shiro-rs-openharmony-arm64/package.json').version
+        const binding = require('@shiro-rs/node-openharmony-arm64')
+        const bindingPackageVersion = require('@shiro-rs/node-openharmony-arm64/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -490,8 +503,8 @@ function requireNative() {
         loadErrors.push(e)
       }
       try {
-        const binding = require('shiro-rs-openharmony-x64')
-        const bindingPackageVersion = require('shiro-rs-openharmony-x64/package.json').version
+        const binding = require('@shiro-rs/node-openharmony-x64')
+        const bindingPackageVersion = require('@shiro-rs/node-openharmony-x64/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -506,8 +519,8 @@ function requireNative() {
         loadErrors.push(e)
       }
       try {
-        const binding = require('shiro-rs-openharmony-arm')
-        const bindingPackageVersion = require('shiro-rs-openharmony-arm/package.json').version
+        const binding = require('@shiro-rs/node-openharmony-arm')
+        const bindingPackageVersion = require('@shiro-rs/node-openharmony-arm/package.json').version
         if (bindingPackageVersion !== '0.1.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 0.1.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -524,39 +537,6 @@ function requireNative() {
 }
 
 nativeBinding = requireNative()
-
-if (!nativeBinding || process.env.NAPI_RS_FORCE_WASI) {
-  let wasiBinding = null
-  let wasiBindingError = null
-  try {
-    wasiBinding = require('./shiro_rs.wasi.cjs')
-    nativeBinding = wasiBinding
-  } catch (err) {
-    if (process.env.NAPI_RS_FORCE_WASI) {
-      wasiBindingError = err
-    }
-  }
-  if (!nativeBinding || process.env.NAPI_RS_FORCE_WASI) {
-    try {
-      wasiBinding = require('shiro-rs-wasm32-wasi')
-      nativeBinding = wasiBinding
-    } catch (err) {
-      if (process.env.NAPI_RS_FORCE_WASI) {
-        if (!wasiBindingError) {
-          wasiBindingError = err
-        } else {
-          wasiBindingError.cause = err
-        }
-        loadErrors.push(err)
-      }
-    }
-  }
-  if (process.env.NAPI_RS_FORCE_WASI === 'error' && !wasiBinding) {
-    const error = new Error('WASI binding not found and NAPI_RS_FORCE_WASI is set to error')
-    error.cause = wasiBindingError
-    throw error
-  }
-}
 
 if (!nativeBinding) {
   if (loadErrors.length > 0) {

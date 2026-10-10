@@ -51,3 +51,5 @@ cargo clippy --all-targets -- -D warnings
 ```
 
 Licensed under GPL-3.0-or-later. SHIRO source is copyright 2017-2018 Kanru Hua. Audited upstream commit: `203ef7b71bf382c8b5ce3f86b8116f63265e2711`.
+
+Release checkpoints, package names and owner setup steps are documented in [the release procedure](docs/releases.md).

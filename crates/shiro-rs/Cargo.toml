@@ -1,11 +1,15 @@
 [package]
 name = "shiro-rs"
-version = "0.1.0"
+version.workspace = true
 edition = "2024"
 license = "GPL-3.0-or-later"
 repository = "https://github.com/Lqm1/shiro-rs"
 rust-version = "1.94"
 
+
+description = "Speech alignment, feature extraction and HMM/HSMM training compatible with SHIRO"
+readme = "README.md"
+include = ["src/**", "examples/**", "Cargo.toml", "README.md", "LICENSE"]
 
 [dependencies]
 ciglet-rs = { version = "0.1.0", git = "https://github.com/Lqm1/ciglet-rs.git", rev = "34208b5fb1757355c638a1c588ec8a7fa49fddc3" }
