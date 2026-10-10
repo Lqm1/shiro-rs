@@ -46,7 +46,8 @@ dependencies = [
 [[package]]
 name = "ciglet-rs"
 version = "0.1.0"
-source = "git+https://github.com/Lqm1/ciglet-rs.git?rev=34208b5fb1757355c638a1c588ec8a7fa49fddc3#34208b5fb1757355c638a1c588ec8a7fa49fddc3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "edf49a8ccde73f396c6072e149518decb853cdaaa0b307aafc9ef591a8f34609"
 dependencies = [
  "rand",
  "rand_chacha",
@@ -255,7 +256,8 @@ dependencies = [
 [[package]]
 name = "liblrhsmm-rs"
 version = "0.1.0"
-source = "git+https://github.com/Lqm1/liblrhsmm-rs.git?rev=d1b32853ccc2381d04af1a1cbd0587a455e992f3#d1b32853ccc2381d04af1a1cbd0587a455e992f3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26b7e47ce1911f72550df7b58654fe734bb5ef8f9447f4ad784f261f0c7ab5d3"
 dependencies = [
  "rand",
  "rmp",
