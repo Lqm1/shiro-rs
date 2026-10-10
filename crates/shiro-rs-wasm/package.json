@@ -1,6 +1,6 @@
 {
   "name": "@shiro-rs/wasm",
-  "version": "0.1.0",
+  "version": "0.1.0-alpha.2",
   "type": "module",
   "description": "Browser WebAssembly bindings for shiro-rs",
   "license": "GPL-3.0-or-later",
