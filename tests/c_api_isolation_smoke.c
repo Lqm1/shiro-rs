@@ -59,7 +59,7 @@ int main(void) {
     size_t count = 0; assert(shiro_rs_isolated_groups_length(clone, &count) == 0 && count == 2);
     ShiroRsObservation *samples[2] = {NULL, NULL}; ShiroRsStates *locals[2] = {NULL, NULL};
     for (size_t i = 0; i < 2; ++i) {
-        ShiroRsIsolatedGroupInfo positions;
+        _Alignas(8) ShiroRsIsolatedGroupInfo positions;
         assert(shiro_rs_isolated_groups_get_info(clone, i, &positions) == 0);
         assert(positions.first_state == i * 3 && positions.first_frame == i * 6);
         assert(shiro_rs_isolated_groups_get_observation(clone, i, &samples[i]) == 0);
@@ -84,9 +84,9 @@ int main(void) {
         assert(shiro_rs_states_release(&states) == 0 && shiro_rs_states_release(&locals[i]) == 0);
     }
     free(raw_values); assert(shiro_rs_bytes_release(&raw) == 0);
-    ShiroRsIsolatedGroupInput input[] = {{SIZE_MAX, SIZE_MAX - 1, source, source_states}, {SIZE_MAX, SIZE_MAX - 1, source, source_states}};
+    _Alignas(8) ShiroRsIsolatedGroupInput input[] = {{SIZE_MAX, SIZE_MAX - 1, source, source_states}, {SIZE_MAX, SIZE_MAX - 1, source, source_states}};
     assert(shiro_rs_isolated_groups_create(input, 2, &groups) == 0);
-    ShiroRsIsolatedGroupInfo positions = {0, 0};
+    _Alignas(8) ShiroRsIsolatedGroupInfo positions = {0, 0};
     assert(shiro_rs_isolated_groups_get_info(groups, 1, &positions) == 0 && positions.first_state == SIZE_MAX && positions.first_frame == SIZE_MAX - 1);
     assert(shiro_rs_isolated_groups_get_info(groups, 2, &positions) == 2 && positions.first_state == SIZE_MAX);
     ShiroRsIsolatedGroups *retained = groups; input[1].states = NULL;

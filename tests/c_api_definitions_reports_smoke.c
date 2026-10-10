@@ -52,11 +52,11 @@ int main(void) {
         ShiroRsModelDefinition *definition = NULL, *snapshot = NULL, *reread = NULL;
         assert(shiro_rs_definition_read_json(source, &definition) == 0 && shiro_rs_bytes_release(&source) == 0);
         assert(shiro_rs_definition_clone(definition, &snapshot) == 0 && shiro_rs_definition_release(&definition) == 0);
-        ShiroRsDefinitionInfo info = {0};
+        _Alignas(8) ShiroRsDefinitionInfo info = {0};
         assert(shiro_rs_definition_get_info(snapshot, &info) == 0);
         assert(info.duration_states == durations[i] && info.streams == stream_counts[i] && info.duration_constraints == constraint_counts[i]);
         for (size_t j = 0; j < info.streams; ++j) {
-            ShiroRsStreamDefinition stream = {0};
+            _Alignas(8) ShiroRsStreamDefinition stream = {0};
             assert(shiro_rs_definition_get_stream(snapshot, j, &stream) == 0);
             assert(stream.states == (i == 1 ? 2 : i == 0 && j == 1 ? 2 : 3));
             assert(stream.dimensions == (i == 1 ? 13 : j == 0 ? 2 : 1));
@@ -64,7 +64,7 @@ int main(void) {
             assert(bits(stream.weight) == bits(i == 0 && j == 1 ? 0.5f : 1.0f));
         }
         for (size_t j = 0; j < info.duration_constraints; ++j) {
-            ShiroRsDurationConstraint constraint = {0};
+            _Alignas(8) ShiroRsDurationConstraint constraint = {0};
             assert(shiro_rs_definition_get_constraint(snapshot, j, &constraint) == 0);
             assert(constraint.index == (i == 0 ? 1 : j == 0 ? 1 : 0));
             assert(constraint.has_minimum == 1 && constraint.minimum == (i == 0 ? 2 : 3));
@@ -85,23 +85,23 @@ int main(void) {
         assert(shiro_rs_definition_release(&snapshot) == 0 && shiro_rs_definition_release(&reread) == 0);
     }
     const uint32_t patterns[] = {0x80000000u, 0x7fc12345u, 0x7f800000u, 0xff800000u, 1};
-    ShiroRsStreamDefinition streams[5];
+    _Alignas(8) ShiroRsStreamDefinition streams[5];
     for (size_t i = 0; i < 5; ++i) {
         streams[i] = (ShiroRsStreamDefinition){SIZE_MAX, 0, SIZE_MAX - 1, value(patterns[i])};
     }
-    const ShiroRsDurationConstraint constraints[] = {{SIZE_MAX, 0, 99, 1, 0}, {0, 1, INT32_MIN, 0, 99}, {1, 1, 0, 1, INT32_MAX}};
+    _Alignas(8) const ShiroRsDurationConstraint constraints[] = {{SIZE_MAX, 0, 99, 1, 0}, {0, 1, INT32_MIN, 0, 99}, {1, 1, 0, 1, INT32_MAX}};
     ShiroRsModelDefinition *definition = NULL, *snapshot = NULL;
     assert(shiro_rs_definition_create(SIZE_MAX, streams, 5, constraints, 3, &definition) == 0);
     assert(shiro_rs_definition_clone(definition, &snapshot) == 0 && shiro_rs_definition_release(&definition) == 0);
-    ShiroRsDefinitionInfo info = {0};
+    _Alignas(8) ShiroRsDefinitionInfo info = {0};
     assert(shiro_rs_definition_get_info(snapshot, &info) == 0 && info.duration_states == SIZE_MAX && info.streams == 5 && info.duration_constraints == 3);
     for (size_t i = 0; i < 5; ++i) {
-        ShiroRsStreamDefinition actual = {0};
+        _Alignas(8) ShiroRsStreamDefinition actual = {0};
         assert(shiro_rs_definition_get_stream(snapshot, i, &actual) == 0);
         assert(actual.states == SIZE_MAX && actual.dimensions == 0 && actual.mixtures == SIZE_MAX - 1 && bits(actual.weight) == patterns[i]);
     }
     for (size_t i = 0; i < 3; ++i) {
-        ShiroRsDurationConstraint actual = {0};
+        _Alignas(8) ShiroRsDurationConstraint actual = {0};
         assert(shiro_rs_definition_get_constraint(snapshot, i, &actual) == 0);
         assert(actual.index == constraints[i].index && actual.has_minimum == constraints[i].has_minimum && actual.has_maximum == constraints[i].has_maximum);
         assert(actual.minimum == (actual.has_minimum ? constraints[i].minimum : 0) && actual.maximum == (actual.has_maximum ? constraints[i].maximum : 0));
@@ -111,10 +111,10 @@ int main(void) {
     ShiroRsModel *invalid_model = NULL;
     assert(shiro_rs_definition_build(snapshot, &invalid_model) == 3 && !invalid_model);
     ShiroRsModelDefinition *retained = snapshot;
-    ShiroRsDurationConstraint invalid = {0, 2, 0, 0, 0};
+    _Alignas(8) ShiroRsDurationConstraint invalid = {0, 2, 0, 0, 0};
     assert(shiro_rs_definition_create(0, NULL, 0, &invalid, 1, &retained) == 2 && retained == snapshot);
     assert(shiro_rs_definition_create(0, NULL, 1, NULL, 0, &retained) == 1 && retained == snapshot);
-    ShiroRsStreamDefinition unchanged = streams[0];
+    _Alignas(8) ShiroRsStreamDefinition unchanged = streams[0];
     assert(shiro_rs_definition_get_stream(snapshot, 5, &unchanged) == 2 && bits(unchanged.weight) == patterns[0]);
     assert(shiro_rs_definition_clone(snapshot, NULL) == 1 && shiro_rs_definition_get_info(snapshot, NULL) == 1);
     assert(shiro_rs_bytes_release(&sentinel) == 0 && shiro_rs_definition_release(&snapshot) == 0 && shiro_rs_definition_release(&snapshot) == 0);
@@ -125,7 +125,7 @@ int main(void) {
     float values[5]; for (size_t i = 0; i < 5; ++i) values[i] = value(patterns[i]);
     ShiroRsArrayF32 *row = NULL, *empty = NULL;
     assert(shiro_rs_array_f32_create(values, 5, &row) == 0 && shiro_rs_array_f32_create(NULL, 0, &empty) == 0);
-    ShiroRsIterationInfo iteration = {SIZE_MAX, value(0x7fc54321u), value(0xff800000u)};
+    _Alignas(8) ShiroRsIterationInfo iteration = {SIZE_MAX, value(0x7fc54321u), value(0xff800000u)};
     const ShiroRsArrayF32 *rows[] = {row, empty, row};
     ShiroRsIterationReport *report = NULL, *blank = NULL;
     assert(shiro_rs_iteration_report_create(&iteration, rows, 3, &report) == 0 && shiro_rs_iteration_report_create(&iteration, NULL, 0, &blank) == 0);
@@ -147,7 +147,7 @@ int main(void) {
     assert(shiro_rs_iteration_report_create(&iteration, NULL, 1, &report) == 1 && report == saved[0]);
     assert(shiro_rs_iteration_reports_release(&copy) == 0);
     for (size_t i = 0; i < 3; ++i) {
-        ShiroRsIterationInfo actual = {0};
+        _Alignas(8) ShiroRsIterationInfo actual = {0};
         assert(shiro_rs_iteration_report_info(saved[i], &actual) == 0);
         assert(actual.iteration == SIZE_MAX && bits(actual.temperature) == 0x7fc54321u && bits(actual.mean_log_likelihood) == 0xff800000u);
         assert(shiro_rs_iteration_report_file_count(saved[i], &count) == 0 && count == (i == 1 ? 0 : 3));

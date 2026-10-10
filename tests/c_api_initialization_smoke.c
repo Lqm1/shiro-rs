@@ -76,7 +76,7 @@ int main(void) {
     const ShiroRsObservation *observations[]={observation};const ShiroRsStates *sequences[]={states};
     assert(shiro_rs_dataset_create(model,observations,sequences,1,&data)==0);
     assert(shiro_rs_dataset_clone(data,&clone)==0);assert(shiro_rs_dataset_release(&data)==0&&!data);
-    ShiroRsInitializationOptions config;assert(shiro_rs_initialization_options_default(&config)==0);
+    _Alignas(8) ShiroRsInitializationOptions config;assert(shiro_rs_initialization_options_default(&config)==0);
     assert(config.flat_start==0&&config.globally_tied==0&&config.variance_floor_ratio==0.1f);
     const char *fixtures[]={"init-c-aligned.hsmm","init-c-flat.hsmm","init-c-tied.hsmm","init-c-flat-tied.hsmm"};
     for(size_t i=0;i<4;++i){

@@ -32,7 +32,7 @@ static void equal(ShiroRsBytes *left, ShiroRsBytes *right) {
 static void equal_text(ShiroRsBytes *owner, const char *expected) {
     ShiroRsBytes *value = text(expected); equal(owner, value); assert(shiro_rs_bytes_release(&value) == 0);
 }
-static double value(uint64_t bits) { double output; memcpy(&output, &bits, sizeof(output)); return output; }
+static double value(uint64_t bits) { _Alignas(8) double output; memcpy(&output, &bits, sizeof(output)); return output; }
 static uint64_t bits(double input) { uint64_t output; memcpy(&output, &input, sizeof(output)); return output; }
 
 static ShiroRsStates *rebuild_states(ShiroRsStates *original) {
@@ -41,7 +41,7 @@ static ShiroRsStates *rebuild_states(ShiroRsStates *original) {
     ShiroRsBytes **bytes = calloc(count * 3 + 1, sizeof(*bytes));
     ShiroRsArrayUsize **arrays = calloc(count + 1, sizeof(*arrays)); assert(inputs && bytes && arrays);
     for (uintptr_t i = 0; i < count; ++i) {
-        ShiroRsStateInfo info = {0}; assert(shiro_rs_states_get_info(original, i, &info) == 0);
+        _Alignas(8) ShiroRsStateInfo info = {0}; assert(shiro_rs_states_get_info(original, i, &info) == 0);
         inputs[i].time = info.time; inputs[i].has_duration = info.has_duration; inputs[i].duration = info.duration;
         if (info.has_outputs) {
             assert(shiro_rs_states_get_outputs(original, i, &arrays[i]) == 0); inputs[i].outputs = arrays[i];
@@ -102,7 +102,7 @@ int main(void) {
     ShiroRsBytes *file_attrs = text(file_attributes_text), *top_attrs = text(top_attributes_text);
     ShiroRsArrayUsize *outputs = NULL, *empty = NULL; const uintptr_t integers[] = {0, UINTPTR_MAX, UINTPTR_MAX - 1};
     assert(shiro_rs_array_usize_create(integers, 3, &outputs) == 0 && shiro_rs_array_usize_create(NULL, 0, &empty) == 0);
-    ShiroRsStateInput inputs[5];
+    _Alignas(8) ShiroRsStateInput inputs[5];
     for (size_t i = 0; i < 5; ++i) {
         inputs[i] = (ShiroRsStateInput){value(patterns[i]), i != 0, i == 1 ? 0 : UINTPTR_MAX,
             i == 0 ? NULL : i == 1 ? empty : outputs, i == 0 ? NULL : jumps, metadata, attributes};
@@ -141,7 +141,7 @@ int main(void) {
         assert(shiro_rs_bytes_release(&actual_attrs) == 0 && shiro_rs_segmented_file_release(&saved[i]) == 0);
         assert(shiro_rs_states_length(states, &count) == 0 && count == 5);
         for (size_t j = 0; j < 5; ++j) {
-            ShiroRsStateInfo info = {0}; assert(shiro_rs_states_get_info(states, j, &info) == 0);
+            _Alignas(8) ShiroRsStateInfo info = {0}; assert(shiro_rs_states_get_info(states, j, &info) == 0);
             assert(bits(info.time) == patterns[j] && info.has_duration == (j != 0) && info.duration == (j <= 1 ? 0 : UINTPTR_MAX));
             assert(info.has_outputs == (j != 0) && info.has_jumps == (j != 0));
             assert(shiro_rs_states_get_outputs(states, j, &outputs) == (j == 0 ? 2u : 0u));
@@ -161,9 +161,9 @@ int main(void) {
         retained_bytes = file_attrs;
         assert(shiro_rs_states_write_json(states, &retained_bytes) == 3 && retained_bytes == file_attrs);
         assert(shiro_rs_states_get_json_field(states, 0, 3, &retained_bytes) == 2 && retained_bytes == file_attrs);
-        ShiroRsStateInfo info = {17.0, 0, 0, 0, 0};
+        _Alignas(8) ShiroRsStateInfo info = {17.0, 0, 0, 0, 0};
         assert(shiro_rs_states_get_info(states, UINTPTR_MAX, &info) == 2 && info.time == 17.0);
-        ShiroRsStateInput invalid = {0, 2, 0, NULL, NULL, file_attrs, file_attrs};
+        _Alignas(8) ShiroRsStateInput invalid = {0, 2, 0, NULL, NULL, file_attrs, file_attrs};
         ShiroRsStates *retained = states;
         assert(shiro_rs_states_create(&invalid, 1, &retained) == 2 && retained == states);
         assert(shiro_rs_states_create(NULL, 1, &retained) == 1 && retained == states);

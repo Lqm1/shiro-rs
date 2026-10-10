@@ -34,7 +34,7 @@ int main(void) {
     assert(shiro_rs_untied_model_clone(result, &clone) == 0 && shiro_rs_untied_model_release(&result) == 0);
     size_t count = 0; assert(shiro_rs_untied_model_length(clone, &count) == 0 && count == 6);
     for (size_t i = 0; i < count; ++i) {
-        ShiroRsAssignment value;
+        _Alignas(8) ShiroRsAssignment value;
         assert(shiro_rs_untied_model_get_assignment(clone, i, &value) == 0);
         assert(value.state == i && value.file == 0 && value.segment == i);
     }
@@ -51,9 +51,9 @@ int main(void) {
     assert(shiro_rs_untied_model_create(model, expected, NULL, 0, &result) == 0 && shiro_rs_bytes_release(&expected) == 0);
     assert(shiro_rs_untied_model_get_document(result, &expected) == 0); equal_bytes(doc, expected);
     assert(shiro_rs_bytes_release(&doc) == 0 && shiro_rs_bytes_release(&expected) == 0 && shiro_rs_untied_model_release(&result) == 0);
-    ShiroRsAssignment entry = {SIZE_MAX, 0, 2};
+    _Alignas(8) ShiroRsAssignment entry = {SIZE_MAX, 0, 2};
     assert(shiro_rs_untied_model_create(model, document, &entry, 1, &result) == 0);
-    ShiroRsAssignment value = {0, 0, 0};
+    _Alignas(8) ShiroRsAssignment value = {0, 0, 0};
     assert(shiro_rs_untied_model_get_assignment(result, 0, &value) == 0 && value.state == SIZE_MAX && value.file == 0 && value.segment == 2);
     assert(shiro_rs_untied_model_get_assignment(result, 1, &value) == 2 && value.state == SIZE_MAX && value.segment == 2);
     assert(shiro_rs_untied_model_summary_bytes(result, &summary) == 0);
@@ -63,7 +63,7 @@ int main(void) {
     assert(shiro_rs_untied_model_create(model, document, NULL, SIZE_MAX, &retained) == 2 && retained == result);
     const char *bad_json = "{}"; expected = owned(bad_json, strlen(bad_json));
     assert(shiro_rs_untie(model, expected, &retained) == 3 && retained == result); assert(shiro_rs_bytes_release(&expected) == 0);
-    ShiroRsAssignment invalid[] = {{0, 0, 0}, {4, 99, 0}};
+    _Alignas(8) ShiroRsAssignment invalid[] = {{0, 0, 0}, {4, 99, 0}};
     assert(shiro_rs_untied_model_create(model, document, invalid, 2, &clone) == 0);
     ShiroRsBytes *retained_summary = summary;
     assert(shiro_rs_untied_model_summary_bytes(clone, &retained_summary) == 3 && retained_summary == summary);

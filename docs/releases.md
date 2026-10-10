@@ -141,3 +141,11 @@ targets; compiling an artifact never marks it runtime tested.
 - [wasm-bindgen deployment targets](https://wasm-bindgen.github.io/wasm-bindgen/reference/deployment.html)
 - [maturin GitHub Actions](https://www.maturin.rs/distribution.html)
 - [release-plz configuration](https://release-plz.dev/docs/config)
+
+### CPython 3.15 build bootstrap
+
+CPython 3.15.0 is installed with pinned uv 0.13.0 and setup-uv 10.3.0 while
+setup-python's version inventory catches up with the stable release. Its virtual
+environment lives under the runner temporary directory. CPython 3.11 through
+3.14 retain setup-python. Release candidates and free-threaded interpreters are
+not substituted. The selected interpreter path is recorded before wheel builds.

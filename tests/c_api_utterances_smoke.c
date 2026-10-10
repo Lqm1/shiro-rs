@@ -105,7 +105,7 @@ static void free_fields(Fields *owner) {
     for (size_t i = 0; i < 3; ++i) assert(shiro_rs_model_release(&owner->models[i]) == 0);
 }
 static ShiroRsUtterances *reconstruct(Fields *values) {
-    ShiroRsUtterancesInput input = {values->phonemap, values->definition, values->phones, values->initial,
+    _Alignas(8) ShiroRsUtterancesInput input = {values->phonemap, values->definition, values->phones, values->initial,
         values->models[0], values->models[1], values->models[2], values->reports, values->alignment, values->labels};
     ShiroRsUtterances *out = NULL; assert(shiro_rs_utterances_create(&input, &out) == 0);
     input.model = NULL; ShiroRsUtterances *retained = out;
@@ -127,7 +127,7 @@ static void equal_fields(Fields *a, Fields *b) {
     }
     assert(shiro_rs_iteration_reports_length(a->reports, &n) == 0 && shiro_rs_iteration_reports_length(b->reports, &m) == 0 && n == m);
     for (uintptr_t i = 0; i < n; ++i) {
-        ShiroRsIterationReport *r = NULL, *s = NULL; ShiroRsIterationInfo p = {0}, q = {0};
+        ShiroRsIterationReport *r = NULL, *s = NULL; _Alignas(8) ShiroRsIterationInfo p = {0}, q = {0};
         assert(shiro_rs_iteration_reports_get(a->reports, i, &r) == 0 && shiro_rs_iteration_reports_get(b->reports, i, &s) == 0);
         assert(shiro_rs_iteration_report_info(r, &p) == 0 && shiro_rs_iteration_report_info(s, &q) == 0);
         assert(p.iteration == q.iteration && memcmp(&p.temperature, &q.temperature, sizeof(float)) == 0);
@@ -143,7 +143,7 @@ static void equal_fields(Fields *a, Fields *b) {
     }
     assert(shiro_rs_labels_length(a->labels, &n) == 0 && shiro_rs_labels_length(b->labels, &m) == 0 && n == m);
     for (uintptr_t i = 0; i < n; ++i) {
-        ShiroRsLabelInfo p = {0}, q = {0};
+        _Alignas(8) ShiroRsLabelInfo p = {0}, q = {0};
         assert(shiro_rs_labels_get_info(a->labels, i, &p) == 0 && shiro_rs_labels_get_info(b->labels, i, &q) == 0);
         assert(memcmp(&p.start, &q.start, sizeof(double)) == 0 && memcmp(&p.end, &q.end, sizeof(double)) == 0);
         assert(shiro_rs_labels_get_name(a->labels, i, &x) == 0 && shiro_rs_labels_get_name(b->labels, i, &y) == 0);
@@ -192,7 +192,7 @@ static void original_fields(Fields *values, uint32_t mode) {
     }
     assert(shiro_rs_iteration_reports_length(values->reports, &count) == 0 && count == (mode == 2 ? 0 : 2));
     for (uintptr_t i = 0; i < count; ++i) {
-        ShiroRsIterationReport *report = NULL; ShiroRsIterationInfo info = {0}; ShiroRsArrayF32 *row = NULL;
+        ShiroRsIterationReport *report = NULL; _Alignas(8) ShiroRsIterationInfo info = {0}; ShiroRsArrayF32 *row = NULL;
         assert(shiro_rs_iteration_reports_get(values->reports, i, &report) == 0);
         assert(shiro_rs_iteration_report_info(report, &info) == 0 && info.iteration == i);
         volatile float temperature = (float)sqrt((double)(i + 1) / 2.0);
@@ -206,8 +206,8 @@ static void original_fields(Fields *values, uint32_t mode) {
     FILE *labels = fopen("tests/fixtures/utterances-c-labels.txt", "rb"); assert(labels);
     assert(shiro_rs_labels_length(values->labels, &count) == 0);
     for (uintptr_t i = 0; i < count; ++i) {
-        double start, end; char name[80]; assert(fscanf(labels, "%lf\t%lf\t%79s", &start, &end, name) == 3);
-        ShiroRsLabelInfo info = {0}; ShiroRsBytes *actual_name = NULL, *reference = text(name);
+        _Alignas(8) double start, end; char name[80]; assert(fscanf(labels, "%lf\t%lf\t%79s", &start, &end, name) == 3);
+        _Alignas(8) ShiroRsLabelInfo info = {0}; ShiroRsBytes *actual_name = NULL, *reference = text(name);
         assert(shiro_rs_labels_get_info(values->labels, i, &info) == 0);
         assert(fabs(info.start - start) < 1e-14 && fabs(info.end - end) < 1e-14);
         assert(shiro_rs_labels_get_name(values->labels, i, &actual_name) == 0); equal_bytes(actual_name, reference);
@@ -257,7 +257,7 @@ static void equal_wave(ShiroRsSegmentedWave *a, ShiroRsSegmentedWave *b) {
     assert(shiro_rs_audio_get_samples(x, &u) == 0 && shiro_rs_audio_get_samples(y, &v) == 0); equal_arrays(u, v);
     assert(shiro_rs_audio_release(&x) == 0 && shiro_rs_audio_release(&y) == 0);
     assert(shiro_rs_array_f32_release(&u) == 0 && shiro_rs_array_f32_release(&v) == 0);
-    ShiroRsFeatures *f = NULL, *g = NULL; ShiroRsFeatureInfo p = {0}, q = {0};
+    ShiroRsFeatures *f = NULL, *g = NULL; _Alignas(8) ShiroRsFeatureInfo p = {0}, q = {0};
     assert(shiro_rs_segmented_wave_get_features(a, &f) == 0 && shiro_rs_segmented_wave_get_features(b, &g) == 0);
     assert(shiro_rs_features_get_info(f, &p) == 0 && shiro_rs_features_get_info(g, &q) == 0);
     assert(p.frames == q.frames && p.columns == q.columns);
@@ -277,7 +277,7 @@ static void original_wave(ShiroRsAudio *audio, ShiroRsFeatures *features) {
     ShiroRsBytes *wire = fixture("utterances-c-audio.bin"); unsigned char *reference = copy_bytes(wire, &m);
     assert(m == n * sizeof(float) && memcmp(actual, reference, m) == 0);
     free(actual); free(reference); assert(shiro_rs_array_f32_release(&values) == 0 && shiro_rs_bytes_release(&wire) == 0);
-    ShiroRsFeatureInfo info = {0}; assert(shiro_rs_features_get_info(features, &info) == 0 && info.frames == 40 && info.columns == 13);
+    _Alignas(8) ShiroRsFeatureInfo info = {0}; assert(shiro_rs_features_get_info(features, &info) == 0 && info.frames == 40 && info.columns == 13);
     assert(shiro_rs_features_get_values(features, &values) == 0); actual = copy_array(values, &n);
     wire = fixture("utterances-c-features.bin"); reference = copy_bytes(wire, &m); assert(m == n * sizeof(float));
     for (uintptr_t i = 0; i < n; ++i) {
@@ -300,8 +300,8 @@ static void arbitrary_results(void) {
     const char *document_text = "{\"file_list\":\"shadow\",\"nested\":[null,7]}";
     ShiroRsBytes *wire = text(map_text); ShiroRsPhoneMap *map = NULL;
     assert(shiro_rs_phone_map_read_json(wire, &map) == 0 && shiro_rs_bytes_release(&wire) == 0);
-    ShiroRsStreamDefinition stream = {UINTPTR_MAX, 0, UINTPTR_MAX, 0}; memcpy(&stream.weight, &weight_bits, sizeof(float));
-    ShiroRsDurationConstraint constraint = {UINTPTR_MAX, 1, INT32_MIN, 1, 0}; ShiroRsModelDefinition *definition = NULL;
+    _Alignas(8) ShiroRsStreamDefinition stream = {UINTPTR_MAX, 0, UINTPTR_MAX, 0}; memcpy(&stream.weight, &weight_bits, sizeof(float));
+    _Alignas(8) ShiroRsDurationConstraint constraint = {UINTPTR_MAX, 1, INT32_MIN, 1, 0}; ShiroRsModelDefinition *definition = NULL;
     assert(shiro_rs_definition_create(UINTPTR_MAX, &stream, 1, &constraint, 1, &definition) == 0);
     const char raw_name[] = "voice\0.param";
     ShiroRsBytes *name = owned(raw_name, sizeof(raw_name) - 1), *empty_name = owned(NULL, 0);
@@ -310,7 +310,7 @@ static void arbitrary_results(void) {
     ShiroRsBytes *json_fields[3]; for (size_t i = 0; i < 3; ++i) json_fields[i] = text(state_fields[i]);
     uintptr_t integers[] = {0, UINTPTR_MAX}; ShiroRsArrayUsize *outputs = NULL;
     assert(shiro_rs_array_usize_create(integers, 2, &outputs) == 0);
-    ShiroRsStateInput state = {0, 1, UINTPTR_MAX, outputs, json_fields[0], json_fields[1], json_fields[2]};
+    _Alignas(8) ShiroRsStateInput state = {0, 1, UINTPTR_MAX, outputs, json_fields[0], json_fields[1], json_fields[2]};
     memcpy(&state.time, &time_bits, sizeof(double)); ShiroRsStates *states = NULL;
     assert(shiro_rs_states_create(&state, 1, &states) == 0 && shiro_rs_array_usize_release(&outputs) == 0);
     for (size_t i = 0; i < 3; ++i) assert(shiro_rs_bytes_release(&json_fields[i]) == 0);
@@ -323,18 +323,18 @@ static void arbitrary_results(void) {
     float row_values[4]; memcpy(row_values, row_bits, sizeof(row_values));
     ShiroRsArrayF32 *row = NULL, *empty_row = NULL;
     assert(shiro_rs_array_f32_create(row_values, 4, &row) == 0 && shiro_rs_array_f32_create(NULL, 0, &empty_row) == 0);
-    ShiroRsIterationInfo iteration = {UINTPTR_MAX, 0, 0}; const uint32_t mean_bits = UINT32_C(0xff800000);
+    _Alignas(8) ShiroRsIterationInfo iteration = {UINTPTR_MAX, 0, 0}; const uint32_t mean_bits = UINT32_C(0xff800000);
     memcpy(&iteration.temperature, &weight_bits, sizeof(float)); memcpy(&iteration.mean_log_likelihood, &mean_bits, sizeof(float));
     const ShiroRsArrayF32 *rows[] = {row, empty_row, row}; ShiroRsIterationReport *report = NULL;
     assert(shiro_rs_iteration_report_create(&iteration, rows, 3, &report) == 0);
     const ShiroRsIterationReport *reports[] = {report, report}; ShiroRsIterationReports *collection = NULL;
     assert(shiro_rs_iteration_reports_create(reports, 2, &collection) == 0);
     assert(shiro_rs_iteration_report_release(&report) == 0 && shiro_rs_array_f32_release(&row) == 0 && shiro_rs_array_f32_release(&empty_row) == 0);
-    ShiroRsLabelInput label = {0, 0, name}; memcpy(&label.start, &time_bits, sizeof(double)); memcpy(&label.end, &end_bits, sizeof(double));
+    _Alignas(8) ShiroRsLabelInput label = {0, 0, name}; memcpy(&label.start, &time_bits, sizeof(double)); memcpy(&label.end, &end_bits, sizeof(double));
     ShiroRsLabels *labels = NULL; assert(shiro_rs_labels_create(&label, 1, &labels) == 0 && shiro_rs_bytes_release(&name) == 0);
     ShiroRsModel *model = read_model("utterances-c-trained.hsmm"); ShiroRsUtterances *owners[4] = {0};
     for (size_t mask = 0; mask < 4; ++mask) {
-        ShiroRsUtterancesInput input = {map, definition, phones, document, mask & 1 ? model : NULL, mask & 2 ? model : NULL,
+        _Alignas(8) ShiroRsUtterancesInput input = {map, definition, phones, document, mask & 1 ? model : NULL, mask & 2 ? model : NULL,
             model, collection, document, labels}; ShiroRsUtterances *out = NULL;
         assert(shiro_rs_utterances_create(&input, &out) == 0 && shiro_rs_utterances_clone(out, &owners[mask]) == 0);
         assert(shiro_rs_utterances_release(&out) == 0);
@@ -352,7 +352,7 @@ static void arbitrary_results(void) {
     assert(shiro_rs_segmented_wave_release(&out) == 0);
     assert(shiro_rs_segmented_wave_get_audio(cloned, &audio) == 0 && shiro_rs_segmented_wave_get_features(cloned, &features) == 0);
     ShiroRsUtterances *result = NULL; assert(shiro_rs_segmented_wave_get_utterances(cloned, &result) == 0 && shiro_rs_segmented_wave_release(&cloned) == 0);
-    uint32_t rate = 99; ShiroRsFeatureInfo shape = {0};
+    uint32_t rate = 99; _Alignas(8) ShiroRsFeatureInfo shape = {0};
     assert(shiro_rs_audio_sample_rate(audio, &rate) == 0 && rate == 0 && shiro_rs_features_get_info(features, &shape) == 0 && shape.frames == UINTPTR_MAX && shape.columns == 0);
     assert(shiro_rs_audio_get_samples(audio, &row) == 0); uintptr_t count = 0; float *data = copy_array(row, &count);
     assert(count == 4 && memcmp(data, row_bits, sizeof(row_bits)) == 0); free(data); assert(shiro_rs_array_f32_release(&row) == 0);
@@ -363,7 +363,7 @@ static void arbitrary_results(void) {
     for (size_t mask = 0; mask < 4; ++mask) {
         Fields values = fields(owners[mask]);
         assert(shiro_rs_phone_map_write_json(values.phonemap, &wire) == 0); expect_text(wire, map_text); assert(shiro_rs_bytes_release(&wire) == 0);
-        ShiroRsDefinitionInfo info = {0}; ShiroRsStreamDefinition actual_stream = {0}; ShiroRsDurationConstraint actual_constraint = {0};
+        _Alignas(8) ShiroRsDefinitionInfo info = {0}; _Alignas(8) ShiroRsStreamDefinition actual_stream = {0}; _Alignas(8) ShiroRsDurationConstraint actual_constraint = {0};
         assert(shiro_rs_definition_get_info(values.definition, &info) == 0 && info.duration_states == UINTPTR_MAX && info.streams == 1 && info.duration_constraints == 1);
         assert(shiro_rs_definition_get_stream(values.definition, 0, &actual_stream) == 0);
         assert(actual_stream.states == UINTPTR_MAX && actual_stream.dimensions == 0 && actual_stream.mixtures == UINTPTR_MAX && float_bits(actual_stream.weight) == weight_bits);
@@ -384,7 +384,7 @@ static void arbitrary_results(void) {
                 equal_bytes(wire, expected); assert(shiro_rs_bytes_release(&wire) == 0 && shiro_rs_bytes_release(&expected) == 0);
                 assert(shiro_rs_segmented_file_get_attributes(file, &wire) == 0); expect_text(wire, file_text); assert(shiro_rs_bytes_release(&wire) == 0);
                 assert(shiro_rs_segmented_file_get_states(file, &states) == 0 && shiro_rs_segmented_file_release(&file) == 0);
-                assert(shiro_rs_states_length(states, &count) == 0 && count == 1); ShiroRsStateInfo state_info = {0};
+                assert(shiro_rs_states_length(states, &count) == 0 && count == 1); _Alignas(8) ShiroRsStateInfo state_info = {0};
                 assert(shiro_rs_states_get_info(states, 0, &state_info) == 0);
                 assert(double_bits(state_info.time) == time_bits && state_info.has_duration == 1 && state_info.duration == UINTPTR_MAX && state_info.has_outputs == 1 && state_info.has_jumps == 1);
                 assert(shiro_rs_states_get_outputs(states, 0, &outputs) == 0); uintptr_t actual[2] = {0};
@@ -405,7 +405,7 @@ static void arbitrary_results(void) {
         assert(shiro_rs_iteration_reports_length(values.reports, &count) == 0 && count == 2);
         for (uintptr_t i = 0; i < 2; ++i) {
             assert(shiro_rs_iteration_reports_get(values.reports, i, &report) == 0);
-            ShiroRsIterationInfo actual = {0}; assert(shiro_rs_iteration_report_info(report, &actual) == 0);
+            _Alignas(8) ShiroRsIterationInfo actual = {0}; assert(shiro_rs_iteration_report_info(report, &actual) == 0);
             assert(actual.iteration == UINTPTR_MAX && float_bits(actual.temperature) == weight_bits && float_bits(actual.mean_log_likelihood) == mean_bits);
             assert(shiro_rs_iteration_report_file_count(report, &count) == 0 && count == 3);
             for (uintptr_t j = 0; j < 3; ++j) {
@@ -415,7 +415,7 @@ static void arbitrary_results(void) {
             }
             assert(shiro_rs_iteration_report_release(&report) == 0);
         }
-        assert(shiro_rs_labels_length(values.labels, &count) == 0 && count == 1); ShiroRsLabelInfo label_info = {0};
+        assert(shiro_rs_labels_length(values.labels, &count) == 0 && count == 1); _Alignas(8) ShiroRsLabelInfo label_info = {0};
         assert(shiro_rs_labels_get_info(values.labels, 0, &label_info) == 0 && double_bits(label_info.start) == time_bits && double_bits(label_info.end) == end_bits);
         assert(shiro_rs_labels_get_name(values.labels, 0, &wire) == 0); ShiroRsBytes *expected_name = owned(raw_name, sizeof(raw_name) - 1);
         equal_bytes(wire, expected_name); assert(shiro_rs_bytes_release(&wire) == 0 && shiro_rs_bytes_release(&expected_name) == 0);
@@ -425,28 +425,28 @@ static void arbitrary_results(void) {
 }
 int main(void) {
     arbitrary_results();
-    ShiroRsUtteranceOptions options = {0}; assert(shiro_rs_utterance_options_default(&options) == 0);
+    _Alignas(8) ShiroRsUtteranceOptions options = {0}; assert(shiro_rs_utterance_options_default(&options) == 0);
     assert(options.utterances == 1 && options.hop_seconds == 0.1 && options.minimum_silence_seconds == 0.3);
     assert(options.minimum_voicing_seconds == 0.3 && options.iterations == 15);
     options.utterances = 2; options.iterations = 2;
     ShiroRsFeatures *features = fixture_features(); ShiroRsBytes *filename = text("sample.param");
     for (uint32_t mode = 0; mode < 3; ++mode) {
         ShiroRsModel *model = mode ? read_model(mode == 1 ? "utterances-c-flat.hsmm" : "utterances-c-trained.hsmm") : NULL;
-        ShiroRsModelSource source = {mode, model}; ShiroRsUtterances *out = NULL;
+        _Alignas(8) ShiroRsModelSource source = {mode, model}; ShiroRsUtterances *out = NULL;
         assert(shiro_rs_utterances_split_features(features, filename, &options, &source, &out) == 0);
         assert(shiro_rs_model_release(&model) == 0);
         Fields values = fields(out); original_fields(&values, mode); free_fields(&values);
         uint32_t present = 73; assert(shiro_rs_utterances_has_model(out, 3, &present) == 2 && present == 73);
-        ShiroRsUtterances *retained = out; ShiroRsUtteranceOptions invalid = options; invalid.hop_seconds = 0;
-        ShiroRsModelSource fresh = {0, NULL};
+        ShiroRsUtterances *retained = out; _Alignas(8) ShiroRsUtteranceOptions invalid = options; invalid.hop_seconds = 0;
+        _Alignas(8) ShiroRsModelSource fresh = {0, NULL};
         assert(shiro_rs_utterances_split_features(features, filename, &invalid, &fresh, &retained) == 3 && retained == out);
         roundtrip(out);
     }
-    const ShiroRsUtteranceOptions nondefaults[] = {{2, 0.1, 0.3, 0.3, 0}, {1, 0.125, 0.25, 0.375, 1}};
+    _Alignas(8) const ShiroRsUtteranceOptions nondefaults[] = {{2, 0.1, 0.3, 0.3, 0}, {1, 0.125, 0.25, 0.375, 1}};
     const char extended_name[] = "audio-\xf0\x9f\x8e\xb5\0.param";
     ShiroRsBytes *unicode_name = owned(extended_name, sizeof(extended_name) - 1);
     for (size_t i = 0; i < 2; ++i) {
-        ShiroRsModelSource source = {0, NULL}; ShiroRsUtterances *out = NULL;
+        _Alignas(8) ShiroRsModelSource source = {0, NULL}; ShiroRsUtterances *out = NULL;
         assert(shiro_rs_utterances_split_features(features, unicode_name, &nondefaults[i], &source, &out) == 0);
         Fields values = fields(out); uintptr_t count = 0;
         assert(shiro_rs_strings_length(values.phones, &count) == 0 && count == nondefaults[i].utterances * 2 + 1);
@@ -465,8 +465,8 @@ int main(void) {
     uint32_t rate = 0; ShiroRsArrayF32 *samples = decoded_wave(&rate);
     for (uint32_t kind = 0; kind < 3; ++kind) {
         Draws draws = {NULL, 0, UINTPTR_MAX}; assert(shiro_rs_dither_linux_gnu(&draws.rng) == 0);
-        ShiroRsWaveSplitInput input = {{rate, 16, 1, 0}, samples, filename, 13, kind};
-        ShiroRsModelSource source = {0, NULL}; ShiroRsSegmentedWave *out = NULL, *rebuilt = NULL, *cloned = NULL;
+        _Alignas(8) ShiroRsWaveSplitInput input = {{rate, 16, 1, 0}, samples, filename, 13, kind};
+        _Alignas(8) ShiroRsModelSource source = {0, NULL}; ShiroRsSegmentedWave *out = NULL, *rebuilt = NULL, *cloned = NULL;
         assert(shiro_rs_utterances_split_wave(&input, &options, &source, uniform, &draws, &out) == 0 && draws.count > 0);
         assert(shiro_rs_dither_release(&draws.rng) == 0);
         ShiroRsAudio *audio = NULL; ShiroRsFeatures *extracted = NULL; ShiroRsUtterances *result = NULL;
@@ -490,8 +490,8 @@ int main(void) {
         ShiroRsModel *model = read_model(model_name), *expected = read_model(model_name);
         for (uint32_t modified = 0; modified < 2; ++modified) {
             Draws draws = {NULL, 0, UINTPTR_MAX}; assert(shiro_rs_dither_linux_gnu(&draws.rng) == 0);
-            ShiroRsWaveSplitInput input = {{modified ? rate / 2 : rate, modified ? 0 : 16, modified ? UINT16_MAX : 1, modified}, samples, filename, 13, 0};
-            ShiroRsModelSource source = {mode, model}; ShiroRsSegmentedWave *out = NULL;
+            _Alignas(8) ShiroRsWaveSplitInput input = {{modified ? rate / 2 : rate, modified ? 0 : 16, modified ? UINT16_MAX : 1, modified}, samples, filename, 13, 0};
+            _Alignas(8) ShiroRsModelSource source = {mode, model}; ShiroRsSegmentedWave *out = NULL;
             assert(shiro_rs_utterances_split_wave(&input, &nondefaults[0], &source, uniform, &draws, &out) == 0 && draws.count > 0);
             assert(shiro_rs_dither_release(&draws.rng) == 0); equal_models(model, expected);
             ShiroRsUtterances *result = NULL; assert(shiro_rs_segmented_wave_get_utterances(out, &result) == 0);

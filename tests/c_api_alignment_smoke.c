@@ -55,7 +55,7 @@ static char *states_json(ShiroRsStates *states) {
     char *result = copied(bytes); assert(shiro_rs_bytes_release(&bytes) == 0); return result;
 }
 int main(void) {
-    ShiroRsAlignmentOptions defaults;
+    _Alignas(8) ShiroRsAlignmentOptions defaults;
     assert(shiro_rs_alignment_options_default(&defaults) == 0);
     assert(defaults.duration_mode == 0 && defaults.isolated == 0 && defaults.hsmm_temperature == 1);
     assert(defaults.duration_weight == 1 && defaults.state_radius == 5 && defaults.duration_extra == 30);
@@ -78,7 +78,7 @@ int main(void) {
         char path[160]; snprintf(path, sizeof(path), "tests/fixtures/%s", source);
         data = load(path, &size); char *input = states_array(data); free(data);
         ShiroRsStates *states = read_states(input), *aligned = NULL;
-        ShiroRsAlignmentOptions options = defaults;
+        _Alignas(8) ShiroRsAlignmentOptions options = defaults;
         options.duration_mode = (uint32_t)(index % 2); options.isolated = index >= 4 && index != 8;
         if (index == 8) options.duration_mode = 1;
         else options.pruning_slope = 0.8f;
@@ -98,7 +98,7 @@ int main(void) {
         assert(shiro_rs_align_document(model, document_bytes, &options, &output) == 0);
         actual = copied(output); assert(strcmp(actual, expected_document) == 0); free(actual);
         actual = copied(document_bytes); assert(strcmp(actual, document) == 0); free(actual);
-        ShiroRsAlignmentOptions invalid = options; invalid.isolated = 2;
+        _Alignas(8) ShiroRsAlignmentOptions invalid = options; invalid.isolated = 2;
         ShiroRsStates *retained = states;
         assert(shiro_rs_align_states(model, observation, states, &invalid, &retained) == 2 && retained == states);
         ShiroRsBytes *retained_bytes = output;

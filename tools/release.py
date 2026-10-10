@@ -92,6 +92,9 @@ def check(registry: bool = False, frozen: bool = False) -> None:
     if lock["version"] != current or lock["packages"][""]["name"] != package["name"]:
         raise ValueError("npm lockfile metadata mismatch")
     pyproject = read_toml(PYTHON / "pyproject.toml")
+    python_manifest = read_toml(PYTHON / "Cargo.toml")
+    if python_manifest.get("features", {}).get("cross-windows") != ["pyo3/generate-import-lib"]:
+        raise ValueError("Python bindings must enable import libraries for Windows cross builds")
     if pyproject["project"]["name"] != PROJECT or pyproject["project"]["requires-python"] != ">=3.11":
         raise ValueError("Python distribution metadata mismatch")
     wasm = json.loads((ROOT / "crates" / f"{PROJECT}-wasm/package.json").read_text())

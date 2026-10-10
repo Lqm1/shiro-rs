@@ -61,12 +61,12 @@ static void likelihood_csv_equal(ShiroRsTrainingResult *result, const char *expe
     const size_t chunks[] = {1, 13, 16384};
     for (size_t i = 0; i < 3; ++i) {
         CsvChannel channel = {0}; channel.chunk = chunks[i]; channel.fail = SIZE_MAX;
-        ShiroRsWriteStream stream = {&channel, csv_write, csv_flush};
+        _Alignas(8) ShiroRsWriteStream stream = {&channel, csv_write, csv_flush};
         assert(shiro_rs_training_result_write_likelihood_csv_stream(result, &stream) == 0);
         assert(channel.length == count && memcmp(channel.bytes, text, count) == 0 && channel.flushes == 0); free(channel.bytes);
     }
     CsvChannel channel = {0}; channel.chunk = 1; channel.fail = 7;
-    ShiroRsWriteStream stream = {&channel, csv_write, csv_flush};
+    _Alignas(8) ShiroRsWriteStream stream = {&channel, csv_write, csv_flush};
     assert(shiro_rs_training_result_write_likelihood_csv_stream(result, &stream) == 3);
     assert(channel.length == 7 && memcmp(channel.bytes, text, 7) == 0 && channel.flushes == 0); free(channel.bytes);
     memset(&channel, 0, sizeof(channel)); channel.fail = SIZE_MAX;
@@ -103,7 +103,7 @@ static void progress(void *context, const ShiroRsIterationReport *report) {
     assert(shiro_rs_iteration_report_clone(report, &events->reports[events->count]) == 0); ++events->count;
 }
 static void reports_equal(const ShiroRsIterationReport *a, const ShiroRsIterationReport *b) {
-    ShiroRsIterationInfo x, y;
+    _Alignas(8) ShiroRsIterationInfo x, y;
     assert(shiro_rs_iteration_report_info(a, &x) == 0 && shiro_rs_iteration_report_info(b, &y) == 0);
     assert(x.iteration == y.iteration && x.temperature == y.temperature && x.mean_log_likelihood == y.mean_log_likelihood);
     size_t count = 0, other = 0;
@@ -127,7 +127,7 @@ static void arbitrary_fields(ShiroRsModel *model) {
     assert(shiro_rs_array_f32_create(values, 5, &row) == 0);
     assert(shiro_rs_array_f32_create(NULL, 0, &empty) == 0);
     const ShiroRsArrayF32 *rows[] = {row, empty, row};
-    ShiroRsIterationInfo info = {SIZE_MAX, -0.0f, INFINITY}, replacement = {7, 2.0f, 3.0f};
+    _Alignas(8) ShiroRsIterationInfo info = {SIZE_MAX, -0.0f, INFINITY}, replacement = {7, 2.0f, 3.0f};
     ShiroRsIterationReport *report = NULL;
     assert(shiro_rs_iteration_report_create(&info, rows, 3, &report) == 0);
     const ShiroRsIterationReport *reports[] = {report, report}, *invalid[] = {report, NULL};
@@ -141,7 +141,7 @@ static void arbitrary_fields(ShiroRsModel *model) {
     assert(shiro_rs_training_result_replace(result, model, NULL, SIZE_MAX) == 2);
     const ShiroRsArrayF32 *invalid_rows[] = {row, NULL};
     assert(shiro_rs_iteration_report_replace(report, &replacement, invalid_rows, 2) == 1);
-    ShiroRsIterationInfo observed;
+    _Alignas(8) ShiroRsIterationInfo observed;
     assert(shiro_rs_iteration_report_info(report, &observed) == 0 && observed.iteration == SIZE_MAX);
     assert(shiro_rs_iteration_report_replace(report, &replacement, NULL, SIZE_MAX) == 2);
     assert(shiro_rs_iteration_report_replace(report, &replacement, NULL, 0) == 0);
@@ -211,7 +211,7 @@ int main(void) {
         {"isolated-hmm", "isolated-hmm", 2, 1, 0, 0, 1}, {"isolated-daem", "isolated-daem", 3, 0, 1, 0, 1},
         {"isolated-mean", "isolated-mean", 2, 0, 0, 1, 1},
     };
-    ShiroRsTrainingOptions config; assert(shiro_rs_training_options_default(&config) == 0);
+    _Alignas(8) ShiroRsTrainingOptions config; assert(shiro_rs_training_options_default(&config) == 0);
     assert(config.iterations == 1 && config.duration_mode == 0 && config.hsmm_temperature == 1 && config.duration_weight == 1);
     assert(config.state_radius == 5 && config.duration_extra == 30 && config.duration_extra_factor == 1);
     assert(config.geometric_temperature == 1 && config.pruning_slope == 0.3f && config.termination_threshold == 1);
@@ -238,7 +238,7 @@ int main(void) {
         char *cursor = source;
         for (size_t i = 0; i < count; ++i) {
             ShiroRsIterationReport *report = NULL; assert(shiro_rs_training_result_get_report(copy, i, &report) == 0);
-            reports_equal(report, events.reports[i]); ShiroRsIterationInfo info;
+            reports_equal(report, events.reports[i]); _Alignas(8) ShiroRsIterationInfo info;
             assert(shiro_rs_iteration_report_info(report, &info) == 0 && info.iteration == i && isfinite(info.mean_log_likelihood));
             float temperature = test.anneal ? (float)sqrt((double)((float)(i+1)/(float)test.iterations)) : 1.0f;
             assert(info.temperature == temperature);
@@ -254,7 +254,7 @@ int main(void) {
             assert(shiro_rs_array_f32_release(&row) == 0 && shiro_rs_iteration_report_release(&report) == 0);
         }
         assert(*cursor == 0); free(source); assert(shiro_rs_training_result_release(&copy) == 0);
-        for (size_t i = 0; i < events.count; ++i) { ShiroRsIterationInfo info; assert(shiro_rs_iteration_report_info(events.reports[i], &info) == 0); assert(shiro_rs_iteration_report_release(&events.reports[i]) == 0); }
+        for (size_t i = 0; i < events.count; ++i) { _Alignas(8) ShiroRsIterationInfo info; assert(shiro_rs_iteration_report_info(events.reports[i], &info) == 0); assert(shiro_rs_iteration_report_release(&events.reports[i]) == 0); }
         assert(shiro_rs_model_release(&result) == 0 && shiro_rs_training_files_release(&files) == 0);
     }
     ShiroRsTrainingFiles *files = NULL; assert(shiro_rs_training_files_read_document(model, bytes, 12, 1, &files) == 0);
@@ -275,7 +275,7 @@ int main(void) {
     config.iterations = 0; ShiroRsTrainingResult *trained = NULL;
     assert(shiro_rs_train(model, files, &config, &trained) == 0);
     CsvChannel empty_csv = {0}; empty_csv.chunk = 1; empty_csv.fail = SIZE_MAX;
-    ShiroRsWriteStream empty_stream = {&empty_csv, csv_write, csv_flush};
+    _Alignas(8) ShiroRsWriteStream empty_stream = {&empty_csv, csv_write, csv_flush};
     assert(shiro_rs_training_result_write_likelihood_csv_stream(trained, &empty_stream) == 0 && empty_csv.calls == 0 && empty_csv.flushes == 0 && empty_csv.length == 0);
     ShiroRsTrainingResult *retained = trained; config.duration_mode = 2;
     assert(shiro_rs_train(model, files, &config, &retained) == 2 && retained == trained);

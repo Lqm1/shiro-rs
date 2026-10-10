@@ -24,7 +24,7 @@ static float *copied(ShiroRsArrayF32 *owner, size_t *count) {
     assert(shiro_rs_array_f32_copy(owner, 0, values, *count) == 0); return values;
 }
 int main(void) {
-    ShiroRsFeatureOptions options;
+    _Alignas(8) ShiroRsFeatureOptions options;
     assert(shiro_rs_feature_options_default(&options) == 0);
     assert(options.kind == 0 && options.order == 12 && options.channels == 36 && options.frame_length == 1024);
     assert(options.hop == 256 && options.sample_rate_hz == 32000 && options.minimum_bandwidth_hz == 400 && options.warp == 1);
@@ -45,7 +45,7 @@ int main(void) {
         ShiroRsFeatures *result = NULL, *clone = NULL;
         assert(shiro_rs_features_extract(signal, &options, &result) == 0 && shiro_rs_array_f32_release(&signal) == 0);
         assert(shiro_rs_features_clone(result, &clone) == 0 && shiro_rs_features_release(&result) == 0);
-        ShiroRsFeatureInfo info; ShiroRsArrayF32 *values = NULL;
+        _Alignas(8) ShiroRsFeatureInfo info; ShiroRsArrayF32 *values = NULL;
         assert(shiro_rs_features_get_info(clone, &info) == 0 && info.frames == frames && info.columns == columns);
         assert(shiro_rs_features_get_values(clone, &values) == 0 && shiro_rs_features_release(&clone) == 0);
         float *actual = copied(values, &count); assert(count == frames * columns);
@@ -64,7 +64,7 @@ int main(void) {
     ShiroRsFeatures *result = NULL, *clone = NULL;
     assert(shiro_rs_features_create(UINTPTR_MAX, UINTPTR_MAX - 1, signal, &result) == 0);
     assert(shiro_rs_features_clone(result, &clone) == 0 && shiro_rs_features_release(&result) == 0 && shiro_rs_array_f32_release(&signal) == 0);
-    ShiroRsFeatureInfo info;
+    _Alignas(8) ShiroRsFeatureInfo info;
     assert(shiro_rs_features_get_info(clone, &info) == 0 && info.frames == UINTPTR_MAX && info.columns == UINTPTR_MAX - 1);
     assert(shiro_rs_features_get_values(clone, &values) == 0);
     ShiroRsFeatures *retained = clone; signal = array(NULL, 0);

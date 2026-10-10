@@ -43,7 +43,7 @@ static void equal_json(ShiroRsBytes *a, ShiroRsBytes *b) {
     int quoted = 0, escaped = 0;
     while (*x && *y) {
         if (!quoted && (*x == '-' || (*x >= '0' && *x <= '9'))) {
-            char *end_x, *end_y; double number_x = strtod(x, &end_x), number_y = strtod(y, &end_y);
+            char *end_x, *end_y; _Alignas(8) double number_x = strtod(x, &end_x), number_y = strtod(y, &end_y);
             assert(end_x != x && end_y != y && fabs(number_x - number_y) <= 1e-14);
             x = end_x; y = end_y; continue;
         }
@@ -70,7 +70,7 @@ int main(void) {
     assert(fseek(file, 0, SEEK_SET) == 0); char *text = malloc((size_t)count + 1); assert(text);
     assert(fread(text, 1, (size_t)count, file) == (size_t)count && fclose(file) == 0); text[count] = 0;
     ShiroRsBytes *input = owned(text), *names = owned("[\"bb\",\"aa\",\"bb\",\"cc\",\"aa\"]"); free(text);
-    ShiroRsPhoneOptions config;
+    _Alignas(8) ShiroRsPhoneOptions config;
     assert(shiro_rs_phone_options_default(&config) == 0 && config.states_per_phone == 3 && config.streams == 3 && config.weak_skips == 0);
     for (size_t i = 0; i < sizeof(phone_cases)/sizeof(phone_cases[0]); ++i) {
         PhoneCase test = phone_cases[i]; config.states_per_phone = test.count; config.streams = 2; config.weak_skips = 1;

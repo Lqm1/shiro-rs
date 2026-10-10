@@ -87,7 +87,7 @@ int main(void) {
     const ShiroRsBytes *pointers[] = {source, empty, source}; ShiroRsStrings *clone = NULL;
     assert(shiro_rs_strings_create(pointers, 3, &values) == 0 && shiro_rs_strings_clone(values, &clone) == 0);
     assert(shiro_rs_bytes_release(&source) == 0 && shiro_rs_bytes_release(&empty) == 0);
-    ShiroRsIndexEntryInput input[] = {{directory, values}, {directory, values}};
+    _Alignas(8) ShiroRsIndexEntryInput input[] = {{directory, values}, {directory, values}};
     assert(shiro_rs_index_entries_create(input, 2, &entries) == 0);
     assert(shiro_rs_path_release(&directory) == 0 && shiro_rs_strings_release(&values) == 0);
     ShiroRsIndexEntries *copied = NULL; assert(shiro_rs_index_entries_clone(entries, &copied) == 0 && shiro_rs_index_entries_release(&entries) == 0);
@@ -111,7 +111,7 @@ int main(void) {
     const ShiroRsBytes *null_owner[] = {NULL}; assert(shiro_rs_strings_create(null_owner, 1, &retained) == 1 && retained == values);
     assert(shiro_rs_strings_get(values, SIZE_MAX, &source) == 2); equal_bytes(source, "valid", 5);
     ShiroRsIndexEntries *retained_entries = entries;
-    ShiroRsIndexEntryInput bad_entries[] = {{directory, values}, {NULL, values}};
+    _Alignas(8) ShiroRsIndexEntryInput bad_entries[] = {{directory, values}, {NULL, values}};
     assert(shiro_rs_index_entries_create(bad_entries, 2, &retained_entries) == 1 && retained_entries == entries);
     assert(shiro_rs_index_entries_create(NULL, SIZE_MAX, &retained_entries) == 2 && retained_entries == entries);
     assert(shiro_rs_index_entries_release(&entries) == 0 && shiro_rs_index_entries_create(NULL, 0, &entries) == 0);

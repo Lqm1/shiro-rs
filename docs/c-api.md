@@ -1,5 +1,22 @@
 # C ABI
 
+## Caller storage alignment
+
+Borrowed buffers and output descriptors must meet the Rust type's alignment.
+On 32-bit MSVC, ordinary automatic `double` variables can occupy a four-byte
+aligned stack address even when their type reports eight-byte alignment. Use
+C11 `_Alignas(8)` for floating-point buffers and ABI descriptors passed by
+pointer; the smoke consumers demonstrate this explicitly. Invalid alignment is
+rejected with status one before any typed dereference.
+
+```c
+_Alignas(8) double values[4] = {0};
+_Alignas(8) double result = 0;
+```
+
+See [Microsoft's x86 stack alignment explanation](https://learn.microsoft.com/en-us/cpp/build/x64-software-conventions)
+and [Rust pointer write requirements](https://doc.rust-lang.org/std/ptr/fn.write.html).
+
 The current adapter is the separate `shiro-rs-capi` workspace package.
 See [workspace layout](workspace-layout.md) for current build commands and artifact names.
 Public C symbols, headers, JavaScript API names and numerical behavior are retained.

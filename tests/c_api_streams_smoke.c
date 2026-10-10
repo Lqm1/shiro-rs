@@ -78,10 +78,10 @@ int main(void) {
     const unsigned char bits[] = {0,0,0,0,0,0,0,0x80,1,0,0,0,0x45,0x23,0xc1,0x7f,0,0,0x80,0x7f,0,0,0x80,0xff};
     const size_t chunks[] = {1, 7, 16384};
     for (size_t i = 0; i < 3; ++i) {
-        Channel source = channel(bits, sizeof(bits), chunks[i]); ShiroRsReadStream reader = {&source, read_bytes}; ShiroRsArrayF32 *values = NULL;
+        Channel source = channel(bits, sizeof(bits), chunks[i]); _Alignas(8) ShiroRsReadStream reader = {&source, read_bytes}; ShiroRsArrayF32 *values = NULL;
         assert(shiro_rs_rawfloat_read_stream(&reader, 6, &values) == 0 && source.position == sizeof(bits));
         ShiroRsBytes *snapshot = NULL; assert(shiro_rs_rawfloat_write_bytes(values, &snapshot) == 0); equal_bytes(snapshot, bits, sizeof(bits)); assert(shiro_rs_bytes_release(&snapshot) == 0);
-        Channel target = channel(NULL, 0, chunks[i]); ShiroRsWriteStream writer = {&target, write_bytes, flush};
+        Channel target = channel(NULL, 0, chunks[i]); _Alignas(8) ShiroRsWriteStream writer = {&target, write_bytes, flush};
         assert(shiro_rs_rawfloat_write_stream(values, &writer) == 0 && target.output_length == sizeof(bits) && memcmp(target.output, bits, sizeof(bits)) == 0 && target.flushes == 0);
         assert(shiro_rs_write_stream_flush(&writer) == 0 && target.flushes == 1); free(target.output);
         for (size_t error = 0; error < 3; ++error) {
@@ -91,9 +91,9 @@ int main(void) {
         target = channel(NULL, 0, 1); target.fail_at = 5;
         assert(shiro_rs_rawfloat_write_stream(values, &writer) == 3 && target.output_length == 5 && memcmp(target.output, bits, 5) == 0 && target.flushes == 0); free(target.output);
         target = channel(NULL, 0, 0); assert(shiro_rs_rawfloat_write_stream(values, &writer) == 3 && target.output_length == 0); free(target.output);
-        ShiroRsReadStream invalid_reader = {NULL, excessive_read}; ShiroRsArrayF32 *retained = values;
+        _Alignas(8) ShiroRsReadStream invalid_reader = {NULL, excessive_read}; ShiroRsArrayF32 *retained = values;
         assert(shiro_rs_rawfloat_read_stream(&invalid_reader, 6, &retained) == 3 && retained == values);
-        ShiroRsWriteStream invalid_writer = {NULL, excessive_write, NULL}; assert(shiro_rs_rawfloat_write_stream(values, &invalid_writer) == 3);
+        _Alignas(8) ShiroRsWriteStream invalid_writer = {NULL, excessive_write, NULL}; assert(shiro_rs_rawfloat_write_stream(values, &invalid_writer) == 3);
         invalid_reader.read = NULL; assert(shiro_rs_rawfloat_read_stream(&invalid_reader, 6, &retained) == 3 && retained == values);
         assert(shiro_rs_rawfloat_read_stream(NULL, 6, &retained) == 1 && shiro_rs_write_stream_flush(NULL) == 1);
         source = channel(bits, sizeof(bits), 1); assert(shiro_rs_rawfloat_read_stream(&reader, 6, NULL) == 1 && source.calls == 0);
@@ -107,7 +107,7 @@ int main(void) {
     size_t wire_length; assert(shiro_rs_bytes_length(expected_wire, &wire_length) == 0); unsigned char *wire = malloc(wire_length + 1); assert(wire);
     assert(shiro_rs_bytes_copy(expected_wire, 0, wire, wire_length) == 0);
     for (size_t i = 0; i < 3; ++i) {
-        Channel source = channel(raw, count, chunks[i]); ShiroRsReadStream reader = {&source, read_bytes}; ShiroRsObservation *observation = NULL; ShiroRsBytes *snapshot = NULL;
+        Channel source = channel(raw, count, chunks[i]); _Alignas(8) ShiroRsReadStream reader = {&source, read_bytes}; ShiroRsObservation *observation = NULL; ShiroRsBytes *snapshot = NULL;
         assert(shiro_rs_observation_read_stream(&reader, dimensions, 2, 1000, &observation) == 0 && source.position == count);
         assert(shiro_rs_observation_write_bytes(observation, &snapshot) == 0); equal_bytes(snapshot, wire, wire_length);
         assert(shiro_rs_bytes_release(&snapshot) == 0 && shiro_rs_observation_release(&observation) == 0);
@@ -120,7 +120,7 @@ int main(void) {
     const char *phones0[] = {"aa", "bb"}, *phones1[] = {"cc", "", "dd"}; const char **phones[] = {phones0, phones1, NULL}; const size_t phone_counts[] = {2, 3, 0};
     uint32_t kind = shiro_rs_path_native_encoding(); assert(kind == 1 || kind == 2);
     for (size_t i = 0; i < 3; ++i) {
-        Channel source = channel(raw, count, chunks[i]); ShiroRsBufferedReadStream reader = {&source, fill, consume}; ShiroRsIndexEntries *entries = NULL;
+        Channel source = channel(raw, count, chunks[i]); _Alignas(8) ShiroRsBufferedReadStream reader = {&source, fill, consume}; ShiroRsIndexEntries *entries = NULL;
         assert(shiro_rs_index_read_stream(&reader, directory, padding, padding, &entries) == 0 && source.position == count && source.consumed == count);
         size_t length; assert(shiro_rs_index_entries_length(entries, &length) == 0 && length == 3);
         for (size_t j = 0; j < 3; ++j) {
@@ -141,7 +141,7 @@ int main(void) {
         source = channel(raw, count, 1); source.fail_at = 9; ShiroRsIndexEntries *retained = entries;
         assert(shiro_rs_index_read_stream(&reader, directory, padding, padding, &retained) == 3 && retained == entries && source.position == 9);
         for (size_t j = 0; j < 2; ++j) {
-            ShiroRsBufferedReadStream invalid = {j ? &source : NULL, invalid_fill, unexpected_consume};
+            _Alignas(8) ShiroRsBufferedReadStream invalid = {j ? &source : NULL, invalid_fill, unexpected_consume};
             assert(shiro_rs_index_read_stream(&invalid, directory, padding, padding, &retained) == 3 && retained == entries);
         }
         source = channel(raw, count, 1); assert(shiro_rs_index_read_stream(&reader, directory, padding, padding, NULL) == 1 && source.calls == 0);
@@ -157,16 +157,16 @@ int main(void) {
     assert(shiro_rs_untie(model, input, &untied) == 0 && shiro_rs_bytes_release(&input) == 0);
     size_t summary_length; unsigned char *summary = load("tests/fixtures/untie-c-summary.txt", &summary_length);
     for (size_t i = 0; i < 3; ++i) {
-        Channel target = channel(NULL, 0, chunks[i]); ShiroRsWriteStream writer = {&target, write_bytes, flush};
+        Channel target = channel(NULL, 0, chunks[i]); _Alignas(8) ShiroRsWriteStream writer = {&target, write_bytes, flush};
         assert(shiro_rs_labels_write_stream(labels, &writer) == 0 && target.output_length == wire_length && memcmp(target.output, wire, wire_length) == 0 && target.flushes == 0); free(target.output);
         target = channel(NULL, 0, chunks[i]);
         assert(shiro_rs_untied_model_write_summary_stream(untied, &writer) == 0 && target.output_length == summary_length && memcmp(target.output, summary, summary_length) == 0 && target.flushes == 0); free(target.output);
     }
-    Channel target = channel(NULL, 0, 1); target.fail_at = 7; ShiroRsWriteStream writer = {&target, write_bytes, flush};
+    Channel target = channel(NULL, 0, 1); target.fail_at = 7; _Alignas(8) ShiroRsWriteStream writer = {&target, write_bytes, flush};
     assert(shiro_rs_labels_write_stream(labels, &writer) == 3 && target.output_length == 7 && memcmp(target.output, wire, 7) == 0); free(target.output);
     target = channel(NULL, 0, 1); target.fail_at = 7;
     assert(shiro_rs_untied_model_write_summary_stream(untied, &writer) == 3 && target.output_length == 7 && memcmp(target.output, summary, 7) == 0); free(target.output);
-    input = fixture("tests/fixtures/align-c-isolated.json"); ShiroRsAssignment assignments[] = {{0,0,0},{SIZE_MAX,SIZE_MAX,SIZE_MAX}}; ShiroRsUntiedModel *invalid = NULL;
+    input = fixture("tests/fixtures/align-c-isolated.json"); _Alignas(8) ShiroRsAssignment assignments[] = {{0,0,0},{SIZE_MAX,SIZE_MAX,SIZE_MAX}}; ShiroRsUntiedModel *invalid = NULL;
     assert(shiro_rs_untied_model_create(model, input, assignments, 2, &invalid) == 0 && shiro_rs_bytes_release(&input) == 0);
     target = channel(NULL, 0, 1); assert(shiro_rs_untied_model_write_summary_stream(invalid, &writer) == 3 && target.calls == 0 && target.output_length == 0);
     assert(shiro_rs_labels_write_stream(NULL, &writer) == 1 && shiro_rs_untied_model_write_summary_stream(untied, NULL) == 1);

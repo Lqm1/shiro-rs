@@ -33,7 +33,7 @@ static void rows_equal(ShiroRsLabels *a, ShiroRsLabels *b, double tolerance) {
     size_t count = 0, other = 0;
     assert(shiro_rs_labels_length(a, &count) == 0 && shiro_rs_labels_length(b, &other) == 0 && count == other);
     for (size_t i = 0; i < count; ++i) {
-        ShiroRsLabelInfo x, y; ShiroRsBytes *left = NULL, *right = NULL;
+        _Alignas(8) ShiroRsLabelInfo x, y; ShiroRsBytes *left = NULL, *right = NULL;
         assert(shiro_rs_labels_get_info(a, i, &x) == 0 && shiro_rs_labels_get_info(b, i, &y) == 0);
         assert(fabs(x.start - y.start) <= tolerance && fabs(x.end - y.end) <= tolerance);
         assert(shiro_rs_labels_get_name(a, i, &left) == 0 && shiro_rs_labels_get_name(b, i, &right) == 0);
@@ -93,17 +93,17 @@ int main(void) {
     assert(shiro_rs_states_release(&states) == 0);
     const char name[] = "retained\0UTF8\xce\xbb"; ShiroRsBytes *name_owner = owned(name, sizeof(name)-1);
     uint64_t bits[] = {UINT64_C(0x8000000000000000), UINT64_C(1), UINT64_C(0x7ff8000000000042), UINT64_C(0xfff0000000000000)};
-    ShiroRsLabelInput values[2];
+    _Alignas(8) ShiroRsLabelInput values[2];
     for (size_t i = 0; i < 2; ++i) { memcpy(&values[i].start, &bits[2*i], sizeof(double)); memcpy(&values[i].end, &bits[2*i+1], sizeof(double)); values[i].name = name_owner; }
     assert(shiro_rs_labels_create(values, 2, &labels) == 0 && shiro_rs_bytes_release(&name_owner) == 0);
     for (size_t i = 0; i < 2; ++i) {
-        ShiroRsLabelInfo info; uint64_t start, end;
+        _Alignas(8) ShiroRsLabelInfo info; uint64_t start, end;
         assert(shiro_rs_labels_get_info(labels, i, &info) == 0);
         memcpy(&start, &info.start, sizeof(double)); memcpy(&end, &info.end, sizeof(double));
         assert(start == bits[2*i] && end == bits[2*i+1]);
     }
     ShiroRsBytes *snapshot = NULL; assert(shiro_rs_labels_get_name(labels, 0, &snapshot) == 0);
-    ShiroRsLabelInfo info = {12, 13}; assert(shiro_rs_labels_get_info(labels, 2, &info) == 2 && info.start == 12 && info.end == 13);
+    _Alignas(8) ShiroRsLabelInfo info = {12, 13}; assert(shiro_rs_labels_get_info(labels, 2, &info) == 2 && info.start == 12 && info.end == 13);
     ShiroRsBytes *retained_wire = snapshot;
     assert(shiro_rs_labels_get_name(labels, 2, &retained_wire) == 2 && retained_wire == snapshot);
     ShiroRsLabels *retained = labels; input = text("0 1 aa\n\nx 2 bb");

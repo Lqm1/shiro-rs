@@ -46,7 +46,7 @@ static uint32_t controlled(void *context, float *output) {
     const float values[] = {0, 0.5f, 1}; *output = values[position]; return 0;
 }
 int main(void) {
-    ShiroRsAudioOptions options; assert(shiro_rs_audio_options_default(&options) == 0);
+    _Alignas(8) ShiroRsAudioOptions options; assert(shiro_rs_audio_options_default(&options) == 0);
     assert(options.normalize == 0 && options.dither_level == 0 && options.has_output_sample_rate == 0 && options.output_sample_rate == 0 && options.boundary == 0 && options.kernel == 0);
     ShiroRsBytes *wire = fixture("c-audio-input.wav");
     const char *names[] = {"plain", "normalized", "up", "down", "normalized-down"};
@@ -62,7 +62,7 @@ int main(void) {
         char name[100]; snprintf(name, sizeof(name), "c-audio-input.%s.raw", names[i]);
         ShiroRsBytes *expected_owner = fixture(name); size_t length = 0; uint8_t *expected = copied_bytes(expected_owner, &length);
         assert(count * 4 == length);
-        for (size_t j = 0; j < count; ++j) { double e = scalar(expected + 4 * j); assert(fabs((double)actual[j] - e) / fmax(fabs(e), 1) < 2e-7); }
+        for (size_t j = 0; j < count; ++j) { _Alignas(8) double e = scalar(expected + 4 * j); assert(fabs((double)actual[j] - e) / fmax(fabs(e), 1) < 2e-7); }
         free(actual); free(expected); assert(shiro_rs_bytes_release(&expected_owner) == 0);
     }
     for (size_t is_linux = 0; is_linux < 2; ++is_linux) {
@@ -79,7 +79,7 @@ int main(void) {
         assert(shiro_rs_dither_release(&rng) == 0);
         assert((is_linux ? shiro_rs_dither_linux_gnu(&rng) : shiro_rs_dither_windows(&rng)) == 0);
         const float zero[64] = {0}; ShiroRsArrayF32 *signal = array(zero, 64);
-        ShiroRsWaveInfo header = {8000, 32, 1, 1}; assert(shiro_rs_audio_options_default(&options) == 0); options.dither_level = 1;
+        _Alignas(8) ShiroRsWaveInfo header = {8000, 32, 1, 1}; assert(shiro_rs_audio_options_default(&options) == 0); options.dither_level = 1;
         ShiroRsAudio *output = NULL;
         assert(shiro_rs_audio_prepare(signal, &header, &options, sequence, rng, &output) == 0);
         uint32_t rate; size_t count; float *actual = snapshot(output, &rate, &count); assert(rate == 8000 && count == 64);
@@ -97,7 +97,7 @@ int main(void) {
     for (size_t j = 0; j < count; ++j) {uint32_t word; memcpy(&word, &actual[j], 4); assert(word == bits(expected + j * 4));}
     free(actual); free(expected); assert(shiro_rs_bytes_release(&expected_owner) == 0 && shiro_rs_dither_release(&rng) == 0);
     const float input[] = {-0.25f, 0.5f, 0}; ShiroRsArrayF32 *signal = array(input, 3);
-    ShiroRsWaveInfo header = {8000, 0, UINT16_MAX, 0}; struct draws state = {0, -1};
+    _Alignas(8) ShiroRsWaveInfo header = {8000, 0, UINT16_MAX, 0}; struct draws state = {0, -1};
     assert(shiro_rs_audio_options_default(&options) == 0); options.normalize = 1; options.dither_level = 0.125f;
     assert(shiro_rs_audio_prepare(signal, &header, &options, controlled, &state, &output) == 0);
     actual = snapshot(output, &rate, &count); assert(rate == 8000 && count == 3 && state.position == 3);

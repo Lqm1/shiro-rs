@@ -78,7 +78,7 @@ static uint32_t failed_uniform(void *context, float *value) { (void)value; ++*(s
 int main(void) {
     uint32_t kind = shiro_rs_path_native_encoding(); assert(kind == 1 || kind == 2);
     ShiroRsBatchOptions *options = NULL; assert(shiro_rs_batch_options_default(&options) == 0);
-    ShiroRsAudioOptions audio = {0}; assert(shiro_rs_batch_options_get_audio(options, &audio) == 0);
+    _Alignas(8) ShiroRsAudioOptions audio = {0}; assert(shiro_rs_batch_options_get_audio(options, &audio) == 0);
     assert(audio.normalize == 0 && audio.dither_level == 0 && audio.has_output_sample_rate == 0 && audio.output_sample_rate == 0 && audio.boundary == 0 && audio.kernel == 0);
     ShiroRsBytes *extension = NULL; assert(shiro_rs_batch_options_get_input_extension(options, &extension) == 0); equal_bytes(extension, ".wav", 4);
     assert(shiro_rs_bytes_release(&extension) == 0 && shiro_rs_batch_options_release(&options) == 0);
@@ -86,7 +86,7 @@ int main(void) {
     audio.normalize = 1; audio.dither_level = 0.125f; audio.has_output_sample_rate = 1; audio.output_sample_rate = 8000; audio.boundary = 1; audio.kernel = 1;
     assert(shiro_rs_batch_options_create(&audio, extension, &options) == 0 && shiro_rs_bytes_release(&extension) == 0);
     ShiroRsBatchOptions *cloned_options = NULL; assert(shiro_rs_batch_options_clone(options, &cloned_options) == 0 && shiro_rs_batch_options_release(&options) == 0);
-    ShiroRsAudioOptions settings = {0}; assert(shiro_rs_batch_options_get_audio(cloned_options, &settings) == 0);
+    _Alignas(8) ShiroRsAudioOptions settings = {0}; assert(shiro_rs_batch_options_get_audio(cloned_options, &settings) == 0);
     assert(settings.normalize == 1 && settings.dither_level == 0.125f && settings.has_output_sample_rate == 1 && settings.output_sample_rate == 8000 && settings.boundary == 1 && settings.kernel == 1);
     assert(shiro_rs_batch_options_get_input_extension(cloned_options, &extension) == 0 && shiro_rs_batch_options_release(&cloned_options) == 0); equal_bytes(extension, suffix, sizeof(suffix) - 1); assert(shiro_rs_bytes_release(&extension) == 0);
     const unsigned char windows[] = {0x66,0,0,0xd8,0,0,0,0xdc}, unix_units[] = {0x66,0xff,0,0x80};
@@ -118,15 +118,15 @@ int main(void) {
     ShiroRsPath *stem_owner = path_ascii(stem, kind); assert(shiro_rs_batch_options_default(&options) == 0);
     const char *originals[] = {"tests/fixtures/c-fextr-mfcc12-da.bin", "tests/fixtures/c-fextr-mfcc12-dae.bin", "tests/fixtures/c-fextr-plpcc12-da.bin"};
     for (uint32_t code = 0; code < 3; ++code) {
-        ShiroRsFeatureOptions feature = {0}; assert(shiro_rs_batch_preset_feature_options(code, &feature) == 0);
+        _Alignas(8) ShiroRsFeatureOptions feature = {0}; assert(shiro_rs_batch_preset_feature_options(code, &feature) == 0);
         assert(feature.kind == (code == 2 ? 2 : 0) && feature.order == 12 && feature.channels == 36 && feature.frame_length == 512 && feature.hop == 80 && feature.sample_rate_hz == 16000 && feature.minimum_bandwidth_hz == 400 && feature.warp == 1 && feature.include_dc == 0 && feature.energy == (code == 1 ? 1 : 0) && feature.delta == 1 && feature.acceleration == 1);
         assert(shiro_rs_extractor_native(code, &extractor) == 0); uint32_t actual = 99; assert(shiro_rs_extractor_get_preset(extractor, &actual) == 0 && actual == code); assert(shiro_rs_extractor_kind(extractor, &actual) == 0 && actual == 0);
         ShiroRsBatchOutputs *output = NULL; assert(shiro_rs_batch_extract_file(stem_owner, options, extractor, NULL, NULL, &output) == 0); output_fields(output, stem, kind, 0);
         assert(snprintf(filename, sizeof(filename), "%s.raw", stem) > 0); equal_files(filename, "tests/fixtures/c-audio-input.plain.raw");
         assert(snprintf(filename, sizeof(filename), "%s.param", stem) > 0); size_t a_count, e_count; unsigned char *a = load(filename, &a_count), *e = load(originals[code], &e_count); assert(a_count == e_count);
-        for (size_t i = 0; i < a_count; i += 4) { double av = scalar(a + i), ev = scalar(e + i); assert(fabs(av - ev) / fmax(fabs(ev), 1.0) < 2e-5); } free(a); free(e);
+        for (size_t i = 0; i < a_count; i += 4) { _Alignas(8) double av = scalar(a + i), ev = scalar(e + i); assert(fabs(av - ev) / fmax(fabs(ev), 1.0) < 2e-5); } free(a); free(e);
         ShiroRsExtractor *retained_extractor = extractor; assert(shiro_rs_extractor_native(3, &retained_extractor) == 2 && retained_extractor == extractor);
-        ShiroRsFeatureOptions retained = feature; assert(shiro_rs_batch_preset_feature_options(3, &retained) == 2 && retained.kind == feature.kind);
+        _Alignas(8) ShiroRsFeatureOptions retained = feature; assert(shiro_rs_batch_preset_feature_options(3, &retained) == 2 && retained.kind == feature.kind);
         assert(shiro_rs_batch_extract_file(stem_owner, options, extractor, NULL, NULL, NULL) == 1);
         assert(shiro_rs_extractor_get_path(extractor, 0, &stem_owner) == 2);
         assert(shiro_rs_batch_outputs_release(&output) == 0 && shiro_rs_extractor_release(&extractor) == 0);
